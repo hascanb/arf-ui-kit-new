@@ -86,6 +86,7 @@ export interface DataTableProps<TData = unknown> {
   // Callbacks
   onRowClick?: (row: any) => void
   onRowDoubleClick?: (row: any) => void
+  onTableReady?: (table: TanStackTable<TData>) => void
 }
 
 /**
@@ -147,6 +148,37 @@ export interface ExcelExportOptions {
   sheetName?: string
   includeHeaders?: boolean
   onlySelected?: boolean
+}
+
+/**
+ * Faceted filter option
+ */
+export interface FacetedFilterOption {
+  label: string
+  value: string
+  icon?: React.ComponentType<{ className?: string }>
+}
+
+/**
+ * Faceted filter props
+ */
+export interface DataTableFacetedFilterProps<TData, TValue> {
+  column?: any
+  title?: string
+  options: FacetedFilterOption[]
+}
+
+/**
+ * Excel actions props
+ */
+export interface DataTableExcelActionsProps<TData> {
+  table: TanStackTable<TData>
+  filename?: string
+  exportSelected?: boolean
+  enableImport?: boolean
+  onImport?: (data: TData[]) => void
+  exportLabel?: string
+  importLabel?: string
 }
 
 /**

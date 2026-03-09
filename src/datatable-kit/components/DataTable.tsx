@@ -13,6 +13,8 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   flexRender,
   type ColumnDef,
 } from '@tanstack/react-table'
@@ -81,6 +83,7 @@ export function DataTable<TData>({
   // Callbacks
   onRowClick,
   onRowDoubleClick,
+  onTableReady,
 }: DataTableProps<TData>) {
   // Internal state management
   const [internalPagination, setInternalPagination] = React.useState<{
@@ -106,9 +109,9 @@ export function DataTable<TData>({
   const rowSelectionState = rowSelection ?? internalRowSelection
 
   // TanStack Table instance
-  const table = useReactTable({
+  const table = useReactTable<TData>({
     data,
-    columns,
+    columns: columns as ColumnDef<TData, any>[],
     
     // Core
     getCoreRowModel: getCoreRowModel(),
@@ -130,6 +133,8 @@ export function DataTable<TData>({
     // Filtering
     ...(enableGlobalFilter && {
       getFilteredRowModel: getFilteredRowModel(),
+      getFacetedRowModel: getFacetedRowModel(),
+      getFacetedUniqueValues: getFacetedUniqueValues(),
       manualFiltering,
       globalFilterFn: 'includesString',
     }),
@@ -156,6 +161,13 @@ export function DataTable<TData>({
     enableRowSelection,
     enableMultiRowSelection,
   })
+
+  // Expose table instance to parent
+  React.useEffect(() => {
+    if (onTableReady) {
+      onTableReady(table as any)
+    }
+  }, [table, onTableReady])
 
   // Table content
   const tableContent = (

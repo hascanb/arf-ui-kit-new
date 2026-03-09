@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   FileText,
   Bell,
+  Table,
   Palette,
 } from 'lucide-react'
 import type { BrandData, UserData, NavGroup } from '../context/types'
@@ -128,6 +129,15 @@ export const testNavGroups: NavGroup[] = [
           { title: 'Header Variants', url: '/test/layout/header' },
           { title: 'Sidebar Variants', url: '/test/layout/sidebar' },
           { title: 'Footer Variants', url: '/test/layout/footer' },
+        ],
+      },
+      {
+        title: 'DataTable Kit Test',
+        icon: Table,
+        items: [
+          { title: 'Basic DataTable', url: '/test/datatable/basic' },
+          { title: 'Advanced Features', url: '/test/datatable/advanced' },
+          { title: 'Server-Side', url: '/test/datatable/server-side' },
         ],
       },
       {

@@ -99,6 +99,35 @@ declare module '@/components/ui/calendar' {
 }
 
 declare module '@/components/ui/popover' {
+  import * as React from 'react'
+  
+  export const Popover: React.FC<any>
+  export const PopoverTrigger: React.ForwardRefExoticComponent<any>
+  export const PopoverContent: React.ForwardRefExoticComponent<any>
+  export const PopoverAnchor: React.ForwardRefExoticComponent<any>
+}
+
+declare module '@/components/ui/command' {
+  import * as React from 'react'
+  
+  export const Command: React.ForwardRefExoticComponent<any>
+  export const CommandDialog: React.FC<any>
+  export const CommandInput: React.ForwardRefExoticComponent<any>
+  export const CommandList: React.ForwardRefExoticComponent<any>
+  export const CommandEmpty: React.ForwardRefExoticComponent<any>
+  export const CommandGroup: React.ForwardRefExoticComponent<any>
+  export const CommandItem: React.ForwardRefExoticComponent<any>
+  export const CommandShortcut: React.FC<any>
+  export const CommandSeparator: React.ForwardRefExoticComponent<any>
+}
+
+declare module '@/components/ui/separator' {
+  import * as React from 'react'
+  
+  export const Separator: React.ForwardRefExoticComponent<any>
+}
+
+declare module '@/components/ui/popover' {
   export * from '@/components/ui/popover'
 }
 

@@ -7,7 +7,7 @@
  */
 
 import React from 'react'
-import { TrashIcon, Cross2Icon } from '@radix-ui/react-icons'
+import { Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DataTableBulkActionsProps } from '../types'
 
@@ -46,7 +46,7 @@ export function DataTableBulkActions<TData>({
             }}
             className="h-8"
           >
-            <TrashIcon className="mr-2 h-4 w-4" />
+            <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
         )}
@@ -58,7 +58,7 @@ export function DataTableBulkActions<TData>({
           onClick={() => table.resetRowSelection()}
           className="h-8"
         >
-          <Cross2Icon className="h-4 w-4" />
+          <X className="h-4 w-4" />
         </Button>
       </div>
     </div>

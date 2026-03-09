@@ -3,8 +3,8 @@
  * 
  * TanStack Table-based data table components with sorting, filtering, pagination.
  * 
- * @status Sprint 1 Complete (Core Features)
- * @version 0.1.0
+ * @status Sprint 2 Complete (Advanced Features)
+ * @version 0.2.0
  */
 
 // Core component
@@ -16,9 +16,25 @@ export { DataTableColumnHeader } from './components/DataTableColumnHeader'
 export { DataTableToolbar } from './components/DataTableToolbar'
 export { DataTableViewOptions } from './components/DataTableViewOptions'
 export { DataTableBulkActions } from './components/DataTableBulkActions'
+export { DataTableFacetedFilter } from './components/DataTableFacetedFilter'
+export { DataTableExcelActions } from './components/DataTableExcelActions'
 
 // Utilities
 export { createSelectionColumn } from './components/SelectionColumn'
+export {
+  exportToExcel,
+  importFromExcel,
+  downloadExcelTemplate,
+  validateExcelFile,
+} from './utils/excel'
+export {
+  getPageNumbers,
+  getPageNumbersWithEllipsis,
+  getPaginationInfo,
+} from './utils/get-page-numbers'
+
+// Hooks
+export { useTableUrlState } from './hooks/useTableUrlState'
 
 // Types
 export type {
@@ -28,7 +44,17 @@ export type {
   DataTableToolbarProps,
   DataTableViewOptionsProps,
   DataTableBulkActionsProps,
+  DataTableFacetedFilterProps,
+  DataTableExcelActionsProps,
   ExcelExportOptions,
+  FacetedFilterOption,
 } from './types'
+export type {
+  ExcelImportOptions,
+} from './utils/excel'
+export type {
+  TableUrlStateOptions,
+  TableUrlState,
+} from './hooks/useTableUrlState'
 
-export const DATATABLE_KIT_VERSION = '0.1.0'
+export const DATATABLE_KIT_VERSION = '0.2.0'

@@ -16,6 +16,7 @@ import {
   LogIn,
   KeyRound,
   ShieldCheck,
+  Table,
 } from "lucide-react"
 
 // 1. Marka (Logo ve İsim) Verisi
@@ -108,6 +109,15 @@ const navGroups = [
           { title: "Header Variants", url: "/test/layout/header" },
           { title: "Sidebar Variants", url: "/test/layout/sidebar" },
           { title: "Footer Variants", url: "/test/layout/footer" },
+        ],
+      },
+      {
+        title: "DataTable Kit Test",
+        icon: Table,
+        items: [
+          { title: "Basic DataTable", url: "/test/datatable/basic" },
+          { title: "Advanced Features", url: "/test/datatable/advanced" },
+          { title: "Server-Side", url: "/test/datatable/server-side" },
         ],
       },
       {
