@@ -2,12 +2,11 @@
   "compilerOptions": {
     // Output configuration
     "outDir": "./dist",
-    "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     
-    // Enable emit (override tsconfig.json)
+    // Enable emit
     "noEmit": false,
     
     // Module system
@@ -24,20 +23,22 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
     
-    // Base URL for absolute imports
-    "baseUrl": "./src"
+    // Ghost UI - Allow unresolved imports (runtime provided by host)
+    "noResolve": false
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/*.spec.ts",
+    "!src/**/*.spec.tsx"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
     "app",
     "playground"
   ]

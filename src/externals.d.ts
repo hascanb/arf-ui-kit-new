@@ -64,7 +64,18 @@ declare module '@/components/ui/form' {
 }
 
 declare module '@/components/ui/select' {
-  export * from '@/components/ui/select'
+  import * as React from 'react'
+  
+  export const Select: React.FC<any>
+  export const SelectGroup: React.FC<any>
+  export const SelectValue: React.FC<any>
+  export const SelectTrigger: React.ForwardRefExoticComponent<any>
+  export const SelectContent: React.ForwardRefExoticComponent<any>
+  export const SelectLabel: React.ForwardRefExoticComponent<any>
+  export const SelectItem: React.ForwardRefExoticComponent<any>
+  export const SelectSeparator: React.ForwardRefExoticComponent<any>
+  export const SelectScrollUpButton: React.ForwardRefExoticComponent<any>
+  export const SelectScrollDownButton: React.ForwardRefExoticComponent<any>
 }
 
 declare module '@/components/ui/textarea' {
@@ -93,27 +104,43 @@ declare module '@/components/ui/popover' {
 
 // Table components (datatable-kit için)
 declare module '@/components/ui/table' {
-  export * from '@/components/ui/table'
+  import * as React from 'react'
+  
+  export const Table: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLTableElement>>
+  export const TableHeader: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLTableSectionElement>>
+  export const TableBody: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLTableSectionElement>>
+  export const TableFooter: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLTableSectionElement>>
+  export const TableRow: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLTableRowElement>>
+  export const TableHead: React.ForwardRefExoticComponent<React.ThHTMLAttributes<HTMLTableCellElement>>
+  export const TableCell: React.ForwardRefExoticComponent<React.TdHTMLAttributes<HTMLTableCellElement>>
+  export const TableCaption: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLElement>>
+}
+
+declare module '@/components/ui/scroll-area' {
+  import * as React from 'react'
+  
+  export const ScrollArea: React.ForwardRefExoticComponent<any>
+  export const ScrollBar: React.ForwardRefExoticComponent<any>
 }
 
 declare module '@/components/ui/dropdown-menu' {
-  export {
-    DropdownMenu,
-    DropdownMenuPortal,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuLabel,
-    DropdownMenuItem,
-    DropdownMenuCheckboxItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubTrigger,
-    DropdownMenuSubContent,
-  } from '@/components/ui/dropdown-menu'
+  import * as React from 'react'
+  
+  export const DropdownMenu: React.FC<any>
+  export const DropdownMenuTrigger: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuContent: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuGroup: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuPortal: React.FC<any>
+  export const DropdownMenuSub: React.FC<any>
+  export const DropdownMenuSubContent: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuSubTrigger: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuLabel: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuItem: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuCheckboxItem: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuRadioGroup: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuRadioItem: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuSeparator: React.ForwardRefExoticComponent<any>
+  export const DropdownMenuShortcut: React.FC<any>
 }
 
 declare module '@/components/ui/pagination' {
@@ -201,6 +228,21 @@ declare module '@/components/ui/alert-dialog' {
 
 declare module '@/lib/utils' {
   export { cn } from '@/lib/utils'
+}
+
+// ============================================================================
+// Icons (Radix UI Icons)
+// ============================================================================
+
+declare module '@radix-ui/react-icons' {
+  import * as React from 'react'
+  
+  export const MixerHorizontalIcon: React.FC<React.SVGProps<SVGSVGElement>>
+  export const Cross2Icon: React.FC<React.SVGProps<SVGSVGElement>>
+  export const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>>
+  export const ArrowDownIcon: React.FC<React.SVGProps<SVGSVGElement>>
+  export const ArrowUpIcon: React.FC<React.SVGProps<SVGSVGElement>>
+  export const ChevronsUpDownIcon: React.FC<React.SVGProps<SVGSVGElement>>
 }
 
 // ============================================================================
