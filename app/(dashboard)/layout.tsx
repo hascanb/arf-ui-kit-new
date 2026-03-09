@@ -128,6 +128,13 @@ const navGroups = [
         ],
       },
       {
+        title: "Errors Kit Test",
+        icon: TestTube2,
+        items: [
+          { title: "Error Handling", url: "/test/errors" },
+        ],
+      },
+      {
         title: "Utils & Icons Test",
         icon: TestTube2,
         items: [

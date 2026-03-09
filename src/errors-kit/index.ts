@@ -3,9 +3,65 @@
  * 
  * Centralized error handling with level-based actions and error pages.
  * 
- * @status In Development (0%)
- * @planned Phase 4 (2-4 weeks)
+ * @version 0.1.0
+ * @status Production Ready
  */
 
-// Placeholder exports - will be implemented in Phase 4
-export const ERRORS_KIT_VERSION = '0.0.0'
+// ============================================================================
+// Components
+// ============================================================================
+
+export { ErrorRenderer } from './components/ErrorRenderer'
+export type { ErrorRendererProps } from './components/ErrorRenderer'
+
+// ============================================================================
+// Context & Provider
+// ============================================================================
+
+export {
+  ErrorsKitProvider,
+  useErrorsKitContext,
+} from './context/ErrorsKitProvider'
+
+// ============================================================================
+// Hooks
+// ============================================================================
+
+export { useErrorHandler } from './context/useErrorHandler'
+
+// ============================================================================
+// Handler
+// ============================================================================
+
+export { createErrorHandler } from './handler/createErrorHandler'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type {
+  ErrorLevel,
+  LevelAction,
+  LevelActionsConfig,
+  LevelForStatus,
+  LevelForCode,
+  StatusToSlug,
+  NormalizedError,
+  AxiosError,
+  FetchError,
+  CustomError,
+  HandlerConfig,
+  ErrorHandler,
+  ErrorMap,
+  ErrorPageProps,
+  ErrorsKitContextValue,
+  ErrorsKitProviderProps,
+} from './context/types'
+
+export {
+  DEFAULT_LEVEL_ACTIONS,
+  DEFAULT_LEVEL_FOR_STATUS,
+  DEFAULT_STATUS_TO_SLUG,
+  DEFAULT_ERROR_MESSAGES,
+} from './context/types'
+
