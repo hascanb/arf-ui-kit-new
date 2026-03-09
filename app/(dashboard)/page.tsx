@@ -1,6 +1,6 @@
 "use client"
 
-import { AppHeader } from "@/components/composite/AppHeader"
+import { AppHeader } from "@arftech/arfweb-shared-lib/layout-kit/components/AppHeader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +18,14 @@ import {
   ChevronRight
 } from "lucide-react"
 import Link from "next/link"
+
+const statusConfig = {
+  beklemede: { label: "Beklemede", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
+  teslim_alindi: { label: "Teslim Alındı", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  transfer: { label: "Transfer", className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  dagitimda: { label: "Dağıtımda", className: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
+  teslim_edildi: { label: "Teslim Edildi", className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+}
 
 export default function HomePage() {
   const stats = [
@@ -63,23 +71,29 @@ export default function HomePage() {
     { id: "KRG-2024-001237", customer: "Can Yıldırım", destination: "İzmir", status: "transfer", time: "6 saat önce" },
   ]
 
-  const statusConfig = {
-    beklemede: { label: "Beklemede", className: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-    teslim_alindi: { label: "Teslim Alındı", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-    transfer: { label: "Transfer", className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-    dagitimda: { label: "Dağıtımda", className: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
-    teslim_edildi: { label: "Teslim Edildi", className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  }
-
   const quickActions = [
-    { title: "Yeni Kargo", description: "Hızlı kargo oluştur", href: "/kargolar/yeni", icon: Plus },
-    { title: "Kargo Sorgula", description: "Takip numarası ile ara", href: "/kargolar/sorgula", icon: Package },
-    { title: "Raporlar", description: "Detaylı analizler", href: "/raporlar", icon: TrendingUp },
+    { title: "Yeni Kargo", description: "Hızlı kargo oluştur", href: "/shipments/new", icon: Plus },
+    { title: "Kargo Sorgula", description: "Takip numarası ile ara", href: "/shipments/track", icon: Package },
+    { title: "Raporlar", description: "Detaylı analizler", href: "/reports", icon: TrendingUp },
   ]
 
   return (
     <>
-      <AppHeader breadcrumbs={[{ label: "Ana Sayfa" }]} />
+      {/* AppHeader artık bir kütüphane bileşeni.
+        Tüm metinleri, bildirim sayılarını ve ikon eylemlerini buradan yolluyoruz.
+      */}
+      <AppHeader 
+        breadcrumbs={[
+          { label: "Ana Sayfa" }
+        ]}
+        searchPlaceholder="Kargo ara..."
+        searchShortcut={<>⌘K</>}
+        notificationCount={3}
+        notificationsLabel="Bildirimler"
+        onSearchClick={() => console.log("Arama ekranı açılıyor...")}
+        onNotificationClick={() => console.log("Bildirimler açılıyor...")}
+      />
+      
       <div className="flex flex-1 flex-col gap-6 p-6">
         {/* Header */}
         <div className="flex flex-col gap-1">
@@ -140,7 +154,7 @@ export default function HomePage() {
                 </CardDescription>
               </div>
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/kargolar" className="gap-1">
+                <Link href="/shipments" className="gap-1">
                   Tümü
                   <ChevronRight className="size-4" />
                 </Link>
@@ -155,7 +169,7 @@ export default function HomePage() {
                         <Package className="size-4 text-muted-foreground" />
                       </div>
                       <div>
-                        <Link href={`/kargolar/${cargo.id}`} className="font-medium hover:underline">
+                        <Link href={`/shipments/${cargo.id}`} className="font-medium hover:underline">
                           {cargo.id}
                         </Link>
                         <p className="text-sm text-muted-foreground">
