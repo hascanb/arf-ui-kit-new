@@ -15,7 +15,7 @@ import {
   ErrorRenderer,
   createErrorHandler,
   type ErrorLevel,
-} from '@/errors-kit'
+} from '@arftech/arfweb-shared-lib/errors-kit'
 import {
   NotFoundPage,
   UnauthorizedPage,
@@ -130,12 +130,12 @@ function TestContent() {
    */
   const testManualHandler = () => {
     const customHandler = createErrorHandler({
-      onToast: (msg, level) => {
+      onToast: (msg: string, level?: string) => {
         toast.error(msg, {
           description: `Level: ${level}`,
         })
       },
-      onRedirect: (path) => {
+      onRedirect: (path: string) => {
         toast.info(`Yönlendiriliyor: ${path}`)
       },
       on401: () => {
@@ -329,12 +329,12 @@ export default function ErrorsKitTestPage() {
     <ErrorsKitProvider
       errorMap={errorMap}
       handlerConfig={{
-        onToast: (message, level) => {
+        onToast: (message: string, level?: string) => {
           toast.error(message, {
             description: `Error Level: ${level}`,
           })
         },
-        onRedirect: (path) => {
+        onRedirect: (path: string) => {
           toast.info(`Yönlendiriliyor: ${path}`)
           // Gerçek uygulamada: router.push(path)
         },

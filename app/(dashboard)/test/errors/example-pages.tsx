@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { AlertCircle, Home, RefreshCw, Lock, FileQuestion } from 'lucide-react'
-import { ErrorPageProps } from '@/errors-kit'
+import { ErrorPageProps } from '@arftech/arfweb-shared-lib/errors-kit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
