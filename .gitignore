@@ -8,3 +8,17 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Playground build artifacts (TypeScript compilation)
+playground/**/*.d.ts
+playground/**/*.d.ts.map
+playground/**/*.js
+playground/**/*.js.map
+!playground/**/*.config.js
+
+# Agent/analysis files
+agent/

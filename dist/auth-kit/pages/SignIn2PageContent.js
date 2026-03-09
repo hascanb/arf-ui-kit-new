@@ -1,9 +1,0 @@
-'use client';
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useAuthKit } from '../context/useAuthKit';
-import { SignInForm } from '../components/SignInForm';
-export function SignIn2PageContent() {
-    const { config, t } = useAuthKit();
-    return (_jsxs("div", { className: "flex min-h-screen", children: [_jsx("div", { className: "hidden lg:flex lg:w-1/2 bg-primary items-center justify-center p-12", children: _jsxs("div", { className: "max-w-md text-white space-y-6", children: [config.ui?.logoUrl && (_jsx("img", { src: config.ui.logoUrl, alt: config.ui.brandName || 'Logo', className: "h-16 w-auto mb-8" })), config.ui?.brandName && (_jsxs(_Fragment, { children: [_jsx("h1", { className: "text-4xl font-bold", children: "Ho\u015F Geldiniz" }), _jsxs("p", { className: "text-lg text-primary-foreground/80", children: [config.ui.brandName, " platformuna giri\u015F yap\u0131n ve i\u015Flemlerinize devam edin."] })] }))] }) }), _jsx("div", { className: "flex-1 flex items-center justify-center p-8 bg-background", children: _jsxs("div", { className: "w-full max-w-md space-y-8", children: [config.ui?.logoUrl && (_jsx("div", { className: "flex justify-center lg:hidden", children: _jsx("img", { src: config.ui.logoUrl, alt: config.ui.brandName || 'Logo', className: "h-12 w-auto" }) })), _jsxs("div", { className: "text-center lg:text-left", children: [_jsx("h2", { className: "text-3xl font-bold", children: t('signIn.title') }), _jsx("p", { className: "mt-2 text-muted-foreground", children: t('signIn.subtitle') })] }), _jsx(SignInForm, {})] }) })] }));
-}
-//# sourceMappingURL=SignIn2PageContent.js.map
