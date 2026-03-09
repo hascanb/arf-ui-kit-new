@@ -13,6 +13,7 @@ import {
   NumberFieldConfig,
   TextareaFieldConfig,
   SelectFieldConfig,
+  ComboboxFieldConfig,
   CheckboxFieldConfig,
   RadioFieldConfig,
   DateFieldConfig,
@@ -28,7 +29,8 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon } from 'lucide-react'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react'
 
 /**
  * Format a date for display
@@ -217,6 +219,97 @@ function SelectField({ config, control, showDescription, showRequired }: FieldRe
           )}
         </div>
       )}
+    />
+  )
+}
+
+/**
+ * Render a combobox field (searchable select with Command)
+ */
+function ComboboxField({ config, control, showDescription, showRequired }: FieldRendererProps) {
+  const fieldConfig = config as ComboboxFieldConfig
+  const [open, setOpen] = useState(false)
+  
+  return (
+    <Controller
+      name={fieldConfig.name}
+      control={control}
+      render={({ field, fieldState }) => {
+        const selectedOption = fieldConfig.options.find(opt => opt.value === field.value)
+        
+        return (
+          <div className="space-y-2">
+            <Label htmlFor={fieldConfig.name}>
+              {fieldConfig.label}
+              {showRequired && fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  disabled={fieldConfig.disabled}
+                  className={cn(
+                    "w-full justify-between",
+                    !field.value && "text-muted-foreground",
+                    fieldState.error && "border-destructive",
+                    fieldConfig.className
+                  )}
+                >
+                  {selectedOption ? (
+                    <>
+                      {selectedOption.icon && <span className="mr-2">{selectedOption.icon}</span>}
+                      {selectedOption.label}
+                    </>
+                  ) : (
+                    fieldConfig.placeholder || "Seçiniz..."
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput 
+                    placeholder={fieldConfig.searchPlaceholder || "Ara..."} 
+                  />
+                  <CommandList>
+                    <CommandEmpty>{fieldConfig.emptyText || "Sonuç bulunamadı."}</CommandEmpty>
+                    <CommandGroup>
+                      {fieldConfig.options.map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          value={option.label}
+                          onSelect={() => {
+                            field.onChange(option.value)
+                            setOpen(false)
+                          }}
+                          disabled={option.disabled}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === option.value ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {option.icon && <span className="mr-2">{option.icon}</span>}
+                          {option.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {showDescription && fieldConfig.description && (
+              <p className="text-sm text-muted-foreground">{fieldConfig.description}</p>
+            )}
+            {fieldState.error && (
+              <p className="text-sm text-destructive">{fieldState.error.message}</p>
+            )}
+          </div>
+        )
+      }}
     />
   )
 }
@@ -473,6 +566,9 @@ export function FieldRenderer(props: FieldRendererProps) {
     
     case 'select':
       return <SelectField {...props} />
+    
+    case 'combobox':
+      return <ComboboxField {...props} />
     
     case 'checkbox':
       return <CheckboxField {...props} />

@@ -224,6 +224,40 @@ export default function FormKitTestPage() {
   ])
 
   // ============================================================================
+  // Combobox Form
+  // ============================================================================
+
+  const comboboxFields: FieldConfig[] = [
+    {
+      name: 'framework',
+      type: 'combobox',
+      label: 'Framework Seçimi',
+      description: 'Kullanmak istediğiniz framework\'ü seçin',
+      required: true,
+      options: [
+        { label: 'Next.js', value: 'nextjs' },
+        { label: 'SvelteKit', value: 'sveltekit' },
+        { label: 'Nuxt.js', value: 'nuxtjs' },
+        { label: 'Remix', value: 'remix' },
+        { label: 'Astro', value: 'astro' },
+      ],
+      searchPlaceholder: 'Framework ara...',
+      emptyText: 'Framework bulunamadı',
+      layout: { span: 12 },
+    },
+    {
+      name: 'projectName',
+      type: 'text',
+      label: 'Proje Adı',
+      placeholder: 'my-awesome-project',
+      required: true,
+      layout: { span: 12 },
+    },
+  ]
+
+  const comboboxSchema = buildSchema(comboboxFields)
+
+  // ============================================================================
   // Submit Handlers
   // ============================================================================
 
@@ -253,6 +287,13 @@ export default function FormKitTestPage() {
     console.log('Date range data:', data)
     toast.success('Tarih aralığı kaydedildi!', {
       description: `${new Date(data.startDate).toLocaleDateString()} - ${new Date(data.endDate).toLocaleDateString()}`,
+    })
+  }
+
+  const handleComboboxSubmit = async (data: any) => {
+    console.log('Combobox form data:', data)
+    toast.success('Proje oluşturuldu!', {
+      description: `${data.projectName} - ${data.framework}`,
     })
   }
 
@@ -346,6 +387,27 @@ export default function FormKitTestPage() {
               layout: { columns: 12, gap: 'default', maxWidth: '600px' },
               submitButton: { label: 'Kaydet', variant: 'default' },
               onSubmit: handleDateRangeSubmit,
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Combobox Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>5. Combobox Field - Aranabilir Seçim</CardTitle>
+          <CardDescription>
+            Combobox field type ile aranabilir ve filtrelenebilir seçim kutusu
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SchemaForm
+            config={{
+              schema: comboboxSchema,
+              fields: comboboxFields,
+              layout: { columns: 12, gap: 'default', maxWidth: '600px' },
+              submitButton: { label: 'Proje Oluştur', variant: 'default' },
+              onSubmit: handleComboboxSubmit,
             }}
           />
         </CardContent>

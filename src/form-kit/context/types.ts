@@ -18,6 +18,7 @@ export type FieldType =
   | 'number'
   | 'textarea'
   | 'select'
+  | 'combobox'
   | 'checkbox'
   | 'radio'
   | 'date'
@@ -134,6 +135,19 @@ export interface SelectFieldConfig extends BaseFieldConfig {
 }
 
 /**
+ * Combobox field configuration (searchable select with Command)
+ */
+export interface ComboboxFieldConfig extends BaseFieldConfig {
+  type: 'combobox'
+  /** Available options */
+  options: FieldOption[]
+  /** Empty state text when no results */
+  emptyText?: string
+  /** Placeholder for search input */
+  searchPlaceholder?: string
+}
+
+/**
  * Checkbox field configuration
  */
 export interface CheckboxFieldConfig extends BaseFieldConfig {
@@ -216,6 +230,7 @@ export type FieldConfig =
   | NumberFieldConfig
   | TextareaFieldConfig
   | SelectFieldConfig
+  | ComboboxFieldConfig
   | CheckboxFieldConfig
   | RadioFieldConfig
   | DateFieldConfig

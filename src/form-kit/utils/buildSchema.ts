@@ -11,6 +11,7 @@ import {
   NumberFieldConfig,
   TextareaFieldConfig,
   SelectFieldConfig,
+  ComboboxFieldConfig,
   CheckboxFieldConfig,
   RadioFieldConfig,
   DateFieldConfig,
@@ -35,6 +36,9 @@ export function buildField(config: FieldConfig): z.ZodTypeAny {
     
     case 'select':
       return buildSelectField(config as SelectFieldConfig)
+    
+    case 'combobox':
+      return buildComboboxField(config as ComboboxFieldConfig)
     
     case 'checkbox':
       return buildCheckboxField(config as CheckboxFieldConfig)
@@ -171,6 +175,24 @@ function buildSelectField(config: SelectFieldConfig): z.ZodTypeAny {
     
     return schema
   }
+}
+
+/**
+ * Build schema for combobox fields (searchable single select)
+ */
+function buildComboboxField(config: ComboboxFieldConfig): z.ZodTypeAny {
+  const validValues = config.options.map(opt => opt.value)
+  let schema = z.union([z.string(), z.number()])
+  
+  if (config.required) {
+    schema = schema.refine(val => validValues.includes(val), {
+      message: 'Geçerli bir seçenek seçiniz',
+    }) as any
+  } else {
+    schema = schema.optional() as any
+  }
+  
+  return schema
 }
 
 /**

@@ -71,6 +71,7 @@ export type {
   NumberFieldConfig,
   TextareaFieldConfig,
   SelectFieldConfig,
+  ComboboxFieldConfig,
   CheckboxFieldConfig,
   RadioFieldConfig,
   DateFieldConfig,
