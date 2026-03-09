@@ -1,0 +1,67 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate release tag version
+        if: github.event_name == 'release'
+        run: |
+          RELEASE_TAG="${{ github.event.release.tag_name }}"
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+          PACKAGE_VERSION="$(node -p \"require('./package.json').version\")"
+
+          echo "Release tag: ${RELEASE_TAG}"
+          echo "Release version: ${RELEASE_VERSION}"
+          echo "Package version: ${PACKAGE_VERSION}"
+
+          if [ "${RELEASE_VERSION}" != "${PACKAGE_VERSION}" ]; then
+            echo "❌ Release tag and package version do not match"
+            exit 1
+          fi
+
+          echo "✅ Release tag matches package version"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Build library
+        run: npm run build:lib
+
+      - name: Verify package contents
+        run: npm pack --dry-run
+
+      - name: Publish package
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
