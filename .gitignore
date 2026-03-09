@@ -22,3 +22,5 @@ playground/**/*.js.map
 
 # Agent/analysis files
 agent/
+*storybook.log
+storybook-static
