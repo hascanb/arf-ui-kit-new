@@ -99,7 +99,9 @@ declare module '@/components/ui/slider' {
 }
 
 declare module '@/components/ui/calendar' {
-  export * from '@/components/ui/calendar'
+  import React from 'react'
+  export type CalendarProps = any
+  export const Calendar: React.ForwardRefExoticComponent<CalendarProps>
 }
 
 declare module '@/components/ui/popover' {

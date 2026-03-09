@@ -4,6 +4,7 @@
  * Automatically renders the appropriate field component based on field configuration.
  */
 
+import { useState } from 'react'
 import { Controller } from 'react-hook-form'
 import { cn } from '@/lib/utils'
 import {
@@ -24,6 +25,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { CalendarIcon } from 'lucide-react'
+
+/**
+ * Format a date for display
+ */
+function formatDate(date: Date | null | undefined): string {
+  if (!date) return ''
+  return date.toLocaleDateString('tr-TR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
 
 /**
  * Render a text-based field (text, email, password)
@@ -301,10 +318,11 @@ function RadioField({ config, control, showDescription, showRequired }: FieldRen
 }
 
 /**
- * Render a date field
+ * Render a date field with Calendar picker
  */
 function DateField({ config, control, showDescription, showRequired }: FieldRendererProps) {
   const fieldConfig = config as DateFieldConfig
+  const [open, setOpen] = useState(false)
   
   return (
     <Controller
@@ -316,21 +334,39 @@ function DateField({ config, control, showDescription, showRequired }: FieldRend
             {fieldConfig.label}
             {showRequired && fieldConfig.required && <span className="text-destructive ml-1">*</span>}
           </Label>
-          <Input
-            {...field}
-            id={fieldConfig.name}
-            type="date"
-            disabled={fieldConfig.disabled}
-            value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ''}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const date = e.target.value ? new Date(e.target.value) : null
-              field.onChange(date)
-            }}
-            className={cn(
-              fieldState.error && 'border-destructive focus-visible:ring-destructive',
-              fieldConfig.className
-            )}
-          />
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={fieldConfig.disabled}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !field.value && "text-muted-foreground",
+                  fieldState.error && "border-destructive",
+                  fieldConfig.className
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {field.value ? formatDate(field.value as Date) : <span>Tarih seçin</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={field.value as Date}
+                onSelect={(date: Date | undefined) => {
+                  field.onChange(date)
+                  setOpen(false)
+                }}
+                disabled={(date: Date) => {
+                  if (fieldConfig.minDate && date < fieldConfig.minDate) return true
+                  if (fieldConfig.maxDate && date > fieldConfig.maxDate) return true
+                  return false
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
           {showDescription && fieldConfig.description && (
             <p className="text-sm text-muted-foreground">{fieldConfig.description}</p>
           )}
