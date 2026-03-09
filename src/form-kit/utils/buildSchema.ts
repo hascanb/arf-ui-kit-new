@@ -69,13 +69,6 @@ function buildTextField(config: TextFieldConfig): z.ZodString {
     schema = schema.email('Geçerli bir e-posta adresi giriniz')
   }
 
-  // Required validation
-  if (config.required) {
-    schema = schema.min(1, `${config.label} zorunludur`)
-  } else {
-    schema = schema.optional() as any
-  }
-
   // Min length
   if (config.minLength !== undefined) {
     schema = schema.min(config.minLength, `En az ${config.minLength} karakter olmalıdır`)
@@ -91,6 +84,13 @@ function buildTextField(config: TextFieldConfig): z.ZodString {
     schema = schema.regex(new RegExp(config.pattern), 'Geçersiz format')
   }
 
+  // Required validation - MUST BE LAST
+  if (config.required) {
+    schema = schema.min(1, `${config.label} zorunludur`)
+  } else {
+    schema = schema.optional() as any
+  }
+
   return schema
 }
 
@@ -103,11 +103,6 @@ function buildNumberField(config: NumberFieldConfig): z.ZodNumber {
     required_error: `${config.label} zorunludur`,
   })
 
-  // Required validation
-  if (!config.required) {
-    schema = schema.optional() as any
-  }
-
   // Min value
   if (config.min !== undefined) {
     schema = schema.min(config.min, `En az ${config.min} olmalıdır`)
@@ -116,6 +111,11 @@ function buildNumberField(config: NumberFieldConfig): z.ZodNumber {
   // Max value
   if (config.max !== undefined) {
     schema = schema.max(config.max, `En fazla ${config.max} olabilir`)
+  }
+
+  // Required validation - MUST BE LAST
+  if (!config.required) {
+    schema = schema.optional() as any
   }
 
   return schema
@@ -127,16 +127,16 @@ function buildNumberField(config: NumberFieldConfig): z.ZodNumber {
 function buildTextareaField(config: TextareaFieldConfig): z.ZodString {
   let schema = z.string()
 
-  // Required validation
+  // Max length
+  if (config.maxLength !== undefined) {
+    schema = schema.max(config.maxLength, `En fazla ${config.maxLength} karakter olabilir`)
+  }
+
+  // Required validation - MUST BE LAST
   if (config.required) {
     schema = schema.min(1, `${config.label} zorunludur`)
   } else {
     schema = schema.optional() as any
-  }
-
-  // Max length
-  if (config.maxLength !== undefined) {
-    schema = schema.max(config.maxLength, `En fazla ${config.maxLength} karakter olabilir`)
   }
 
   return schema
@@ -217,11 +217,6 @@ function buildDateField(config: DateFieldConfig): z.ZodDate {
     required_error: `${config.label} zorunludur`,
   })
 
-  // Required validation
-  if (!config.required) {
-    schema = schema.optional() as any
-  }
-
   // Min date
   if (config.minDate) {
     schema = schema.min(config.minDate, `${config.minDate.toLocaleDateString()} tarihinden önce olamaz`)
@@ -230,6 +225,11 @@ function buildDateField(config: DateFieldConfig): z.ZodDate {
   // Max date
   if (config.maxDate) {
     schema = schema.max(config.maxDate, `${config.maxDate.toLocaleDateString()} tarihinden sonra olamaz`)
+  }
+
+  // Required validation - MUST BE LAST
+  if (!config.required) {
+    schema = schema.optional() as any
   }
 
   return schema
