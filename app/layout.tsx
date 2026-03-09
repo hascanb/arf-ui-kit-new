@@ -3,16 +3,14 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import '@/styles/globals.css'
 
-const inter = Inter({ 
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
-  display: "swap",
+const fontSans = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-sans",
 });
 
-const jetbrainsMono = JetBrains_Mono({ 
-  subsets: ["latin", "latin-ext"],
+const fontMono = JetBrains_Mono({ 
+  subsets: ["latin"],
   variable: "--font-mono",
-  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -44,15 +42,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <head>
-        <script
-          async
-          crossOrigin="anonymous"
-          src="https://tweakcn.com/live-preview.min.js"
-        />
-      </head>
-      <body className="font-sans antialiased">
+    <html lang="en">
+      <body className={`${fontSans.variable} ${fontMono.variable} antialiased`}>
         {children}
         <Analytics />
       </body>
