@@ -121,8 +121,15 @@ const navGroups = [
         ],
       },
       {
-        title: "Utils & Icons Test",
+        title: "Form Kit Test",
         icon: KeyRound,
+        items: [
+          { title: "Form Examples", url: "/test/form" },
+        ],
+      },
+      {
+        title: "Utils & Icons Test",
+        icon: TestTube2,
         items: [
           { title: "Validation Utils", url: "/test/utils/validation" },
           { title: "Token Utils", url: "/test/utils/token" },

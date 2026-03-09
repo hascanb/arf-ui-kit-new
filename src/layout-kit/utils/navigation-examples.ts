@@ -141,6 +141,13 @@ export const testNavGroups: NavGroup[] = [
         ],
       },
       {
+        title: 'Form Kit Test',
+        icon: FileText,
+        items: [
+          { title: 'Form Examples', url: '/test/form' },
+        ],
+      },
+      {
         title: 'Component Gallery',
         url: '/gallery',
         icon: Palette,
