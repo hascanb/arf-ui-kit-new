@@ -1,0 +1,1 @@
+{"version":3,"file":"defaults.d.ts","sourceRoot":"","sources":["../../../src/auth-kit/i18n/defaults.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAEH,OAAO,KAAK,EAAE,mBAAmB,EAAE,MAAM,kBAAkB,CAAA;AAE3D,eAAO,MAAM,mBAAmB,EAAE,MAAM,CAAC,MAAM,EAAE,mBAAmB,CA0GnE,CAAA;AAED;;GAEG;AACH,eAAO,MAAM,gBAAgB,QAAO,MAAc,CAAA;AAElD;;GAEG;AACH,eAAO,MAAM,mBAAmB,QAAO,MAAM,EAAsC,CAAA"}

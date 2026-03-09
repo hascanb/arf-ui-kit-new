@@ -191,7 +191,7 @@ interface AppHeaderProps {
               Header <code className="bg-muted px-1 py-0.5 rounded">position: sticky</code> özelliğine sahip.
               Sayfayı kaydırdığınızda header her zaman görünür kalır.
             </p>
-            <div className="h-[1000px] bg-gradient-to-b from-muted to-background rounded-lg flex items-center justify-center">
+            <div className="h-[1000px] bg-linear-to-b from-muted to-background rounded-lg flex items-center justify-center">
               <div className="text-center space-y-2">
                 <p className="text-lg font-semibold">Scroll Demo Area</p>
                 <p className="text-sm text-muted-foreground">
