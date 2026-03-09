@@ -79,11 +79,15 @@ declare module '@/components/ui/select' {
 }
 
 declare module '@/components/ui/textarea' {
-  export * from '@/components/ui/textarea'
+  import * as React from 'react'
+  export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+  export const Textarea: React.ForwardRefExoticComponent<TextareaProps>
 }
 
 declare module '@/components/ui/radio-group' {
-  export * from '@/components/ui/radio-group'
+  import * as React from 'react'
+  export const RadioGroup: React.ForwardRefExoticComponent<any>
+  export const RadioGroupItem: React.ForwardRefExoticComponent<any>
 }
 
 declare module '@/components/ui/switch' {
