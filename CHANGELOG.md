@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-03-10
+
+### Changed
+- Package scope migrated from `@arftech/arf-ui-kit` to `@hascanb/arf-ui-kit` for publish ownership alignment.
+- Release pipeline standardized to run validation first (`workflow_dispatch` with `publish=false`) and publish only on explicit release or `publish=true`.
+
+### Verified
+- GitHub Actions publish workflow passes with Playwright browser installation and green test/build/package checks.
+- npm distribution confirmed under the new scope.
+
+---
+
 ## [1.0.0] - 2026-03-10
 
 ### Added - First Stable Public Release

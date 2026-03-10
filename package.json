@@ -1,6 +1,6 @@
 {
   "name": "@hascanb/arf-ui-kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Production-ready React UI Kit with Auth, Layout, DataTable, Form, and Errors modules",
   "private": false,
   "sideEffects": false,
