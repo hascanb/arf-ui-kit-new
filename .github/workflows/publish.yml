@@ -25,7 +25,7 @@ jobs:
         run: |
           RELEASE_TAG="${{ github.event.release.tag_name }}"
           RELEASE_VERSION="${RELEASE_TAG#v}"
-          PACKAGE_VERSION="$(node -p \"require('./package.json').version\")"
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
 
           echo "Release tag: ${RELEASE_TAG}"
           echo "Release version: ${RELEASE_VERSION}"
