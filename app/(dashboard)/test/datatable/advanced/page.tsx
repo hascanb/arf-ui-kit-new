@@ -11,8 +11,8 @@
  * - Empty states
  */
 
-import React from 'react'
-import { ColumnDef, Table as TanStackTable } from '@tanstack/react-table'
+import React, { Suspense } from 'react'
+import { ColumnDef, Table as TanStackTable, VisibilityState } from '@tanstack/react-table'
 import {
   DataTable,
   DataTableColumnHeader,
@@ -22,26 +22,34 @@ import {
   DataTableFacetedFilter,
   DataTableExcelActions,
   createSelectionColumn,
+  useDataTableSync,
 } from '@arftech/arfweb-shared-lib/datatable-kit'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Download, Trash2, RefreshCw } from 'lucide-react'
+import { Download, Trash2, RefreshCw, Pencil, Filter } from 'lucide-react'
 import { mockProducts, type Product } from '../data'
 import { toast } from 'sonner'
 
-export default function AdvancedDataTableTestPage() {
+function AdvancedDataTableContent() {
   const [data, setData] = React.useState<Product[]>(mockProducts)
   const [isLoading, setIsLoading] = React.useState(false)
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [table, setTable] = React.useState<TanStackTable<Product> | null>(null)
+  const [showFacetedFilters, setShowFacetedFilters] = React.useState(false)
+  const handleTableReady = React.useCallback((nextTable: TanStackTable<Product>) => {
+    // Keep latest table instance so toolbar/view-options always stays in sync.
+    setTable(nextTable)
+  }, [])
+  const sync = useDataTableSync({
+    defaultPagination: { pageIndex: 0, pageSize: 10 },
+  })
 
   // Faceted filter options
   const categoryOptions = [
-    { label: 'Laptop', value: 'Laptop' },
-    { label: 'Smartphone', value: 'Smartphone' },
-    { label: 'Tablet', value: 'Tablet' },
-    { label: 'Accessory', value: 'Accessory' },
+    { label: 'Electronics', value: 'Electronics' },
+    { label: 'Accessories', value: 'Accessories' },
   ]
 
   const statusOptions = [
@@ -56,6 +64,8 @@ export default function AdvancedDataTableTestPage() {
     { label: 'Dell', value: 'Dell' },
     { label: 'Sony', value: 'Sony' },
     { label: 'LG', value: 'LG' },
+    { label: 'Logitech', value: 'Logitech' },
+    { label: 'Keychron', value: 'Keychron' },
   ]
 
   // Simulate loading
@@ -90,110 +100,214 @@ export default function AdvancedDataTableTestPage() {
   }
 
   // Column definitions with sticky first/last columns
-  const columns: ColumnDef<Product>[] = [
-    createSelectionColumn<Product>(),
-    {
-      accessorKey: 'id',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Product ID" />
-      ),
-      cell: ({ row }) => (
-        <div className="font-mono text-xs">{row.getValue('id')}</div>
-      ),
-    },
-    {
-      accessorKey: 'name',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Product Name" />
-      ),
-      cell: ({ row }) => (
-        <div className="font-medium min-w-[200px]">{row.getValue('name')}</div>
-      ),
-    },
-    {
-      accessorKey: 'category',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Category" />
-      ),
-    },
-    {
-      accessorKey: 'brand',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Brand" />
-      ),
-    },
-    {
-      accessorKey: 'price',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Price" />
-      ),
-      cell: ({ row }) => {
-        const price = row.getValue('price') as number
-        return (
-          <div className="font-semibold">
-            {new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'USD',
-            }).format(price)}
-          </div>
-        )
+  const columns: ColumnDef<Product>[] = React.useMemo(
+    () => [
+      createSelectionColumn<Product>(),
+      {
+        accessorKey: 'id',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Product ID" />
+        ),
+        cell: ({ row }) => (
+          <div className="font-mono text-xs">{row.getValue('id')}</div>
+        ),
       },
-    },
-    {
-      accessorKey: 'stock',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Stock" />
-      ),
-      cell: ({ row }) => {
-        const stock = row.getValue('stock') as number
-        return (
-          <div className={stock === 0 ? 'text-red-600' : stock < 10 ? 'text-orange-600' : ''}>
-            {stock} units
-          </div>
-        )
+      {
+        accessorKey: 'name',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Product Name" />
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium min-w-[200px]">{row.getValue('name')}</div>
+        ),
       },
-    },
-    {
-      accessorKey: 'status',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
-      ),
-      cell: ({ row }) => {
-        const status = row.getValue('status') as string
-        return (
-          <Badge
-            variant={
-              status === 'In Stock'
-                ? 'default'
-                : status === 'Low Stock'
-                ? 'outline'
-                : 'destructive'
-            }
-          >
-            {status}
-          </Badge>
-        )
+      {
+        accessorKey: 'category',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Category" />
+        ),
       },
-    },
-    {
-      accessorKey: 'rating',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Rating" />
-      ),
-      cell: ({ row }) => {
-        const rating = row.getValue('rating') as number
-        return (
-          <div className="flex items-center gap-1">
-            <span className="text-yellow-500">★</span>
-            <span>{rating.toFixed(1)}</span>
-          </div>
-        )
+      {
+        accessorKey: 'brand',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Brand" />
+        ),
       },
-    },
-  ]
+      {
+        accessorKey: 'price',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Price" />
+        ),
+        cell: ({ row }) => {
+          const price = row.getValue('price') as number
+          return (
+            <div className="font-semibold">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              }).format(price)}
+            </div>
+          )
+        },
+      },
+      {
+        accessorKey: 'stock',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Stock" />
+        ),
+        cell: ({ row }) => {
+          const stock = row.getValue('stock') as number
+          return (
+            <div className={stock === 0 ? 'text-red-600' : stock < 10 ? 'text-orange-600' : ''}>
+              {stock} units
+            </div>
+          )
+        },
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Status" />
+        ),
+        cell: ({ row }) => {
+          const status = row.getValue('status') as string
+          return (
+            <Badge
+              variant={
+                status === 'In Stock'
+                  ? 'default'
+                  : status === 'Low Stock'
+                  ? 'outline'
+                  : 'destructive'
+              }
+            >
+              {status}
+            </Badge>
+          )
+        },
+      },
+      {
+        accessorKey: 'rating',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Rating" />
+        ),
+        cell: ({ row }) => {
+          const rating = row.getValue('rating') as number
+          return (
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-500">★</span>
+              <span>{rating.toFixed(1)}</span>
+            </div>
+          )
+        },
+      },
+      {
+        id: 'sku',
+        accessorFn: (row) => `SKU-${row.id}`,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="SKU" />
+        ),
+        cell: ({ row }) => <span className="font-mono text-xs">{row.getValue('sku') as string}</span>,
+      },
+      {
+        id: 'warehouse',
+        accessorFn: (row) => (row.category === 'Electronics' ? 'A-Depot' : 'B-Depot'),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Warehouse" />
+        ),
+      },
+      {
+        id: 'supplier',
+        accessorFn: (row) => `${row.brand} Supply`,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Supplier" />
+        ),
+        cell: ({ row }) => <span className="min-w-[150px] inline-block">{row.getValue('supplier') as string}</span>,
+      },
+      {
+        id: 'discountRate',
+        accessorFn: (row) => (row.status === 'Out of Stock' ? 0 : row.stock < 10 ? 15 : 5),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Discount %" />
+        ),
+        cell: ({ row }) => <span>{row.getValue('discountRate') as number}%</span>,
+      },
+      {
+        id: 'sales30d',
+        accessorFn: (row) => Math.max(0, Math.round((row.rating * 20) + row.stock / 2)),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Sales (30d)" />
+        ),
+      },
+      {
+        id: 'restockDate',
+        accessorFn: (row) => {
+          const day = (row.stock % 9) + 10
+          return `2026-04-${String(day).padStart(2, '0')}`
+        },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Restock Date" />
+        ),
+      },
+      {
+        id: 'priority',
+        accessorFn: (row) => {
+          if (row.status === 'Out of Stock') return 'High'
+          if (row.status === 'Low Stock') return 'Medium'
+          return 'Low'
+        },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Priority" />
+        ),
+      },
+    ],
+    []
+  )
+
+  const renderRowActions = React.useCallback((row: Product) => (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+          event.stopPropagation()
+          toast.info(`Edit: ${row.name}`)
+        }}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+          event.stopPropagation()
+          toast.error(`Deleted: ${row.name}`)
+        }}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  ), [])
+
+  const renderSubComponent = React.useCallback((row: Product) => (
+    <div className="grid gap-2 p-2 text-sm md:grid-cols-3">
+      <div>
+        <p className="text-muted-foreground">Product</p>
+        <p className="font-medium">{row.name}</p>
+      </div>
+      <div>
+        <p className="text-muted-foreground">Brand / Category</p>
+        <p className="font-medium">{row.brand} / {row.category}</p>
+      </div>
+      <div>
+        <p className="text-muted-foreground">Stock</p>
+        <p className="font-medium">{row.stock} units</p>
+      </div>
+    </div>
+  ), [])
 
   return (
-    <div className="container mx-auto py-10 space-y-8">
+    <div className="container mx-auto py-10 space-y-8 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Advanced DataTable Test</h1>
@@ -224,22 +338,36 @@ export default function AdvancedDataTableTestPage() {
                   searchKey="name"
                   searchPlaceholder="Search products..."
                 >
-                  {/* Faceted Filters */}
-                  <DataTableFacetedFilter
-                    column={table.getColumn('category')}
-                    title="Category"
-                    options={categoryOptions}
-                  />
-                  <DataTableFacetedFilter
-                    column={table.getColumn('status')}
-                    title="Status"
-                    options={statusOptions}
-                  />
-                  <DataTableFacetedFilter
-                    column={table.getColumn('brand')}
-                    title="Brand"
-                    options={brandOptions}
-                  />
+                  <Button
+                    type="button"
+                    variant={showFacetedFilters ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8"
+                    onClick={() => setShowFacetedFilters((prev) => !prev)}
+                  >
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filters
+                  </Button>
+
+                  {showFacetedFilters && (
+                    <>
+                      <DataTableFacetedFilter
+                        column={table.getColumn('category')}
+                        title="Category"
+                        options={categoryOptions}
+                      />
+                      <DataTableFacetedFilter
+                        column={table.getColumn('status')}
+                        title="Status"
+                        options={statusOptions}
+                      />
+                      <DataTableFacetedFilter
+                        column={table.getColumn('brand')}
+                        title="Brand"
+                        options={brandOptions}
+                      />
+                    </>
+                  )}
                 </DataTableToolbar>
               </div>
               
@@ -260,26 +388,44 @@ export default function AdvancedDataTableTestPage() {
             columns={columns}
             // Pagination
             enablePagination
+            pagination={sync.pagination}
+            onPaginationChange={sync.onPaginationChange}
             // Sorting
             enableSorting
             enableMultiSort
+            sorting={sync.sorting}
+            onSortingChange={sync.onSortingChange}
             // Filtering
             enableGlobalFilter
+            columnFilters={sync.columnFilters}
+            onColumnFiltersChange={sync.onColumnFiltersChange}
             // Selection
             enableRowSelection
             enableMultiRowSelection
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
+            // Column visibility (controlled to keep View dropdown in sync)
+            enableColumnVisibility
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
             // Layout
             enableHorizontalScroll
+            tableClassName="min-w-[2200px]"
+            virtualized
+            tableHeight={460}
+            estimateRowHeight={54}
             stickyFirstColumn
             stickyLastColumn
+            // Advanced rows
+            renderRowActions={renderRowActions}
+            renderSubComponent={renderSubComponent}
+            expandOnRowClick
             // States
             isLoading={isLoading}
             loadingMessage="Loading products..."
             emptyMessage="No products found. Try adjusting your filters."
             // Expose table instance
-            onTableReady={setTable}
+            onTableReady={handleTableReady}
           />
 
           {/* Pagination */}
@@ -300,7 +446,10 @@ export default function AdvancedDataTableTestPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const selected = data.filter((_, i) => rowSelection[i])
+                  const selected = table
+                    .getFilteredSelectedRowModel()
+                    .rows
+                    .map((row) => row.original)
                   handleBulkExport(selected)
                 }}
               >
@@ -344,6 +493,14 @@ export default function AdvancedDataTableTestPage() {
               <span>Perform actions on selected rows</span>
             </div>
             <div className="flex items-center gap-2">
+              <Badge variant="outline">Virtualized</Badge>
+              <span>Only visible rows are rendered</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">URL Sync</Badge>
+              <span>Pagination, sorting and filters are synced to query params</span>
+            </div>
+            <div className="flex items-center gap-2">
               <Badge variant="outline">Loading States</Badge>
               <span>Graceful loading animations</span>
             </div>
@@ -355,5 +512,13 @@ export default function AdvancedDataTableTestPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function AdvancedDataTableTestPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">Loading table...</div>}>
+      <AdvancedDataTableContent />
+    </Suspense>
   )
 }

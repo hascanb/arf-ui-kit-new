@@ -6,7 +6,7 @@
  * TanStack Table tabanlı, feature-rich veri tablosu bileşeni
  */
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -15,9 +15,12 @@ import {
   getFilteredRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
+  getExpandedRowModel,
   flexRender,
   type ColumnDef,
+  type ExpandedState,
 } from '@tanstack/react-table'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   Table,
   TableBody,
@@ -26,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import type { DataTableProps } from '../types'
 
 export function DataTable<TData>({
@@ -68,8 +71,17 @@ export function DataTable<TData>({
   
   // Layout
   enableHorizontalScroll = true,
+  virtualized = false,
+  tableHeight = 480,
+  estimateRowHeight = 52,
+  overscan = 8,
   stickyFirstColumn = false,
   stickyLastColumn = false,
+
+  // Advanced rows
+  renderRowActions,
+  renderSubComponent,
+  expandOnRowClick = false,
   
   // Styling
   className,
@@ -99,6 +111,9 @@ export function DataTable<TData>({
   const [internalColumnFilters, setInternalColumnFilters] = React.useState<any[]>([])
   const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<Record<string, boolean>>({})
   const [internalRowSelection, setInternalRowSelection] = React.useState<Record<string, boolean>>({})
+  const [internalExpanded, setInternalExpanded] = React.useState<ExpandedState>({})
+
+  const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Use controlled or internal state
   const paginationState = pagination ?? internalPagination
@@ -108,10 +123,25 @@ export function DataTable<TData>({
   const columnVisibilityState = columnVisibility ?? internalColumnVisibility
   const rowSelectionState = rowSelection ?? internalRowSelection
 
+  const computedColumns = useMemo<ColumnDef<TData, any>[]>(() => {
+    if (!renderRowActions) {
+      return columns as ColumnDef<TData, any>[]
+    }
+
+    return [
+      ...(columns as ColumnDef<TData, any>[]),
+      {
+        id: '__inline_actions__',
+        header: 'Actions',
+        cell: ({ row }) => renderRowActions(row.original),
+      },
+    ]
+  }, [columns, renderRowActions])
+
   // TanStack Table instance
   const table = useReactTable<TData>({
     data,
-    columns: columns as ColumnDef<TData, any>[],
+    columns: computedColumns,
     
     // Core
     getCoreRowModel: getCoreRowModel(),
@@ -138,6 +168,12 @@ export function DataTable<TData>({
       manualFiltering,
       globalFilterFn: 'includesString',
     }),
+
+    ...(renderSubComponent && {
+      getExpandedRowModel: getExpandedRowModel(),
+      enableExpanding: true,
+      getRowCanExpand: () => true,
+    }),
     
     // State
     state: {
@@ -147,6 +183,7 @@ export function DataTable<TData>({
       columnFilters: columnFiltersState,
       ...(enableColumnVisibility && { columnVisibility: columnVisibilityState }),
       ...(enableRowSelection && { rowSelection: rowSelectionState }),
+      ...(renderSubComponent && { expanded: internalExpanded }),
     },
     
     // State updaters
@@ -156,6 +193,7 @@ export function DataTable<TData>({
     onColumnFiltersChange: onColumnFiltersChange ?? setInternalColumnFilters,
     onColumnVisibilityChange: onColumnVisibilityChange ?? setInternalColumnVisibility,
     onRowSelectionChange: onRowSelectionChange ?? setInternalRowSelection,
+    ...(renderSubComponent && { onExpandedChange: setInternalExpanded }),
     
     // Row selection config
     enableRowSelection,
@@ -168,6 +206,64 @@ export function DataTable<TData>({
       onTableReady(table as any)
     }
   }, [table, onTableReady])
+
+  const rows = table.getRowModel().rows
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => estimateRowHeight,
+    overscan,
+  })
+
+  const virtualRows = virtualized ? rowVirtualizer.getVirtualItems() : []
+  const totalVirtualSize = virtualized ? rowVirtualizer.getTotalSize() : 0
+  const paddingTop = virtualized && virtualRows.length > 0 ? virtualRows[0].start : 0
+  const paddingBottom =
+    virtualized && virtualRows.length > 0
+      ? totalVirtualSize - virtualRows[virtualRows.length - 1].end
+      : 0
+
+  const hasInteractiveRow = !!onRowClick || !!onRowDoubleClick || (expandOnRowClick && !!renderSubComponent)
+
+  const renderMainRow = (row: any) => (
+    <React.Fragment key={row.id}>
+      <TableRow
+        data-state={row.getIsSelected() && 'selected'}
+        onClick={() => {
+          if (renderSubComponent && expandOnRowClick) {
+            row.toggleExpanded()
+          }
+          onRowClick?.(row.original)
+        }}
+        onDoubleClick={() => onRowDoubleClick?.(row.original)}
+        className={hasInteractiveRow ? 'cursor-pointer' : undefined}
+      >
+        {row.getVisibleCells().map((cell: any, index: number) => (
+          <TableCell
+            key={cell.id}
+            className={
+              stickyFirstColumn && index === 0
+                ? 'sticky left-0 z-10 bg-background'
+                : stickyLastColumn && index === row.getVisibleCells().length - 1
+                ? 'sticky right-0 z-10 bg-background'
+                : undefined
+            }
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+
+      {renderSubComponent && row.getIsExpanded() && (
+        <TableRow>
+          <TableCell colSpan={row.getVisibleCells().length} className="bg-muted/40">
+            {renderSubComponent(row.original)}
+          </TableCell>
+        </TableRow>
+      )}
+    </React.Fragment>
+  )
 
   // Table content
   const tableContent = (
@@ -200,38 +296,36 @@ export function DataTable<TData>({
       <TableBody>
         {isLoading ? (
           <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
+            <TableCell colSpan={computedColumns.length} className="h-24 text-center">
               {loadingMessage}
             </TableCell>
           </TableRow>
-        ) : table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              data-state={row.getIsSelected() && 'selected'}
-              onClick={() => onRowClick?.(row.original)}
-              onDoubleClick={() => onRowDoubleClick?.(row.original)}
-              className={onRowClick || onRowDoubleClick ? 'cursor-pointer' : undefined}
-            >
-              {row.getVisibleCells().map((cell, index) => (
-                <TableCell
-                  key={cell.id}
-                  className={
-                    stickyFirstColumn && index === 0
-                      ? 'sticky left-0 z-10 bg-background'
-                      : stickyLastColumn && index === row.getVisibleCells().length - 1
-                      ? 'sticky right-0 z-10 bg-background'
-                      : undefined
-                  }
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
+        ) : rows?.length ? (
+          virtualized ? (
+            <>
+              {paddingTop > 0 && (
+                <TableRow>
+                  <TableCell colSpan={computedColumns.length} style={{ height: `${paddingTop}px` }} />
+                </TableRow>
+              )}
+
+              {virtualRows.map((virtualRow) => {
+                const row = rows[virtualRow.index]
+                return row ? renderMainRow(row) : null
+              })}
+
+              {paddingBottom > 0 && (
+                <TableRow>
+                  <TableCell colSpan={computedColumns.length} style={{ height: `${paddingBottom}px` }} />
+                </TableRow>
+              )}
+            </>
+          ) : (
+            rows.map((row) => renderMainRow(row))
+          )
         ) : (
           <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
+            <TableCell colSpan={computedColumns.length} className="h-24 text-center">
               {emptyMessage}
             </TableCell>
           </TableRow>
@@ -244,10 +338,15 @@ export function DataTable<TData>({
     <div className={className}>
       {enableHorizontalScroll ? (
         <ScrollArea className="rounded-md border">
-          <div className="relative">{tableContent}</div>
+          <div className="relative min-w-max" ref={virtualized ? tableContainerRef : undefined} style={virtualized ? { maxHeight: tableHeight, overflowY: 'auto' } : undefined}>
+            {tableContent}
+          </div>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       ) : (
-        <div className="rounded-md border">{tableContent}</div>
+        <div className="rounded-md border" ref={virtualized ? tableContainerRef : undefined} style={virtualized ? { maxHeight: tableHeight, overflowY: 'auto' } : undefined}>
+          {tableContent}
+        </div>
       )}
     </div>
   )

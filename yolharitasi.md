@@ -19,6 +19,7 @@
 
 **Sonraki Adım:**
 - 🚀 Phase 6: NPM Publish & Release
+- 🧭 Phase 7: Advanced UX Kits (Form/DataTable/Layout/Feedback/File)
 
 **Son Commitler:**
 - `53af329` - feat(errors-kit): implement Phase 4 - centralized error handling (10 Mart 2026)
@@ -609,6 +610,42 @@ Time: 859ms
 - Example project runs
 - CI/CD green
 - Documentation live
+
+---
+
+### Faz 7: Advanced UX & Productivity (Yeni - Q2 2026)
+
+**Hedef:** Uzun formlar, büyük tablolar ve hata/geri bildirim akışları için enterprise-ready deneyim
+
+**Sprint A (Form-Kit Advanced):**
+1. ✅ WizardForm (adım bazlı schema doğrulama + progress)
+2. ✅ Field Array desteği (`type: 'array'`, ekle/sil)
+3. ✅ Dynamic Fields (`condition` / `requiredWhen`)
+4. ✅ AutoSave & Draft (`useAutoSave`, debounce + localStorage)
+
+**Sprint B (DataTable Advanced):**
+1. ✅ useDataTableSync (App Router query sync)
+2. ✅ Virtualized body (`@tanstack/react-virtual`)
+3. ✅ Inline row actions
+4. ✅ Expandable row details (`renderSubComponent`)
+
+**Sprint C (Layout/Error/Feedback):**
+1. ✅ Nested Sidebar (recursive menu)
+2. ✅ Collapsible sidebar davranış iyileştirmeleri
+3. ✅ Feedback-Kit (global toast merkezi)
+4. ✅ GlobalErrorBoundary (Retry + Home recovery)
+
+**Sprint D (Media/File):**
+1. ✅ File-Kit başlangıcı (`FileUploader`)
+2. ✅ Drag & Drop + thumbnail preview
+3. ✅ Zod tabanlı dosya doğrulama
+4. ✅ RHF `Controller` uyumu
+
+**Demo & Kabul Kriterleri:**
+- ✅ `app/(dashboard)/test/form` içinde wizard + array + dynamic + autosave örnekleri
+- ✅ `app/(dashboard)/test/datatable/advanced` içinde virtual + inline action + expandable row örnekleri
+- ✅ `app/(dashboard)/test/errors` içinde feedback + boundary recovery gösterimi
+- ✅ `app/(dashboard)/test/file-uploader` içinde uploader demo
 
 ---
 

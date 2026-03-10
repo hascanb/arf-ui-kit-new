@@ -13,6 +13,7 @@ import { FieldRenderer } from './FieldRenderer'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { useWatch } from 'react-hook-form'
 
 /**
  * Get grid column span class
@@ -116,6 +117,9 @@ export function SchemaForm<TSchema extends z.ZodType<any, any, any>>({
     onError,
   })
 
+  const watchedValues = useWatch({ control: form.control }) as Record<string, any>
+  const visibleFields = fields.filter((field) => !field.condition || field.condition(watchedValues || {}))
+
   const {
     columns = 1,
     gap = 'default',
@@ -150,7 +154,7 @@ export function SchemaForm<TSchema extends z.ZodType<any, any, any>>({
           columns === 12 && 'grid-cols-12'
         )}
       >
-        {fields.map((field) => (
+        {visibleFields.map((field) => (
           <div
             key={field.name}
             className={cn(
@@ -163,6 +167,7 @@ export function SchemaForm<TSchema extends z.ZodType<any, any, any>>({
             <FieldRenderer
               config={field}
               control={form.control}
+              watchValues={watchedValues}
               showDescription={showDescriptions}
               showRequired={showRequired}
             />

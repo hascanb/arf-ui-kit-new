@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, ChevronsUpDown, LogOut, User, Bell, Settings } from "lucide-react"
+import { ChevronRight, ChevronsUpDown, LogOut, User, Settings } from "lucide-react"
 
 import {
   Sidebar,
@@ -21,6 +21,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
 import {
   Collapsible,
   CollapsibleContent,
@@ -50,9 +51,47 @@ export function AppSidebar({ brand, user, navGroups, onLogout }: AppSidebarProps
     return pathname.startsWith(url)
   }
 
-  const isSubActive = (items?: NavSubItem[]) => {
+  const isSubActive = (items?: NavSubItem[]): boolean => {
     if (!items) return false
-    return items.some((item) => pathname.startsWith(item.url))
+    return items.some((item) => isActive(item.url) || isSubActive(item.items))
+  }
+
+  const renderSubItems = (items: NavSubItem[], level = 0) => {
+    return (
+      <SidebarMenuSub className={cn("mr-0 pr-0", level > 0 && "ml-3")}>
+        {items.map((subItem) => {
+          const hasNested = !!subItem.items?.length
+
+          if (!hasNested) {
+            return (
+              <SidebarMenuSubItem key={`${subItem.title}-${subItem.url}`}>
+                <SidebarMenuSubButton asChild isActive={isActive(subItem.url)} className="h-8 rounded-md">
+                  <Link href={subItem.url}>
+                    <span>{subItem.title}</span>
+                    {subItem.badge && <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px] font-semibold">{subItem.badge}</Badge>}
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            )
+          }
+
+          return (
+            <Collapsible key={`${subItem.title}-${level}`} asChild defaultOpen={isSubActive(subItem.items)} className="group/collapsible-sub">
+              <SidebarMenuSubItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuSubButton className="h-8 rounded-md">
+                    <span>{subItem.title}</span>
+                    {subItem.badge && <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px] font-semibold">{subItem.badge}</Badge>}
+                    <ChevronRight className="ml-2 size-3 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible-sub:rotate-90" />
+                  </SidebarMenuSubButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>{renderSubItems(subItem.items || [], level + 1)}</CollapsibleContent>
+              </SidebarMenuSubItem>
+            </Collapsible>
+          )
+        })}
+      </SidebarMenuSub>
+    )
   }
 
   return (
@@ -103,17 +142,7 @@ export function AppSidebar({ brand, user, navGroups, onLogout }: AppSidebarProps
                             </SidebarMenuButton>
                           </CollapsibleTrigger>
                           <CollapsibleContent>
-                            <SidebarMenuSub className="mr-0 pr-0">
-                              {item.items!.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild isActive={pathname === subItem.url} className="h-8 rounded-md">
-                                    <Link href={subItem.url}>
-                                      <span>{subItem.title}</span>
-                                    </Link>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
+                            {renderSubItems(item.items || [])}
                           </CollapsibleContent>
                         </SidebarMenuItem>
                       </Collapsible>

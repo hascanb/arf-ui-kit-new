@@ -22,6 +22,7 @@
 
 export { SchemaForm } from './components/SchemaForm'
 export { FieldRenderer } from './components/FieldRenderer'
+export { WizardForm } from './components/WizardForm'
 
 // ============================================================================
 // Context & Provider
@@ -34,6 +35,7 @@ export { FormKitProvider, useFormKit } from './context/FormKitProvider'
 // ============================================================================
 
 export { useSchemaForm } from './hooks/useSchemaForm'
+export { useAutoSave } from './hooks/useAutoSave'
 export type { UseSchemaFormOptions } from './hooks/useSchemaForm'
 
 // ============================================================================
@@ -76,6 +78,7 @@ export type {
   RadioFieldConfig,
   DateFieldConfig,
   FileFieldConfig,
+  ArrayFieldConfig,
   CustomFieldConfig,
   FieldConfig,
   
@@ -91,6 +94,12 @@ export type {
   
   // Hook types
   UseSchemaFormReturn,
+  WizardStepConfig,
+  WizardFormConfig,
+  WizardFormProps,
+  AutoSaveMode,
+  UseAutoSaveOptions,
+  UseAutoSaveReturn,
   
   // Provider types
   FormKitConfig,
@@ -115,8 +124,10 @@ export const SUPPORTED_FIELD_TYPES = [
   'select',
   'checkbox',
   'radio',
+  'combobox',
   'date',
   'file',
+  'array',
   'custom',
 ] as const
 

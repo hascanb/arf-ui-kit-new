@@ -10,6 +10,7 @@ import { useErrorsKitContext } from './ErrorsKitProvider'
 import { createErrorHandler } from '../handler/createErrorHandler'
 import { ErrorHandler } from './types'
 import { useMemo } from 'react'
+import { toast } from 'sonner'
 
 /**
  * Hook to access error handler
@@ -49,8 +50,20 @@ export function useErrorHandler(): ErrorHandler {
   const defaultHandler = useMemo(
     () =>
       createErrorHandler({
-        onToast: (message) => {
-          console.error('[ERROR]', message)
+        onToast: (message, level) => {
+          if (level === 'critical') {
+            toast.error(message)
+            return
+          }
+          if (level === 'high') {
+            toast.error(message)
+            return
+          }
+          if (level === 'medium') {
+            toast.warning(message)
+            return
+          }
+          toast.info(message)
         },
       }),
     []

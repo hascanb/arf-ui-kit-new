@@ -37,6 +37,8 @@ export interface AppHeaderProps {
 export interface NavSubItem {
   title: string
   url: string
+  badge?: string
+  items?: NavSubItem[]
 }
 
 /**

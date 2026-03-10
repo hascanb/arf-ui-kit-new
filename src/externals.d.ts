@@ -249,6 +249,10 @@ declare module '@/components/ui/toaster' {
   export { Toaster } from '@/components/ui/toaster'
 }
 
+declare module '@/components/ui/progress' {
+  export { Progress } from '@/components/ui/progress'
+}
+
 declare module '@/components/ui/sonner' {
   export { Toaster } from '@/components/ui/sonner'
 }

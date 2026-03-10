@@ -60,6 +60,8 @@ export interface DataTableProps<TData = unknown> {
   // Custom Actions
   renderRowActions?: (row: any) => React.ReactNode
   renderBulkActions?: (selectedRows: any[]) => React.ReactNode
+  renderSubComponent?: (row: any) => React.ReactNode
+  expandOnRowClick?: boolean
   
   // Toolbar
   showToolbar?: boolean
@@ -70,6 +72,10 @@ export interface DataTableProps<TData = unknown> {
   
   // Table Layout
   enableHorizontalScroll?: boolean
+  virtualized?: boolean
+  tableHeight?: number
+  estimateRowHeight?: number
+  overscan?: number
   stickyFirstColumn?: boolean
   stickyLastColumn?: boolean
   enableColumnResizing?: boolean

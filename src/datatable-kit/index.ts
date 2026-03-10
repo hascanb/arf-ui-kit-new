@@ -35,6 +35,7 @@ export {
 
 // Hooks
 export { useTableUrlState } from './hooks/useTableUrlState'
+export { useDataTableSync } from './hooks/useDataTableSync'
 
 // Types
 export type {
@@ -56,5 +57,9 @@ export type {
   TableUrlStateOptions,
   TableUrlState,
 } from './hooks/useTableUrlState'
+export type {
+  DataTableSyncOptions,
+  DataTableSyncState,
+} from './hooks/useDataTableSync'
 
 export const DATATABLE_KIT_VERSION = '0.2.0'

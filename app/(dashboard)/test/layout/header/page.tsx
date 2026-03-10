@@ -3,10 +3,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { AppHeader } from "@arftech/arfweb-shared-lib/layout-kit/components/AppHeader"
 
 export default function HeaderVariantsTestPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Header Variants Test</h1>
         <p className="text-muted-foreground">
@@ -191,12 +192,32 @@ interface AppHeaderProps {
               Header <code className="bg-muted px-1 py-0.5 rounded">position: sticky</code> özelliğine sahip.
               Sayfayı kaydırdığınızda header her zaman görünür kalır.
             </p>
-            <div className="h-[1000px] bg-linear-to-b from-muted to-background rounded-lg flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <p className="text-lg font-semibold">Scroll Demo Area</p>
+            <div className="h-[520px] overflow-y-auto rounded-lg border bg-background">
+              <AppHeader
+                breadcrumbs={[
+                  { label: "Test & Geliştirme", href: "/test/layout/dashboard" },
+                  { label: "Layout Kit Test", href: "/test/layout/header" },
+                  { label: "Sticky Header Demo" },
+                ]}
+                searchPlaceholder="Demo içinde ara..."
+                searchShortcut="⌘K"
+                notificationCount={3}
+                notificationsLabel="Bildirimler"
+              />
+
+              <div className="space-y-4 p-4">
                 <p className="text-sm text-muted-foreground">
-                  ↑ Yukarı baktığınızda header'ı görebilirsiniz ↑
+                  Bu alanı kaydırdığınızda üstteki header sabit kalır. Böylece sticky davranışı canlı olarak test edebilirsiniz.
                 </p>
+
+                {Array.from({ length: 16 }).map((_, index) => (
+                  <div key={index} className="rounded-lg border bg-muted/30 p-4">
+                    <h4 className="text-sm font-semibold">Demo İçerik Satırı {index + 1}</h4>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Sticky header doğrulaması için örnek kaydırma içeriği.
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

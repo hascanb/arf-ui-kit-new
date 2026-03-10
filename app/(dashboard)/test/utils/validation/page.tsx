@@ -29,7 +29,7 @@ export default function ValidationUtilsTestPage() {
   const strengthColors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-blue-500", "bg-green-500"]
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Validation Utils Test</h1>
         <p className="text-muted-foreground">

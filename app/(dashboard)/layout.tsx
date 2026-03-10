@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@arftech/arfweb-shared-lib/layout-kit/components/AppSidebar"
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
+import { usePathname } from "next/navigation"
 import {
   Home,
   Package,
@@ -13,6 +14,7 @@ import {
   Settings,
   Truck,
   TestTube2,
+  Bell,
   LogIn,
   KeyRound,
   ShieldCheck,
@@ -125,6 +127,14 @@ const navGroups = [
         icon: KeyRound,
         items: [
           { title: "Form Examples", url: "/test/form" },
+          { title: "Advanced Form", url: "/test/form/advanced" },
+        ],
+      },
+      {
+        title: "File Kit Test",
+        icon: TestTube2,
+        items: [
+          { title: "File Uploader", url: "/test/file-uploader" },
         ],
       },
       {
@@ -132,6 +142,13 @@ const navGroups = [
         icon: TestTube2,
         items: [
           { title: "Error Handling", url: "/test/errors" },
+        ],
+      },
+      {
+        title: "Feedback Kit Test",
+        icon: Bell,
+        items: [
+          { title: "Feedback Playground", url: "/test/feedback" },
         ],
       },
       {
@@ -166,13 +183,19 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  const isTestPage = pathname.startsWith("/test")
+  const sidebarNavGroups = isTestPage
+    ? navGroups.filter((group) => group.label === "Test & Geliştirme")
+    : navGroups
+
   return (
     <SidebarProvider>
       {/* Kütüphaneden gelen Sidebar'a verileri Props olarak gönderiyoruz */}
       <AppSidebar 
         brand={brandData} 
         user={userData} 
-        navGroups={navGroups} 
+        navGroups={sidebarNavGroups} 
         onLogout={() => console.log("Çıkış yapıldı")}
       />
       <SidebarInset>{children}</SidebarInset>

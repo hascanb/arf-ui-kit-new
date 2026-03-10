@@ -1,12 +1,162 @@
 /**
- * Form-Kit Test Page
+ * Form-Kit Comprehensive Test & Documentation
  * 
- * Demonstrates all FormKit features:
- * - All field types
- * - Schema validation with Zod
- * - Cross-field validation
- * - Layout system
- * - Required fields
+ * Bu sayfa Form-Kit'in tüm özelliklerini kapsamlı şekilde test eder ve dokümante eder.
+ * Production kullanımı için referans noktasıdır.
+ * 
+ * @module FormKitTest
+ * @category Form-Kit
+ * 
+ * ## 📚 Form-Kit Nedir?
+ * 
+ * Form-Kit, schema-driven form generation için tasarlanmış production-ready bir çözümdür.
+ * React Hook Form ve Zod validation üzerine kurulmuş, TypeScript ile tam tip güvenli,
+ * özelleştirilebilir ve kullanımı kolay bir form sistemidir.
+ * 
+ * ## 🎯 Ana Özellikler
+ * 
+ * ### 1. Field Types (9 Tip)
+ * - **text**: Tek satır metin girişi
+ * - **email**: Email validation ile email girişi
+ * - **password**: Şifre girişi (show/hide toggle)
+ * - **number**: Sayısal değer girişi (min/max)
+ * - **textarea**: Çok satırlı metin (rows özelleştirilebilir)
+ * - **select**: Dropdown seçim (single)
+ * - **checkbox**: Boolean checkbox
+ * - **radio**: Radio button grubları
+ * - **date**: Tarih seçici (date picker)
+ * 
+ * ### 2. Validation System
+ * - **Zod Integration**: Type-safe schema validation
+ * - **Built-in Rules**: required, min, max, minLength, maxLength, pattern
+ * - **Custom Validation**: Zod refinements ile özel kurallar
+ * - **Cross-Field Validation**: Field'lar arası bağımlılık kontrolü
+ * - **Async Validation**: Server-side validation desteği
+ * - **Real-time Feedback**: onChange validasyonu
+ * 
+ * ### 3. Layout System
+ * - **12-Column Grid**: Flexbox tabanlı responsive grid
+ * - **Span Control**: Her field için span: 1-12
+ * - **Gap Control**: Row ve column gap özelleştirilebilir
+ * - **Responsive**: Breakpoint-aware layout
+ * 
+ * ### 4. Advanced Features
+ * - **Auto-save**: Otomatik form kaydetme (debounced)
+ * - **Wizard Forms**: Multi-step form support
+ * - **Conditional Fields**: Dynamic field visibility
+ * - **Custom Renderers**: Own field components
+ * - **Loading States**: Submit sırasında UI feedback
+ * - **Error Handling**: Comprehensive error messages
+ * 
+ * ## 📦 Import
+ * 
+ * ```tsx
+ * import {
+ *   SchemaForm,
+ *   FieldConfig,
+ *   buildSchema,
+ *   addRefinements,
+ *   useSchemaForm
+ * } from '@arftech/arfweb-shared-lib/form-kit'
+ * ```
+ * 
+ * ## 💡 Basic Usage
+ * 
+ * ```tsx
+ * const fields: FieldConfig[] = [
+ *   {
+ *     name: 'email',
+ *     type: 'email',
+ *     label: 'Email',
+ *     required: true
+ *   },
+ *   {
+ *     name: 'password',
+ *     type: 'password',
+ *     label: 'Password',
+ *     required: true,
+ *     minLength: 8
+ *   }
+ * ]
+ * 
+ * const schema = buildSchema(fields)
+ * 
+ * <SchemaForm
+ *   fields={fields}
+ *   schema={schema}
+ *   onSubmit={(data) => console.log(data)}
+ * />
+ * ```
+ * 
+ * ## 🎨 Layout Examples
+ * 
+ * ### Two-Column Layout
+ * ```tsx
+ * const fields = [
+ *   { name: 'firstName', label: 'First Name', layout: { span: 6 } },
+ *   { name: 'lastName', label: 'Last Name', layout: { span: 6 } }
+ * ]
+ * ```
+ * 
+ * ### Three-Column Layout
+ * ```tsx
+ * const fields = [
+ *   { name: 'field1', layout: { span: 4 } },
+ *   { name: 'field2', layout: { span: 4 } },
+ *   { name: 'field3', layout: { span: 4 } }
+ * ]
+ * ```
+ * 
+ * ## 🔧 Validation Patterns
+ * 
+ * ### Password Strength
+ * ```tsx
+ * const schema = buildSchema(fields)
+ * const refinedSchema = addRefinements(schema, [
+ *   createPasswordStrengthRefine('password', { minStrength: 3 })
+ * ])
+ * ```
+ * 
+ * ### Password Confirmation
+ * ```tsx
+ * const refinedSchema = addRefinements(schema, [
+ *   createPasswordConfirmRefine('password', 'confirmPassword')
+ * ])
+ * ```
+ * 
+ * ### Date Range
+ * ```tsx
+ * const refinedSchema = addRefinements(schema, [
+ *   createDateRangeRefine('startDate', 'endDate')
+ * ])
+ * ```
+ * 
+ * ## ♿ Accessibility
+ * 
+ * - ✅ ARIA Labels: Automatic label association
+ * - ✅ Error Announcements: Screen reader feedback
+ * - ✅ Keyboard Navigation: Full keyboard support
+ * - ✅ Focus Management: Proper focus handling
+ * - ✅ Required Indicators: Visual and semantic markers
+ * 
+ * ## 📱 Responsive Behavior
+ * 
+ * - Mobile (<640px): All fields full-width (span 12)
+ * - Tablet (640-1024px): Respects span values
+ * - Desktop (>1024px): Full grid system active
+ * 
+ * ## 🎯 Test Edilen Form Tipleri
+ * 
+ * Bu sayfada aşağıdaki form senaryoları test edilir:
+ * 
+ * 1. **Basic Registration**: Tüm field tipleri
+ * 2. **Password Form**: Password validation ve confirm
+ * 3. **Survey Form**: Select, radio, checkbox
+ * 4. **Date Range Form**: Date pickers ve range validation
+ * 5. **Complex Layout**: Advanced grid layouts
+ * 
+ * @see advanced - Wizard forms ve auto-save
+ * @see /src/form-kit - Source code and implementations
  */
 
 'use client'
@@ -298,7 +448,7 @@ export default function FormKitTestPage() {
   }
 
   return (
-    <div className="container py-8 space-y-8">
+    <div className="container py-8 space-y-8 px-4 sm:px-6 lg:px-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Form-Kit Test Sayfası</h1>
         <p className="text-muted-foreground mt-2">

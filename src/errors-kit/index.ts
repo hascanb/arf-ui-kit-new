@@ -13,6 +13,8 @@
 
 export { ErrorRenderer } from './components/ErrorRenderer'
 export type { ErrorRendererProps } from './components/ErrorRenderer'
+export { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
+export type { GlobalErrorBoundaryProps } from './components/GlobalErrorBoundary'
 
 // ============================================================================
 // Context & Provider

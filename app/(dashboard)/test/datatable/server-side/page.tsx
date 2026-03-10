@@ -218,7 +218,7 @@ export default function ServerSideDataTableTestPage() {
   ]
 
   return (
-    <div className="container mx-auto py-10 space-y-8">
+    <div className="container mx-auto py-10 space-y-8 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Server-Side DataTable Test</h1>

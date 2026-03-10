@@ -7,7 +7,7 @@ import { Facebook, Twitter, Instagram, Linkedin, Github, Mail } from "lucide-rea
 
 export default function FooterVariantsTestPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Footer Variants Test</h1>
         <p className="text-muted-foreground">

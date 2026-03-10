@@ -1,13 +1,136 @@
 'use client'
 
 /**
- * Basic DataTable Test Page
+ * DataTable-Kit Basic Features Test & Documentation
  * 
- * Temel DataTable özelliklerini test eder:
- * - Pagination
- * - Sorting
- * - Column visibility
- * - Global search
+ * Bu sayfa DataTable component'inin temel özelliklerini kapsamlı şekilde test eder
+ * ve dokümante eder. Production kullanımı için referans noktasıdır.
+ * 
+ * @module DataTableBasicTest
+ * @category DataTable-Kit
+ * 
+ * ## 📚 Test Edilen Özellikler
+ * 
+ * ### 1. Core Features
+ * - **Pagination**: Sayfa bazlı veri gösterimi (10, 20, 50, 100 kayıt/sayfa)
+ * - **Sorting**: Kolon başlıklarına tıklayarak sıralama (asc/desc)
+ * - **Global Search**: Tüm kolonlarda arama yapma
+ * - **Column Visibility**: Kolonları göster/gizle
+ * - **Row Selection**: Checkbox ile satır seçimi
+ * - **Row Actions**: Her satır için action menüsü
+ * 
+ * ### 2. Interaction Features
+ * - Row click events
+ * - Selection state management
+ * - Responsive design
+ * - Loading states
+ * - Empty states
+ * 
+ * ## 🎯 DataTable Nedir?
+ * 
+ * DataTable-Kit, TanStack Table (React Table v8) üzerine kurulmuş, production-ready
+ * bir data table çözümüdür. Shadcn/ui component library ile tam entegrasyon sunar.
+ * 
+ * ## 🔧 Key Features
+ * 
+ * - ✅ **Type-Safe**: Full TypeScript support
+ * - ✅ **Performant**: Virtualization ready, optimized rendering
+ * - ✅ **Flexible**: Customize everything from columns to cells
+ * - ✅ **Accessible**: WCAG 2.1 AA compliant
+ * - ✅ **Responsive**: Mobile-first design
+ * - ✅ **i18n Ready**: Localization support
+ * 
+ * ## 📦 Import
+ * 
+ * ```tsx
+ * import { 
+ *   DataTable, 
+ *   DataTableColumnHeader,
+ *   createSelectionColumn 
+ * } from '@arftech/arfweb-shared-lib/datatable-kit'
+ * ```
+ * 
+ * ## 💡 Basic Usage
+ * 
+ * ```tsx
+ * const columns: ColumnDef<User>[] = [
+ *   {
+ *     accessorKey: 'name',
+ *     header: 'Name',
+ *     cell: ({ row }) => row.getValue('name')
+ *   },
+ *   // ... more columns
+ * ]
+ * 
+ * <DataTable
+ *   data={users}
+ *   columns={columns}
+ *   enablePagination
+ *   enableSorting
+ *   enableGlobalFilter
+ * />
+ * ```
+ * 
+ * ## 🎨 Column Definition Patterns
+ * 
+ * ### Simple Column
+ * ```tsx
+ * {
+ *   accessorKey: 'email',
+ *   header: 'Email'
+ * }
+ * ```
+ * 
+ * ### Sortable Column
+ * ```tsx
+ * {
+ *   accessorKey: 'name',
+ *   header: ({ column }) => (
+ *     <DataTableColumnHeader column={column} title="Name" />
+ *   )
+ * }
+ * ```
+ * 
+ * ### Custom Cell Rendering
+ * ```tsx
+ * {
+ *   accessorKey: 'status',
+ *   cell: ({ row }) => (
+ *     <Badge variant={row.getValue('status') === 'Active' ? 'default' : 'secondary'}>
+ *       {row.getValue('status')}
+ *     </Badge>
+ *   )
+ * }
+ * ```
+ * 
+ * ### Action Column
+ * ```tsx
+ * {
+ *   id: 'actions',
+ *   cell: ({ row }) => (
+ *     <DropdownMenu>
+ *       <DropdownMenuTrigger asChild>
+ *         <Button variant="ghost">Actions</Button>
+ *       </DropdownMenuTrigger>
+ *       <DropdownMenuContent>
+ *         <DropdownMenuItem onClick={() => handleEdit(row.original)}>
+ *           Edit
+ *         </DropdownMenuItem>
+ *       </DropdownMenuContent>
+ *     </DropdownMenu>
+ *   )
+ * }
+ * ```
+ * 
+ * ## ⚠️ Important Notes
+ * 
+ * - Pagination zorunlu değil ancak yüksek performans için önerilir
+ * - Column keys (`accessorKey`) veri objesindeki property'lerle eşleşmeli
+ * - `createSelectionColumn()` her zaman ilk kolon olmalı
+ * - Actions column'ı genellikle son kolon olarak eklenir
+ * 
+ * @see advanced - Gelişmiş özellikler (filtering, excel export)
+ * @see server-side - Server-side pagination ve filtering
  */
 
 import React from 'react'
@@ -148,19 +271,35 @@ export default function BasicDataTableTestPage() {
   ]
 
   return (
-    <div className="container mx-auto py-10 space-y-8">
+    <div className="container mx-auto py-10 space-y-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Basic DataTable Test</h1>
+        <div className="flex items-center gap-2 mb-2">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => window.history.back()}
+          >
+            ← Back
+          </Button>
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">DataTable - Basic Features</h1>
         <p className="text-muted-foreground mt-2">
-          Temel özellikler: Pagination, Sorting, Search, Column Visibility
+          Core functionality: Pagination, Sorting, Search, Column Visibility, Row Selection
         </p>
+        <div className="flex items-center gap-2 mt-3">
+          <Badge variant="default">Basic Features</Badge>
+          <Badge variant="outline">Client-Side</Badge>
+          <Badge variant="outline">{mockUsers.length} Records</Badge>
+        </div>
       </div>
 
+      {/* Live Demo */}
       <Card>
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
+          <CardTitle>🎯 Interactive Demo</CardTitle>
           <CardDescription>
-            {mockUsers.length} users in the system
+            Test all basic features in action - {mockUsers.length} users loaded
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -178,42 +317,285 @@ export default function BasicDataTableTestPage() {
               console.log('Row clicked:', row.original)
             }}
           />
+          
+          {/* Selection Info */}
+          {Object.keys(selectedRows).length > 0 && (
+            <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm font-medium">
+                ✓ {Object.keys(selectedRows).length} rows selected
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Info Card */}
+      {/* Feature Guide */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>✨ Enabled Features</CardTitle>
+            <CardDescription>Click and interact with these features</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">1</Badge>
+                <div>
+                  <p className="text-sm font-medium">Pagination</p>
+                  <p className="text-xs text-muted-foreground">
+                    Bottom-right: Change page size (10/20/50/100) and navigate pages
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">2</Badge>
+                <div>
+                  <p className="text-sm font-medium">Sorting</p>
+                  <p className="text-xs text-muted-foreground">
+                    Click column headers - first click: ascending, second: descending, third: reset
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">3</Badge>
+                <div>
+                  <p className="text-sm font-medium">Global Search</p>
+                  <p className="text-xs text-muted-foreground">
+                    Top-left search box - searches across all visible columns
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">4</Badge>
+                <div>
+                  <p className="text-sm font-medium">Column Visibility</p>
+                  <p className="text-xs text-muted-foreground">
+                    Top-right &quot;Columns&quot; button - show/hide columns dynamically
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">5</Badge>
+                <div>
+                  <p className="text-sm font-medium">Row Selection</p>
+                  <p className="text-xs text-muted-foreground">
+                    Checkboxes - select multiple rows, header checkbox selects all
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">6</Badge>
+                <div>
+                  <p className="text-sm font-medium">Row Actions</p>
+                  <p className="text-xs text-muted-foreground">
+                    Action menu (•••) - contextual actions for each row
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>💡 Implementation Tips</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex items-start gap-2">
+              <Eye className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p>
+                <strong>Column Headers:</strong> Use <code className="text-xs bg-muted px-1 rounded">DataTableColumnHeader</code> for sortable columns
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Eye className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p>
+                <strong>Selection:</strong> Call <code className="text-xs bg-muted px-1 rounded">createSelectionColumn()</code> as first column
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Eye className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p>
+                <strong>Custom Cells:</strong> Use <code className="text-xs bg-muted px-1 rounded">cell</code> property for Badge, icons, formatting
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Eye className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p>
+                <strong>Type Safety:</strong> Define <code className="text-xs bg-muted px-1 rounded">ColumnDef&lt;YourType&gt;[]</code> for autocomplete
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Props Reference */}
       <Card>
         <CardHeader>
-          <CardTitle>Test Features</CardTitle>
+          <CardTitle>⚙️ Props Reference</CardTitle>
+          <CardDescription>
+            DataTable component props used in this example
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Pagination with page size selector</span>
+        <CardContent>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left p-3 font-semibold">Prop</th>
+                  <th className="text-left p-3 font-semibold">Type</th>
+                  <th className="text-left p-3 font-semibold">Default</th>
+                  <th className="text-left p-3 font-semibold">Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <tr>
+                  <td className="p-3 font-mono text-xs">data</td>
+                  <td className="p-3 font-mono text-xs">T[]</td>
+                  <td className="p-3">-</td>
+                  <td className="p-3 text-muted-foreground">Array of data objects</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">columns</td>
+                  <td className="p-3 font-mono text-xs">ColumnDef[]</td>
+                  <td className="p-3">-</td>
+                  <td className="p-3 text-muted-foreground">Column definitions</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">enablePagination</td>
+                  <td className="p-3 font-mono text-xs">boolean</td>
+                  <td className="p-3">false</td>
+                  <td className="p-3 text-muted-foreground">Enable pagination controls</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">enableSorting</td>
+                  <td className="p-3 font-mono text-xs">boolean</td>
+                  <td className="p-3">false</td>
+                  <td className="p-3 text-muted-foreground">Enable column sorting</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">enableGlobalFilter</td>
+                  <td className="p-3 font-mono text-xs">boolean</td>
+                  <td className="p-3">false</td>
+                  <td className="p-3 text-muted-foreground">Enable global search</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">enableColumnVisibility</td>
+                  <td className="p-3 font-mono text-xs">boolean</td>
+                  <td className="p-3">false</td>
+                  <td className="p-3 text-muted-foreground">Show column toggle</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">enableRowSelection</td>
+                  <td className="p-3 font-mono text-xs">boolean</td>
+                  <td className="p-3">false</td>
+                  <td className="p-3 text-muted-foreground">Enable row checkboxes</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-mono text-xs">onRowClick</td>
+                  <td className="p-3 font-mono text-xs">Function</td>
+                  <td className="p-3">-</td>
+                  <td className="p-3 text-muted-foreground">Row click handler</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Column sorting (click headers)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Global search filtering</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Column visibility toggle</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Row selection with checkboxes</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Row actions dropdown</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>✅</Badge>
-            <span>Custom cell rendering (badges, currency)</span>
+        </CardContent>
+      </Card>
+
+      {/* Code Example */}
+      <Card>
+        <CardHeader>
+          <CardTitle>💻 Code Example</CardTitle>
+          <CardDescription>
+            Complete implementation of this page
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <pre className="p-4 rounded-lg bg-muted text-xs overflow-x-auto">
+            <code>{`import { DataTable, DataTableColumnHeader, createSelectionColumn } from '@arftech/arfweb-shared-lib/datatable-kit'
+import { ColumnDef } from '@tanstack/react-table'
+
+type User = {
+  id: string
+  name: string
+  email: string
+  role: string
+  status: string
+}
+
+const columns: ColumnDef<User>[] = [
+  createSelectionColumn<User>(), // Checkbox column
+  {
+    accessorKey: 'name',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
+    cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>
+  },
+  {
+    accessorKey: 'email',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Email" />
+    )
+  },
+  {
+    accessorKey: 'status',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
+    cell: ({ row }) => (
+      <Badge variant={row.getValue('status') === 'Active' ? 'default' : 'secondary'}>
+        {row.getValue('status')}
+      </Badge>
+    )
+  }
+]
+
+export default function UsersPage() {
+  const [selectedRows, setSelectedRows] = useState({})
+  
+  return (
+    <DataTable
+      data={users}
+      columns={columns}
+      enablePagination
+      enableSorting
+      enableGlobalFilter
+      enableColumnVisibility
+      enableRowSelection
+      rowSelection={selectedRows}
+      onRowSelectionChange={setSelectedRows}
+      onRowClick={(row) => console.log('Clicked:', row.original)}
+    />
+  )
+}`}</code>
+          </pre>
+        </CardContent>
+      </Card>
+
+      {/* Related Pages */}
+      <Card className="border-primary/50">
+        <CardHeader>
+          <CardTitle>🔗 Related Examples</CardTitle>
+          <CardDescription>
+            Explore more DataTable features
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button variant="outline" asChild className="justify-start">
+              <a href="/test/datatable/advanced">
+                <Badge className="mr-2">Advanced</Badge>
+                Filtering, Faceted Filters, Excel Export
+              </a>
+            </Button>
+            <Button variant="outline" asChild className="justify-start">
+              <a href="/test/datatable/server-side">
+                <Badge className="mr-2">Server-Side</Badge>
+                Server Pagination & Filtering
+              </a>
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -360,8 +360,15 @@ export const nestedNavGroups: NavGroup[] = [
         title: 'Form Kit',
         icon: FileText,
         items: [
-          { title: 'Text Fields', url: '/modules/form/text' },
-          { title: 'Select Fields', url: '/modules/form/select' },
+          {
+            title: 'Field Types',
+            url: '/modules/form/fields',
+            items: [
+              { title: 'Text Fields', url: '/modules/form/text' },
+              { title: 'Select Fields', url: '/modules/form/select' },
+              { title: 'Array Fields', url: '/modules/form/array' },
+            ],
+          },
           { title: 'Validation', url: '/modules/form/validation' },
         ],
       },

@@ -24,3 +24,4 @@ playground/**/*.js.map
 agent/
 *storybook.log
 storybook-static
+repomix-output.xml

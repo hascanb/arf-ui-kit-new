@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useFieldArray } from 'react-hook-form'
 import { cn } from '@/lib/utils'
 import {
   FieldRendererProps,
@@ -18,6 +18,7 @@ import {
   RadioFieldConfig,
   DateFieldConfig,
   FileFieldConfig,
+  ArrayFieldConfig,
   CustomFieldConfig,
 } from '../context/types'
 import { Input } from '@/components/ui/input'
@@ -30,7 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react'
+import { CalendarIcon, Check, ChevronsUpDown, Plus, Trash2 } from 'lucide-react'
 
 /**
  * Format a date for display
@@ -519,6 +520,90 @@ function FileField({ config, control, showDescription, showRequired }: FieldRend
 }
 
 /**
+ * Render an array field (dynamic item list)
+ */
+function ArrayField({ config, control, showDescription, showRequired, watchValues }: FieldRendererProps) {
+  const fieldConfig = config as ArrayFieldConfig
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: fieldConfig.name,
+  })
+
+  const addLabel = fieldConfig.addButtonLabel || 'Yeni Ekle'
+  const removeLabel = fieldConfig.removeButtonLabel || 'Sil'
+  const canAdd = !fieldConfig.maxItems || fields.length < fieldConfig.maxItems
+
+  return (
+    <div className="space-y-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label>
+            {fieldConfig.label}
+            {showRequired && fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+          </Label>
+          {showDescription && fieldConfig.description && (
+            <p className="text-sm text-muted-foreground mt-1">{fieldConfig.description}</p>
+          )}
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={fieldConfig.disabled || !canAdd}
+          onClick={() => append(fieldConfig.defaultItem || {})}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {addLabel}
+        </Button>
+      </div>
+
+      {fields.length === 0 && (
+        <p className="text-sm text-muted-foreground">Henüz öğe eklenmedi.</p>
+      )}
+
+      <div className="space-y-4">
+        {fields.map((item, index) => (
+          <div key={item.id} className="space-y-3 rounded-md border bg-muted/20 p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">
+                {(fieldConfig.itemLabel || 'Öğe')} #{index + 1}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={fieldConfig.disabled || (fieldConfig.minItems ? fields.length <= fieldConfig.minItems : false)}
+                onClick={() => remove(index)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {removeLabel}
+              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {fieldConfig.fields.map((subField) => (
+                <FieldRenderer
+                  key={`${item.id}-${subField.name}`}
+                  config={{
+                    ...subField,
+                    name: `${fieldConfig.name}.${index}.${subField.name}`,
+                  }}
+                  control={control}
+                  watchValues={watchValues}
+                  showDescription={showDescription}
+                  showRequired={showRequired}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
  * Render a custom field
  */
 function CustomField({ config, control }: FieldRendererProps) {
@@ -548,42 +633,53 @@ function CustomField({ config, control }: FieldRendererProps) {
  * Automatically renders the appropriate field component based on field type.
  */
 export function FieldRenderer(props: FieldRendererProps) {
-  const { config } = props
+  const { config, watchValues } = props
+
+  if (config.condition && !config.condition(watchValues || {})) {
+    return null
+  }
+
+  const resolvedRequired = config.required || (config.requiredWhen ? config.requiredWhen(watchValues || {}) : false)
+  const resolvedConfig = resolvedRequired === config.required ? config : { ...config, required: resolvedRequired }
   
-  const fieldType = config.type
+  const fieldType = resolvedConfig.type
+  const nextProps = { ...props, config: resolvedConfig }
   
   switch (fieldType) {
     case 'text':
     case 'email':
     case 'password':
-      return <TextField {...props} />
+      return <TextField {...nextProps} />
     
     case 'number':
-      return <NumberField {...props} />
+      return <NumberField {...nextProps} />
     
     case 'textarea':
-      return <TextareaField {...props} />
+      return <TextareaField {...nextProps} />
     
     case 'select':
-      return <SelectField {...props} />
+      return <SelectField {...nextProps} />
     
     case 'combobox':
-      return <ComboboxField {...props} />
+      return <ComboboxField {...nextProps} />
     
     case 'checkbox':
-      return <CheckboxField {...props} />
+      return <CheckboxField {...nextProps} />
     
     case 'radio':
-      return <RadioField {...props} />
+      return <RadioField {...nextProps} />
     
     case 'date':
-      return <DateField {...props} />
+      return <DateField {...nextProps} />
     
     case 'file':
-      return <FileField {...props} />
+      return <FileField {...nextProps} />
+
+    case 'array':
+      return <ArrayField {...nextProps} />
     
     case 'custom':
-      return <CustomField {...props} />
+      return <CustomField {...nextProps} />
     
     default:
       console.warn(`Unknown field type: ${fieldType}`)

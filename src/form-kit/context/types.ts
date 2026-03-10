@@ -23,6 +23,7 @@ export type FieldType =
   | 'radio'
   | 'date'
   | 'file'
+  | 'array'
   | 'custom'
 
 /**
@@ -76,6 +77,12 @@ export interface BaseFieldConfig {
   layout?: FieldLayout
   /** Custom CSS classes */
   className?: string
+  /** Field dependencies used for reactive UI updates */
+  dependencies?: string[]
+  /** Declarative visibility condition based on watched values */
+  condition?: (values: Record<string, any>) => boolean
+  /** Dynamic required state based on watched values */
+  requiredWhen?: (values: Record<string, any>) => boolean
 }
 
 /**
@@ -196,6 +203,27 @@ export interface FileFieldConfig extends BaseFieldConfig {
 }
 
 /**
+ * Array field configuration for dynamic field lists
+ */
+export interface ArrayFieldConfig extends BaseFieldConfig {
+  type: 'array'
+  /** Child field configuration for each array item */
+  fields: FieldConfig[]
+  /** Default object used for new items */
+  defaultItem?: Record<string, any>
+  /** Button label for appending new item */
+  addButtonLabel?: string
+  /** Button label for removing an item */
+  removeButtonLabel?: string
+  /** Minimum item count */
+  minItems?: number
+  /** Maximum item count */
+  maxItems?: number
+  /** Visual title for every item row */
+  itemLabel?: string
+}
+
+/**
  * Custom field configuration (for custom renderers)
  */
 export interface CustomFieldConfig extends BaseFieldConfig {
@@ -235,6 +263,7 @@ export type FieldConfig =
   | RadioFieldConfig
   | DateFieldConfig
   | FileFieldConfig
+  | ArrayFieldConfig
   | CustomFieldConfig
 
 /**
@@ -345,8 +374,72 @@ export interface FieldRendererProps {
   config: FieldConfig
   /** react-hook-form control */
   control: any
+  /** Latest watched form values for conditional rendering */
+  watchValues?: Record<string, any>
   /** Whether to show field description */
   showDescription?: boolean
   /** Whether to show required indicator */
   showRequired?: boolean
+}
+
+/**
+ * Wizard step configuration
+ */
+export interface WizardStepConfig {
+  id: string
+  title: string
+  description?: string
+  schema: z.ZodType<any, any, any>
+  fields: FieldConfig[]
+}
+
+/**
+ * Wizard form configuration
+ */
+export interface WizardFormConfig<TValues extends FieldValues = FieldValues> {
+  steps: WizardStepConfig[]
+  defaultValues?: DefaultValues<TValues>
+  onSubmit: (data: TValues) => void | Promise<void>
+  onStepChange?: (stepIndex: number) => void
+  className?: string
+  nextLabel?: string
+  prevLabel?: string
+  submitLabel?: string
+}
+
+/**
+ * Wizard form component props
+ */
+export interface WizardFormProps<TValues extends FieldValues = FieldValues> {
+  config: WizardFormConfig<TValues>
+  showDescriptions?: boolean
+  showRequired?: boolean
+}
+
+/**
+ * Auto save mode
+ */
+export type AutoSaveMode = 'debounce' | 'onBlur'
+
+/**
+ * Auto save hook options
+ */
+export interface UseAutoSaveOptions<TValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TValues>
+  storageKey: string
+  mode?: AutoSaveMode
+  debounceMs?: number
+  enabled?: boolean
+  restoreOnMount?: boolean
+  onAutoSave?: (values: TValues) => void | Promise<void>
+}
+
+/**
+ * Auto save hook return
+ */
+export interface UseAutoSaveReturn {
+  saveNow: () => Promise<void>
+  onFieldBlur: () => Promise<void>
+  clearDraft: () => void
+  hasDraft: boolean
 }

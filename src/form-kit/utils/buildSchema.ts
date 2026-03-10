@@ -16,6 +16,7 @@ import {
   RadioFieldConfig,
   DateFieldConfig,
   FileFieldConfig,
+  ArrayFieldConfig,
 } from '../context/types'
 
 /**
@@ -51,6 +52,9 @@ export function buildField(config: FieldConfig): z.ZodTypeAny {
     
     case 'file':
       return buildFileField(config as FileFieldConfig)
+
+    case 'array':
+      return buildArrayField(config as ArrayFieldConfig)
     
     case 'custom':
       // For custom fields, return a generic any schema
@@ -289,6 +293,33 @@ function buildFileField(config: FileFieldConfig): z.ZodTypeAny {
     
     return schema
   }
+}
+
+/**
+ * Build schema for array fields
+ */
+function buildArrayField(config: ArrayFieldConfig): z.ZodTypeAny {
+  const itemShape: Record<string, z.ZodTypeAny> = {}
+
+  for (const field of config.fields) {
+    itemShape[field.name] = buildField(field)
+  }
+
+  let schema = z.array(z.object(itemShape))
+
+  if (config.minItems !== undefined) {
+    schema = schema.min(config.minItems, `En az ${config.minItems} öğe olmalıdır`) as any
+  }
+
+  if (config.maxItems !== undefined) {
+    schema = schema.max(config.maxItems, `En fazla ${config.maxItems} öğe olabilir`) as any
+  }
+
+  if (!config.required) {
+    schema = schema.optional() as any
+  }
+
+  return schema
 }
 
 /**

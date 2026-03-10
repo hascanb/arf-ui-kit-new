@@ -17,6 +17,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-03-10
+
+### Added
+
+#### Feedback Kit (new)
+- `FeedbackProvider` and `useFeedback` hook for app-wide feedback/toast management
+- Exported types: `FeedbackType`, `FeedbackPayload`, `FeedbackContextValue`, `FeedbackProviderProps`
+
+#### File Kit (new)
+- `FileUploader` component for drag-and-drop / browse file uploads
+- `RHFFileUploader` — React Hook Form integrated file uploader
+- Exported types: `FileUploaderProps`, `RHFFileUploaderProps`
+
+#### DataTable Kit
+- `useDataTableSync` hook for state synchronization across table instances
+- `GlobalErrorBoundary` exported from errors-kit
+- Extended `DataTable` component with column visibility improvements
+- New type exports via `datatable-kit/index.ts`
+
+#### Form Kit
+- `WizardForm` multi-step form component
+- `useAutoSave` hook for automatic draft persistence
+- New field types in `FieldRenderer` (extended schema support)
+- Extended `types.ts` with new form context types and `buildSchema` utilities
+
+#### Errors Kit
+- `GlobalErrorBoundary` component
+- Improved `useErrorHandler` with additional error lifecycle callbacks
+
+#### Layout Kit
+- `AppSidebar` collapsible/responsive enhancements
+- Added `activeVariant` to navigation context types
+
+### Changed
+- `src/index.ts` — re-exports for new kits (feedback, file) added to root barrel
+- `app/test/*` pages updated to showcase new kit functionality
+- `playground/components/ui/dropdown-menu.tsx` minor style fix
+
+### Removed
+- `ACCESSIBILITY.md` and `PERFORMANCE.md` moved to `agent/` documentation folder
+
+---
+
 ## [1.0.1] - 2026-03-10
 
 ### Changed
