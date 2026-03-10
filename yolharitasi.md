@@ -591,7 +591,7 @@ Time: 859ms
 
 3. **Post-Release**
    - ✅ npm package verification
-   - ✅ Install test (@arftech/arf-ui-kit)
+   - ✅ Install test (@hascanb/arf-ui-kit)
    - ✅ Example project (Next.js/Vite)
    - ✅ Social media announcement
    - ✅ GitHub release notes
@@ -604,7 +604,7 @@ Time: 859ms
 - ✅ Example projects
 
 **Kabul Kriterleri:**
-- npm install @arftech/arf-ui-kit works
+- npm install @hascanb/arf-ui-kit works
 - All kits import successfully
 - Example project runs
 - CI/CD green

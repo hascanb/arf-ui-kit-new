@@ -60,23 +60,23 @@ import {
   SignInForm, 
   DataTable, 
   FormField 
-} from '@arftech/arf-ui-kit';
+} from '@hascanb/arf-ui-kit';
 ```
 **Size:** 234.9 KB (includes everything)  
 **Use when:** Building a full application using multiple kits
 
 ### Strategy 2: Kit-Level Import (Recommended)
 ```typescript
-import { SignInForm } from '@arftech/arf-ui-kit/auth-kit';
-import { DataTable } from '@arftech/arf-ui-kit/datatable-kit';
-import { FormField } from '@arftech/arf-ui-kit/form-kit';
+import { SignInForm } from '@hascanb/arf-ui-kit/auth-kit';
+import { DataTable } from '@hascanb/arf-ui-kit/datatable-kit';
+import { FormField } from '@hascanb/arf-ui-kit/form-kit';
 ```
 **Size:** Only what you need (21 + 192 + 65 = 278 KB in this example)  
 **Use when:** Using specific kits only
 
 ### Strategy 3: Component-Level Import (Advanced)
 ```typescript
-import { SignInForm } from '@arftech/arf-ui-kit/auth-kit/components/SignInForm';
+import { SignInForm } from '@hascanb/arf-ui-kit/auth-kit/components/SignInForm';
 ```
 **Size:** Minimal (requires custom webpack config)  
 **Use when:** Maximum optimization needed
@@ -123,14 +123,14 @@ import { SignInForm } from '@arftech/arf-ui-kit/auth-kit/components/SignInForm';
 
 ### Future Optimizations (v0.3.0+)
 1. **DataTable-Kit Split:**
-   - Create `@arftech/arf-ui-kit/datatable-kit/excel` sub-export
+   - Create `@hascanb/arf-ui-kit/datatable-kit/excel` sub-export
    - Move xlsx to optional dependency
    - **Potential savings:** 155 KB if Excel not needed
    - **New size:** ~37 KB without Excel features
 
 2. **Component-Level Exports:**
    - Add granular exports for each component
-   - Example: `@arftech/arf-ui-kit/auth-kit/SignInForm`
+   - Example: `@hascanb/arf-ui-kit/auth-kit/SignInForm`
    - **Benefit:** Maximum tree-shaking
 
 3. **Radix UI Optimization:**

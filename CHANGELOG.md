@@ -195,7 +195,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 No breaking changes. Simply update the package:
 
 ```bash
-npm install @arftech/arf-ui-kit@latest
+npm install @hascanb/arf-ui-kit@latest
 ```
 
 New features are additive and don't affect existing code.

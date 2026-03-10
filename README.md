@@ -2,8 +2,8 @@
 
 > Production-ready React UI Kit with comprehensive components for modern web applications
 
-[![Version](https://img.shields.io/npm/v/@arftech/arf-ui-kit.svg)](https://www.npmjs.com/package/@arftech/arf-ui-kit)
-[![License](https://img.shields.io/npm/l/@arftech/arf-ui-kit.svg)](https://github.com/arftech/arf-ui-kit/blob/main/LICENSE)
+[![Version](https://img.shields.io/npm/v/@hascanb/arf-ui-kit.svg)](https://www.npmjs.com/package/@hascanb/arf-ui-kit)
+[![License](https://img.shields.io/npm/l/@hascanb/arf-ui-kit.svg)](https://github.com/arftech/arf-ui-kit/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61dafb.svg)](https://reactjs.org/)
 [![Storybook](https://img.shields.io/badge/Storybook-FF4785?logo=storybook&logoColor=white)](http://localhost:6006)
@@ -31,11 +31,11 @@ ARF UI Kit provides 5 specialized kits for building modern web applications:
 ## 🚀 Installation
 
 ```bash
-npm install @arftech/arf-ui-kit
+npm install @hascanb/arf-ui-kit
 # or
-yarn add @arftech/arf-ui-kit
+yarn add @hascanb/arf-ui-kit
 # or
-pnpm add @arftech/arf-ui-kit
+pnpm add @hascanb/arf-ui-kit
 ```
 
 ### Peer Dependencies
@@ -64,7 +64,7 @@ Complete authentication UI components with i18n support.
 #### Quick Start
 
 ```tsx
-import { SignInForm, AuthKitProvider } from '@arftech/arf-ui-kit/auth-kit'
+import { SignInForm, AuthKitProvider } from '@hascanb/arf-ui-kit/auth-kit'
 
 function App() {
   return (
@@ -111,7 +111,7 @@ Advanced data tables with TanStack Table v8.
 #### Quick Start
 
 ```tsx
-import { DataTable, useTableUrlState } from '@arftech/arf-ui-kit/datatable-kit'
+import { DataTable, useTableUrlState } from '@hascanb/arf-ui-kit/datatable-kit'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Payment {
@@ -188,7 +188,7 @@ Schema-driven form generation with Zod validation.
 #### Quick Start
 
 ```tsx
-import { SchemaForm, FieldConfig, buildSchema } from '@arftech/arf-ui-kit/form-kit'
+import { SchemaForm, FieldConfig, buildSchema } from '@hascanb/arf-ui-kit/form-kit'
 
 const fields: FieldConfig[] = [
   {
@@ -253,7 +253,7 @@ import {
   addRefinements, 
   createPasswordConfirmRefine,
   createDateRangeRefine 
-} from '@arftech/arf-ui-kit/form-kit'
+} from '@hascanb/arf-ui-kit/form-kit'
 
 const schema = addRefinements(buildSchema(fields), [
   createPasswordConfirmRefine('password', 'confirmPassword'),
@@ -290,7 +290,7 @@ import {
   ErrorsKitProvider, 
   useErrorHandler,
   ErrorRenderer 
-} from '@arftech/arf-ui-kit/errors-kit'
+} from '@hascanb/arf-ui-kit/errors-kit'
 
 // Error page components
 const errorMap = {
@@ -343,7 +343,7 @@ function MyComponent() {
 #### Custom Handler
 
 ```tsx
-import { createErrorHandler } from '@arftech/arf-ui-kit/errors-kit'
+import { createErrorHandler } from '@hascanb/arf-ui-kit/errors-kit'
 
 const handler = createErrorHandler({
   levelForStatus: {
@@ -386,7 +386,7 @@ import {
   AppHeader, 
   AppSidebar, 
   AppFooter 
-} from '@arftech/arf-ui-kit/layout-kit'
+} from '@hascanb/arf-ui-kit/layout-kit'
 
 function App() {
   return (
@@ -432,7 +432,7 @@ This library uses **Tailwind CSS** and **Shadcn UI** patterns. Make sure you hav
 module.exports = {
   content: [
     './app/**/*.{js,ts,jsx,tsx}',
-    './node_modules/@arftech/arf-ui-kit/**/*.{js,ts,jsx,tsx}',
+    './node_modules/@hascanb/arf-ui-kit/**/*.{js,ts,jsx,tsx}',
   ],
   // ... rest of config
 }
@@ -466,7 +466,7 @@ The library is fully typed. Add these to your `tsconfig.json`:
 {
   "compilerOptions": {
     "paths": {
-      "@arftech/arf-ui-kit/*": ["./node_modules/@arftech/arf-ui-kit/dist/*"]
+      "@hascanb/arf-ui-kit/*": ["./node_modules/@hascanb/arf-ui-kit/dist/*"]
     }
   }
 }
@@ -478,7 +478,7 @@ For Next.js projects, configure `next.config.js`:
 
 ```js
 module.exports = {
-  transpilePackages: ['@arftech/arf-ui-kit'],
+  transpilePackages: ['@hascanb/arf-ui-kit'],
 }
 ```
 
