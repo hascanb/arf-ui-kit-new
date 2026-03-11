@@ -208,7 +208,7 @@ function TestContent() {
   }
 
   const simulateError = (type: string) => {
-    let error: any
+    let error: Record<string, unknown> | Error | undefined
 
     switch (type) {
       case 'axios-404':

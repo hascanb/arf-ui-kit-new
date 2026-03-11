@@ -162,7 +162,6 @@
 'use client'
 
 import { useState } from 'react'
-import { z } from 'zod'
 import {
   SchemaForm,
   FieldConfig,
@@ -177,7 +176,7 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 
 export default function FormKitTestPage() {
-  const [formData, setFormData] = useState<any>(null)
+  const [formData, setFormData] = useState<Record<string, unknown>>({})
 
   // ============================================================================
   // Basic Registration Form
@@ -411,7 +410,7 @@ export default function FormKitTestPage() {
   // Submit Handlers
   // ============================================================================
 
-  const handleBasicSubmit = async (data: any) => {
+  const handleBasicSubmit = async (data: Record<string, unknown>) => {
     console.log('Basic form data:', data)
     setFormData(data)
     toast.success('Form başarıyla gönderildi!', {
@@ -419,28 +418,28 @@ export default function FormKitTestPage() {
     })
   }
 
-  const handlePasswordSubmit = async (data: any) => {
+  const handlePasswordSubmit = async (data: Record<string, unknown>) => {
     console.log('Password form data:', data)
     toast.success('Şifre başarıyla oluşturuldu!', {
       description: `Kullanıcı: ${data.username}`,
     })
   }
 
-  const handleComplexSubmit = async (data: any) => {
+  const handleComplexSubmit = async (data: Record<string, unknown>) => {
     console.log('Complex form data:', data)
     toast.success('Kayıt tamamlandı!', {
       description: `Hesap tipi: ${data.accountType}`,
     })
   }
 
-  const handleDateRangeSubmit = async (data: any) => {
+  const handleDateRangeSubmit = async (data: Record<string, unknown>) => {
     console.log('Date range data:', data)
     toast.success('Tarih aralığı kaydedildi!', {
-      description: `${new Date(data.startDate).toLocaleDateString()} - ${new Date(data.endDate).toLocaleDateString()}`,
+      description: `${new Date(data.startDate as string).toLocaleDateString()} - ${new Date(data.endDate as string).toLocaleDateString()}`,
     })
   }
 
-  const handleComboboxSubmit = async (data: any) => {
+  const handleComboboxSubmit = async (data: Record<string, unknown>) => {
     console.log('Combobox form data:', data)
     toast.success('Proje oluşturuldu!', {
       description: `${data.projectName} - ${data.framework}`,

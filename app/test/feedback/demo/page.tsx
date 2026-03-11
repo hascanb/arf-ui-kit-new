@@ -108,7 +108,7 @@ function FeedbackKitTestContent() {
     })
   }
 
-  const simulateLongDuration = () => {
+  const _simulateLongDuration = () => {
     feedback.info('Bu mesaj 10 saniye görünür', 'Önemli bilgilendirmeler için uygundur')
   }
 
@@ -122,7 +122,7 @@ function FeedbackKitTestContent() {
   }
 
   const simulateRichContent = () => {
-    toast.custom((t) => (
+    toast.custom((_t) => (
       <div className="flex items-center gap-3 p-4 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-lg">
         <Sparkles className="h-5 w-5" />
         <div>
