@@ -77,7 +77,7 @@ export function ErrorState({
     <Card className={`border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/30 ${className}`}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
-          <AlertCircle className="size-5 flex-shrink-0" aria-hidden="true" />
+          <AlertCircle className="size-5 shrink-0" aria-hidden="true" />
           {title}
           {errorCode && (
             <span className="ml-auto font-mono text-sm font-normal opacity-60">

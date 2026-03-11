@@ -13,19 +13,19 @@ const SCENARIOS = [
   {
     title: 'Form Kit Demo Hub',
     href: '/test/form/demo',
-    description: 'Kapsamlı form-kit demo ve dokümantasyon sayfası.'
+    description: 'Kapsamlı form-kit demo ve dokümantasyon sayfası.',
     tags: ['demo', 'full'],
   },
   {
     title: 'Advanced Form Scenarios',
     href: '/test/form/advanced',
-    description: 'Autosave ve dynamic field içeren karmaşık form senaryoları.'
+    description: 'Autosave ve dynamic field içeren karmaşık form senaryoları.',
     tags: ['advanced', 'autosave'],
   },
   {
     title: 'Validation Helpers',
     href: '/test/utils/validation',
-    description: 'Schema ve field kuralları için validation utility kontrolleri.'
+    description: 'Schema ve field kuralları için validation utility kontrolleri.',
     tags: ['utils', 'validation'],
   },
 ]

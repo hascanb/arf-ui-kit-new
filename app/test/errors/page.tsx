@@ -13,7 +13,7 @@ const SCENARIOS = [
   {
     title: 'Error Handling Demo Hub',
     href: '/test/errors/demo',
-    description: 'Kapsamlı error throw/render/recovery senaryoları.'
+    description: 'Kapsamlı error throw/render/recovery senaryoları.',
     tags: ['demo', 'boundary', 'renderer'],
   },
 ]

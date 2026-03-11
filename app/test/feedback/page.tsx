@@ -13,7 +13,7 @@ const SCENARIOS = [
   {
     title: 'Feedback Demo Hub',
     href: '/test/feedback/demo',
-    description: 'Detaylı toast varyantı ve seçenekleri test sayfası.'
+    description: 'Detaylı toast varyantı ve seçenekleri test sayfası.',
     tags: ['demo', 'toast', 'notifications'],
   },
 ]

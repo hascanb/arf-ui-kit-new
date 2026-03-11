@@ -13,7 +13,7 @@ const SCENARIOS = [
   {
     title: 'File Uploader Demo Hub',
     href: '/test/file-uploader/demo',
-    description: 'Detaylı senaryolar içeren tam upload etkileşim sayfası.'
+    description: 'Detaylı senaryolar içeren tam upload etkileşim sayfası.',
     tags: ['demo', 'drag-drop', 'validation'],
   },
 ]
@@ -28,7 +28,7 @@ const API_ITEMS = [
 
 const TEST_CASES = [
   { title: 'Upload flow select ve drag-drop ile çalışır', status: 'manual' as const },
-  { title: 'Geçersiz file kısıtları beklenen feedback'i üretir', status: 'manual' as const },
+  { title: "Geçersiz file kısıtları beklenen feedback'i üretir", status: 'manual' as const },
   { title: 'Yüklenen file listesi ve remove aksiyonları çalışır', status: 'manual' as const },
 ]
 

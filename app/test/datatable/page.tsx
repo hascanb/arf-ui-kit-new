@@ -13,19 +13,19 @@ const SCENARIOS = [
   {
     title: 'Basic DataTable',
     href: '/test/datatable/basic',
-    description: 'Temel tablo etkileşimleri: sorting, paging, selection.'
+    description: 'Temel tablo etkileşimleri: sorting, paging, selection.',
     tags: ['basic', 'sorting', 'pagination'],
   },
   {
     title: 'Advanced DataTable',
     href: '/test/datatable/advanced',
-    description: 'Advanced filtreler, grouped row yapısı ve column kontrolleri.'
+    description: 'Advanced filtreler, grouped row yapısı ve column kontrolleri.',
     tags: ['advanced', 'filters'],
   },
   {
     title: 'Server-side DataTable',
     href: '/test/datatable/server-side',
-    description: 'Async ve server-driven tablo etkileşim kapsamı.'
+    description: 'Async ve server-driven tablo etkileşim kapsamı.',
     tags: ['server', 'async'],
   },
 ]
