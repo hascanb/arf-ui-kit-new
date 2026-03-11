@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2026-03-11
+
+### Changed
+
+#### Documentation
+- `README.md`: Added optional `shadcn` setup section (`npx shadcn@latest init`) for teams that also scaffold local app-specific UI components.
+- `README.md`: Clarified that ARF UI Kit does not require running `shadcn` CLI to consume package components.
+
+---
+
 ## [1.3.0] - 2026-03-11
 
 ### Fixed
