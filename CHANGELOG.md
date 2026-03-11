@@ -13,7 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional form field types
 - Enhanced i18n support
 - E2E test coverage expansion
-- CI/CD release automation improvements
+
+---
+
+## [1.3.0] - 2026-03-11
+
+### Fixed
+
+#### CI/CD
+- `publish.yml`: Removed obsolete `Install Playwright browsers` and `npm test -- --run` steps (test infra removed in v1.1.0) that caused publish workflow to fail
+- `publish.yml`: Changed trigger from `release: published` to `push: tags: v*` — publish now fires automatically on `git push --tags` without needing a manual GitHub Release
+- `ci.yml`: Removed same obsolete Playwright/test steps
+
+#### App — Test Landing Pages
+- Added missing commas in `SCENARIOS` array objects across 5 test landing pages (`datatable`, `errors`, `feedback`, `file-uploader`, `form`) — caused Turbopack parse errors on Vercel builds
+- Fixed apostrophe inside single-quoted string in `file-uploader/page.tsx`
+
+#### Demo Pages — Lint
+- `auth/demo`: Removed unused `Mail`, `Lock`, `Smartphone` imports
+- `feedback/demo`: Renamed unused `simulateLongDuration` → `_simulateLongDuration`, unused `t` → `_t`
+- `form/demo`: Removed unused `z` import; replaced `any` types with `Record<string, unknown>` in 5 submit handlers
+- `errors/demo`: Replaced `any` type with `Record<string, unknown> | Error | undefined`
 
 ---
 
