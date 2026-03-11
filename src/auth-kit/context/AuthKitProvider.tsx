@@ -12,9 +12,10 @@
  * </AuthKitProvider>
  */
 
-import React, { createContext, useState, useMemo, useCallback } from 'react'
+import React, { createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import type { AuthKitConfig, AuthKitContextValue } from './types'
 import { useTranslation } from '../i18n/use-translation'
+import { clearAuth } from '../utils'
 
 export const AuthKitContext = createContext<AuthKitContextValue | null>(null)
 
@@ -45,6 +46,71 @@ export function AuthKitProvider({ config, children }: AuthKitProviderProps) {
     },
     [translateFn]
   )
+
+  const sessionTimerRef = useRef<number | null>(null)
+
+  const runSessionTimeout = useCallback(() => {
+    clearAuth()
+    setLastUsername(null)
+    setError((prev) => prev ?? t('errors.unauthorized'))
+
+    if (config.onSessionTimeout) {
+      config.onSessionTimeout()
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      window.location.href = config.routes.signIn
+    }
+  }, [config, t])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!config.sessionTimeout || config.sessionTimeout <= 0) return
+
+    const resetTimer = () => {
+      if (sessionTimerRef.current) {
+        window.clearTimeout(sessionTimerRef.current)
+      }
+
+      sessionTimerRef.current = window.setTimeout(() => {
+        runSessionTimeout()
+      }, config.sessionTimeout)
+    }
+
+    const activityEvents: Array<keyof WindowEventMap> = [
+      'pointerdown',
+      'keydown',
+      'mousemove',
+      'touchstart',
+      'focus',
+      'scroll',
+    ]
+
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, resetTimer, { passive: true })
+    })
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        resetTimer()
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    resetTimer()
+
+    return () => {
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, resetTimer)
+      })
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+
+      if (sessionTimerRef.current) {
+        window.clearTimeout(sessionTimerRef.current)
+      }
+    }
+  }, [config.sessionTimeout, runSessionTimeout])
   
   // ========== Context Value ==========
   const contextValue = useMemo<AuthKitContextValue>(
@@ -68,6 +134,7 @@ export function AuthKitProvider({ config, children }: AuthKitProviderProps) {
       hasOtpVerify: !!config.onOtpVerify,
       hasForgotPassword: !!config.onForgotPassword,
       hasResetPassword: !!config.onResetPassword,
+      sessionTimeout: config.sessionTimeout,
       routes: config.routes,
     })
   }

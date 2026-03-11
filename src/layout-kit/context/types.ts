@@ -139,6 +139,9 @@ export interface DashboardLayoutProps {
   brand: BrandData
   user: UserData
   navGroups: NavGroup[]
+  mainContentId?: string
+  showSkipToContent?: boolean
+  skipToContentLabel?: string
   breadcrumbs?: BreadcrumbData[]
   searchPlaceholder?: string
   notificationCount?: number

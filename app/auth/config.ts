@@ -4,7 +4,7 @@
  * Bu dosya auth-kit'in test için örnek bir konfigürasyonunu içerir
  */
 
-import type { AuthKitConfig } from '@arftech/arfweb-shared-lib/auth-kit'
+import type { AuthKitConfig } from '@hascanb/arf-ui-kit/auth-kit'
 
 export const demoAuthConfig: AuthKitConfig = {
   // ========== Callbacks ==========

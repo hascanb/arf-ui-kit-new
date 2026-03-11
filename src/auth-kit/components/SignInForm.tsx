@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert } from '@/components/ui/alert'
+import { sanitizeAuthErrorMessage } from '../utils'
 
 export function SignInForm({ 
   onSuccess, 
@@ -22,6 +23,12 @@ export function SignInForm({
   className 
 }: SignInFormProps = {}) {
   const { config, t, setLastUsername } = useAuthKit()
+  const exposeErrorDetails = config.debug || config.maskSensitiveErrors === false
+  const sanitizeError = (rawMessage: unknown, fallback: string) =>
+    sanitizeAuthErrorMessage(rawMessage, {
+      fallbackMessage: fallback,
+      exposeDetails: exposeErrorDetails,
+    })
   
   // ========== State ==========
   const [username, setUsername] = useState('')
@@ -82,12 +89,12 @@ export function SignInForm({
           window.location.href = config.routes.afterSignIn
         }
       } else {
-        const errorMsg = response.error || t('errors.generic')
+        const errorMsg = sanitizeError(response.error, t('errors.generic'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('errors.networkError')
+      const errorMsg = sanitizeError(err instanceof Error ? err.message : err, t('errors.networkError'))
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {

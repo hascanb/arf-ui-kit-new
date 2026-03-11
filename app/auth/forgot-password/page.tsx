@@ -1,4 +1,4 @@
-import { ForgotPasswordPageContent } from '@arftech/arfweb-shared-lib/auth-kit'
+import { ForgotPasswordPageContent } from '@hascanb/arf-ui-kit/auth-kit'
 
 export default function ForgotPasswordPage() {
   return <ForgotPasswordPageContent />

@@ -10,7 +10,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 /**
  * Export options for Excel
  */
-export interface ExcelExportOptions {
+export interface ExcelExportOptions<TData = unknown> {
   /** Filename without extension */
   filename?: string
   /** Sheet name */
@@ -18,7 +18,7 @@ export interface ExcelExportOptions {
   /** Include headers in export */
   includeHeaders?: boolean
   /** Column definitions for header mapping */
-  columns?: ColumnDef<any, any>[]
+  columns?: ColumnDef<TData, unknown>[]
 }
 
 /**
@@ -31,6 +31,28 @@ export interface ExcelImportOptions {
   skipRows?: number
   /** Column mapping { excelColumn: dataKey } */
   columnMapping?: Record<string, string>
+  /** Maximum allowed data rows after header */
+  maxRows?: number
+  /** Maximum allowed columns */
+  maxColumns?: number
+}
+
+/**
+ * Security options for Excel file validation/import.
+ */
+export interface ExcelImportSecurityOptions {
+  maxSizeBytes?: number
+  allowedExtensions?: string[]
+  allowedMimeTypes?: string[]
+  allowLegacyXls?: boolean
+  maxRows?: number
+  maxColumns?: number
+}
+
+export interface ExcelValidationResult {
+  valid: boolean
+  error?: string
+  warning?: string
 }
 
 /**
@@ -46,9 +68,9 @@ export interface ExcelImportOptions {
  * })
  * ```
  */
-export function exportToExcel<TData = any>(
+export function exportToExcel<TData = unknown>(
   data: TData[],
-  options: ExcelExportOptions = {}
+  options: ExcelExportOptions<TData> = {}
 ): void {
   const {
     filename = 'export',
@@ -64,12 +86,12 @@ export function exportToExcel<TData = any>(
 
   try {
     // Prepare data for Excel
-    let exportData: any[] = []
+    let exportData: Record<string, unknown>[] = []
 
     if (columns && columns.length > 0) {
       // Use column definitions to map and format data
       exportData = data.map((row) => {
-        const mappedRow: Record<string, any> = {}
+        const mappedRow: Record<string, unknown> = {}
         
         columns.forEach((col) => {
           // Skip selection columns and action columns
@@ -79,15 +101,15 @@ export function exportToExcel<TData = any>(
           let header = col.id || ''
           if (typeof col.header === 'string') {
             header = col.header
-          } else if (col.meta && (col.meta as any).title) {
-            header = (col.meta as any).title
+          } else if (col.meta && 'title' in col.meta && typeof col.meta.title === 'string') {
+            header = col.meta.title
           }
 
           // Get cell value
-          let value = ''
+          let value: unknown = ''
           if ('accessorKey' in col && col.accessorKey) {
             const key = col.accessorKey as string
-            value = (row as any)[key]
+            value = (row as Record<string, unknown>)[key]
           } else if ('accessorFn' in col && col.accessorFn) {
             value = col.accessorFn(row, 0)
           }
@@ -104,7 +126,7 @@ export function exportToExcel<TData = any>(
       })
     } else {
       // Export raw data
-      exportData = data
+      exportData = data as Record<string, unknown>[]
     }
 
     // Create workbook
@@ -129,7 +151,7 @@ export function exportToExcel<TData = any>(
     XLSX.writeFile(workbook, `${filename}.xlsx`)
   } catch (error) {
     console.error('Error exporting to Excel:', error)
-    throw new Error('Failed to export data to Excel')
+    throw Object.assign(new Error('Failed to export data to Excel'), { cause: error })
   }
 }
 
@@ -147,7 +169,7 @@ export function exportToExcel<TData = any>(
  * }
  * ```
  */
-export async function importFromExcel<TData = any>(
+export async function importFromExcel<TData = unknown>(
   file: File,
   options: ExcelImportOptions = {}
 ): Promise<TData[]> {
@@ -155,6 +177,8 @@ export async function importFromExcel<TData = any>(
     sheetName,
     skipRows = 0,
     columnMapping = {},
+    maxRows,
+    maxColumns,
   } = options
 
   return new Promise((resolve, reject) => {
@@ -169,7 +193,7 @@ export async function importFromExcel<TData = any>(
         }
 
         // Parse workbook
-        const workbook = XLSX.read(data, { type: 'binary' })
+        const workbook = XLSX.read(new Uint8Array(data as ArrayBuffer), { type: 'array' })
 
         // Get sheet
         const targetSheetName = sheetName || workbook.SheetNames[0]
@@ -184,7 +208,7 @@ export async function importFromExcel<TData = any>(
         const rawData = XLSX.utils.sheet_to_json(worksheet, {
           header: 1,
           defval: '',
-        }) as any[][]
+        }) as unknown[][]
 
         // Skip rows if needed
         const dataRows = skipRows > 0 ? rawData.slice(skipRows) : rawData
@@ -198,9 +222,19 @@ export async function importFromExcel<TData = any>(
         const headers = dataRows[0] as string[]
         const rows = dataRows.slice(1)
 
+        if (maxColumns && headers.length > maxColumns) {
+          reject(new Error(`Column count exceeds limit (${maxColumns})`))
+          return
+        }
+
+        if (maxRows && rows.length > maxRows) {
+          reject(new Error(`Row count exceeds limit (${maxRows})`))
+          return
+        }
+
         // Map to objects
         const mappedData: TData[] = rows.map((row) => {
-          const obj: Record<string, any> = {}
+          const obj: Record<string, unknown> = {}
           
           headers.forEach((header, index) => {
             const cellValue = row[index]
@@ -225,7 +259,7 @@ export async function importFromExcel<TData = any>(
       reject(new Error('Failed to read file'))
     }
 
-    reader.readAsBinaryString(file)
+    reader.readAsArrayBuffer(file)
   })
 }
 
@@ -245,7 +279,7 @@ export function downloadExcelTemplate(options: {
   filename?: string
   headers: string[]
   sheetName?: string
-  sampleData?: Record<string, any>[]
+  sampleData?: Record<string, unknown>[]
 }): void {
   const {
     filename = 'template',
@@ -283,7 +317,7 @@ export function downloadExcelTemplate(options: {
     XLSX.writeFile(workbook, `${filename}.xlsx`)
   } catch (error) {
     console.error('Error downloading template:', error)
-    throw new Error('Failed to download Excel template')
+    throw Object.assign(new Error('Failed to download Excel template'), { cause: error })
   }
 }
 
@@ -292,15 +326,24 @@ export function downloadExcelTemplate(options: {
  */
 export async function validateExcelFile(
   file: File,
-  options: {
-    maxSizeBytes?: number
-    allowedExtensions?: string[]
-  } = {}
-): Promise<{ valid: boolean; error?: string }> {
+  options: ExcelImportSecurityOptions = {}
+): Promise<ExcelValidationResult> {
   const {
     maxSizeBytes = 10 * 1024 * 1024, // 10MB default
-    allowedExtensions = ['.xlsx', '.xls', '.csv'],
+    allowedExtensions = ['.xlsx', '.csv'],
+    allowedMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+      'application/csv',
+      'text/plain',
+      'application/vnd.ms-excel',
+    ],
+    allowLegacyXls = false,
   } = options
+
+  const resolvedAllowedExtensions = allowLegacyXls
+    ? Array.from(new Set([...allowedExtensions, '.xls']))
+    : allowedExtensions
 
   // Check file size
   if (file.size > maxSizeBytes) {
@@ -312,12 +355,49 @@ export async function validateExcelFile(
 
   // Check file extension
   const extension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
-  if (!allowedExtensions.includes(extension)) {
+  if (!resolvedAllowedExtensions.includes(extension)) {
     return {
       valid: false,
-      error: `File type not allowed. Allowed types: ${allowedExtensions.join(', ')}`,
+      error: `File type not allowed. Allowed types: ${resolvedAllowedExtensions.join(', ')}`,
     }
   }
+
+  if (extension === '.xls' && !allowLegacyXls) {
+    return {
+      valid: false,
+      error: 'Legacy .xls files are disabled by default for security reasons.',
+    }
+  }
+
+  if (file.type) {
+    if (!allowedMimeTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: `File MIME type is not allowed: ${file.type}`,
+      }
+    }
+
+    const extensionMimeMap: Record<string, string[]> = {
+      '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+      '.xls': ['application/vnd.ms-excel'],
+      '.csv': ['text/csv', 'application/csv', 'text/plain', 'application/vnd.ms-excel'],
+    }
+
+    const allowedForExtension = extensionMimeMap[extension]
+    if (allowedForExtension && !allowedForExtension.includes(file.type)) {
+      return {
+        valid: false,
+        error: `File extension (${extension}) does not match MIME type (${file.type}).`,
+      }
+    }
+  }
+
+  return file.type
+    ? { valid: true }
+    : {
+        valid: true,
+        warning: 'File MIME type could not be verified by the browser. Import only trusted files.',
+      }
 
   return { valid: true }
 }

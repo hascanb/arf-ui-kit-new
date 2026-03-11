@@ -50,7 +50,7 @@ export function ErrorsKitProvider({
   children,
   errorMap,
   handlerConfig,
-  fallbackComponent,
+  fallbackComponent: _fallbackComponent,
 }: ErrorsKitProviderProps) {
   // Create error handler instance
   const handler = useMemo(

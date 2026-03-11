@@ -6,27 +6,73 @@
 [![License](https://img.shields.io/npm/l/@hascanb/arf-ui-kit.svg)](https://github.com/arftech/arf-ui-kit/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61dafb.svg)](https://reactjs.org/)
-[![Storybook](https://img.shields.io/badge/Storybook-FF4785?logo=storybook&logoColor=white)](http://localhost:6006)
 
 > ⚠️ **Security Notice:** DataTable-Kit uses `xlsx` library which has known vulnerabilities. See [SECURITY.md](SECURITY.md) for details and mitigation strategies.
 
-## 🎨 Interactive Documentation
-
-Explore all components in Storybook:
-- **Local:** `npm run storybook` → [http://localhost:6006](http://localhost:6006)
-- **40+ Interactive Stories** with Dark Mode support
-- **Accessibility Testing** built-in with @storybook/addon-a11y
-- **Live Code Examples** - see props, controls, and variants
-
 ## 📦 What's Included
 
-ARF UI Kit provides 5 specialized kits for building modern web applications:
+ARF UI Kit provides 7 specialized kits for building modern web applications:
 
 - 🔐 **[Auth-Kit](#auth-kit)** - Authentication forms and flows (Sign In, OTP, Password Reset)
 - 📊 **[DataTable-Kit](#datatable-kit)** - Advanced data tables with sorting, filtering, Excel export
 - 📝 **[Form-Kit](#form-kit)** - Schema-driven forms with Zod validation
+- 📁 **[File-Kit](#file-kit)** - File upload workflows with preview, progress, and RHF integration
+- 🔔 **[Feedback-Kit](#feedback-kit)** - Centralized toast and in-app feedback orchestration
 - ❌ **[Errors-Kit](#errors-kit)** - Centralized error handling with level-based actions
 - 🎨 **[Layout-Kit](#layout-kit)** - Dashboard layouts, headers, sidebars, footers
+
+## 🏗️ Uygulama Mimarisi (Cargo / Test Hub)
+
+Bu repodaki Next.js uygulaması iki ayrı çalışma alanına ayrılmıştır:
+
+- **Cargo Workspace (`/cargo`)**: Operasyonel ekranlar — sevkiyat oluşturma, müşteri, şube, finans ve raporlama.
+- **Test & Docs Hub (`/test`)**: Kit doğrulama, canlı demo, API referansları ve erişilebilirlik panelleri.
+- **Giriş Seçici (`/`)**: Kullanıcıyı bilinçli olarak iki çalışma alanından birine yönlendirir.
+
+### Information Architecture
+
+```mermaid
+flowchart TD
+  A[/ / Entry Chooser] --> B[/cargo / Cargo Workspace]
+  A --> C[/test / Test & Docs Hub]
+
+  B --> B1[/cargo/shipments]
+  B --> B2[/cargo/customers]
+  B --> B3[/cargo/branches]
+  B --> B4[/cargo/reports]
+  B --> B5[/cargo/finance]
+
+  C --> C1[/test/auth]
+  C --> C2[/test/datatable]
+  C --> C3[/test/layout-kit]
+  C --> C4[/test/form]
+  C --> C5[/test/file-uploader]
+  C --> C6[/test/errors]
+  C --> C7[/test/feedback]
+  C --> C8[/test/gallery]
+  C --> C9[/test/a11y]
+  C --> C10[/test/benchmarks]
+```
+
+### Cargo Workspace Rehberi
+
+- Odak: Kargo oluşturma, listeleme, takip ve raporlama.
+- Hedef URL: `http://localhost:3000/cargo`
+- Başlangıç akışları:
+  - Yeni kargo: `/cargo/shipments/new`
+  - Takip: `/cargo/shipments/track`
+  - Raporlar: `/cargo/reports`
+
+### Test & Docs Hub Rehberi
+
+- Odak: Kit bazlı demo, API referansları ve test senaryoları.
+- Hedef URL: `http://localhost:3000/test`
+- Kritik sayfalar:
+  - DataTable genel bakış: `/test/datatable`
+  - Layout Kit genel bakış: `/test/layout-kit`
+  - Bileşen galerisi: `/test/gallery`
+  - A11y paneli: `/test/a11y`
+  - Benchmark paneli: `/test/benchmarks`
 
 ## 🚀 Installation
 
@@ -60,6 +106,8 @@ Complete authentication UI components with i18n support.
 - ✅ OAuth integration (Google, Apple)
 - ✅ i18n support (en/tr)
 - ✅ Zod validation
+- ✅ Session timeout contract (`sessionTimeout`, `onSessionTimeout`)
+- ✅ Sensitive backend error masking (`maskSensitiveErrors`, default: `true`)
 
 #### Quick Start
 
@@ -71,6 +119,12 @@ function App() {
     <AuthKitProvider
       config={{
         apiBaseUrl: 'https://api.example.com',
+        maskSensitiveErrors: true,
+        sessionTimeout: 30 * 60 * 1000,
+        onSessionTimeout: () => {
+          // clear session and redirect login
+          router.push('/auth/signin')
+        },
         onSuccess: (data) => console.log('Success:', data),
         onError: (error) => console.error('Error:', error),
       }}
@@ -104,6 +158,7 @@ Advanced data tables with TanStack Table v8.
 - ✅ Row selection (single/bulk)
 - ✅ Column visibility
 - ✅ Excel import/export
+- ✅ Excel import security controls (size/mime/rows/columns/trusted source confirmation)
 - ✅ URL state synchronization
 - ✅ Faceted filters
 - ✅ Server-side pagination support
@@ -111,7 +166,9 @@ Advanced data tables with TanStack Table v8.
 #### Quick Start
 
 ```tsx
-import { DataTable, useTableUrlState } from '@hascanb/arf-ui-kit/datatable-kit'
+'use client'
+
+import { DataTable, useDataTableSync } from '@hascanb/arf-ui-kit/datatable-kit'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Payment {
@@ -136,16 +193,22 @@ const columns: ColumnDef<Payment>[] = [
 ]
 
 function PaymentsTable({ data }: { data: Payment[] }) {
-  const [tableState, setTableState] = useTableUrlState({
-    pageSize: 10,
+  const sync = useDataTableSync({
+    defaultPagination: { pageIndex: 0, pageSize: 10 },
+    searchColumnId: 'id',
+    searchDebounceMs: 400,
   })
 
   return (
     <DataTable
       columns={columns}
       data={data}
-      state={tableState}
-      onStateChange={setTableState}
+      pagination={sync.pagination}
+      sorting={sync.sorting}
+      columnFilters={sync.columnFilters}
+      onPaginationChange={sync.onPaginationChange}
+      onSortingChange={sync.onSortingChange}
+      onColumnFiltersChange={sync.onColumnFiltersChange}
       enableFiltering
       enableSorting
       enableRowSelection
@@ -167,9 +230,76 @@ function PaymentsTable({ data }: { data: Payment[] }) {
 
 #### Hooks & Utils
 
-- `useTableUrlState` - URL query sync
+- `useDataTableSync` - URL query sync, debounced search state, and server-side friendly table coordination
+- `useTableUrlState` - Low-level URL state sync helper
 - `excel.ts` - Excel export/import/template/validate
 - `get-page-numbers.ts` - Pagination helpers
+
+#### Security Notes (Excel)
+
+- Import only trusted files
+- Keep legacy `.xls` disabled unless you absolutely need it
+- Apply strict size and row limits in UI and server
+- Always run server-side validation before persistence
+
+---
+
+### File-Kit
+
+File upload bileşenleri with preview, dedupe, upload states and RHF integration.
+
+#### Quick Start
+
+```tsx
+import { FileUploader, toFormData } from '@hascanb/arf-ui-kit/file-kit'
+
+function FileDemo() {
+  return (
+    <FileUploader
+      maxFiles={5}
+      maxSizeMb={5}
+      uploadStrategy="sequential"
+      dedupeFiles
+      onUpload={async (file, onProgress) => {
+        onProgress(35)
+        const formData = toFormData({ file, module: 'profile' })
+        await fetch('/api/upload', { method: 'POST', body: formData })
+        onProgress(100)
+      }}
+    />
+  )
+}
+```
+
+---
+
+### Feedback-Kit
+
+Sonner tabanlı merkezi bildirim katmanı.
+
+#### Quick Start
+
+```tsx
+import { FeedbackProvider, useFeedback } from '@hascanb/arf-ui-kit/feedback-kit'
+
+function SaveButton() {
+  const feedback = useFeedback()
+
+  return (
+    <button onClick={() => feedback.success('Kaydedildi', 'Değişiklikleriniz başarıyla kaydedildi.')}>
+      Kaydet
+    </button>
+  )
+}
+
+function App() {
+  return (
+    <FeedbackProvider>
+      <SaveButton />
+    </FeedbackProvider>
+  )
+}
+```
 
 ---
 
@@ -382,18 +512,20 @@ Dashboard layouts with responsive design.
 
 ```tsx
 import { 
-  DashboardLayout, 
-  AppHeader, 
-  AppSidebar, 
-  AppFooter 
+  DashboardLayout,
+  basicNavGroups,
+  exampleBrandData,
+  exampleUserData,
 } from '@hascanb/arf-ui-kit/layout-kit'
 
 function App() {
   return (
     <DashboardLayout
-      header={<AppHeader title="Dashboard" />}
-      sidebar={<AppSidebar navigation={navItems} />}
-      footer={<AppFooter />}
+      brand={exampleBrandData}
+      user={exampleUserData}
+      navGroups={basicNavGroups}
+      showSkipToContent
+      mainContentId="main-content"
     >
       {children}
     </DashboardLayout>

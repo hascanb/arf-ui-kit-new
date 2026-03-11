@@ -3,7 +3,7 @@
  * 
  * Centralized error handling with level-based actions and error pages.
  * 
- * @version 0.1.0
+ * @version 1.1.0
  * @status Production Ready
  */
 

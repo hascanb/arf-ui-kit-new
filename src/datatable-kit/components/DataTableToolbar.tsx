@@ -16,10 +16,16 @@ import { DataTableViewOptions } from './DataTableViewOptions'
 export function DataTableToolbar<TData>({
   table,
   searchKey,
+  searchValue,
+  onSearchValueChange,
+  isSearchPending = false,
   searchPlaceholder = 'Search...',
   children,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0 || !!table.getState().globalFilter
+  const resolvedSearchValue = searchKey
+    ? searchValue ?? ((table.getColumn(searchKey)?.getFilterValue() as string) ?? '')
+    : ''
 
   return (
     <div className="flex items-center justify-between">
@@ -27,13 +33,20 @@ export function DataTableToolbar<TData>({
         {/* Global Search */}
         {searchKey && (
           <div className="relative w-full max-w-sm">
-            <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <SearchIcon
+              className={`absolute left-2 top-2.5 h-4 w-4 text-muted-foreground ${isSearchPending ? 'animate-pulse' : ''}`}
+            />
             <Input
               placeholder={searchPlaceholder}
-              value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              value={resolvedSearchValue}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                if (onSearchValueChange) {
+                  onSearchValueChange(event.target.value)
+                  return
+                }
+
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
-              }
+              }}
               className="h-9 w-full pl-8"
             />
           </div>
@@ -47,6 +60,7 @@ export function DataTableToolbar<TData>({
           <Button
             variant="ghost"
             onClick={() => {
+              onSearchValueChange?.('')
               table.resetColumnFilters()
               table.setGlobalFilter('')
             }}

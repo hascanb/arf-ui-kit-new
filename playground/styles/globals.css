@@ -197,4 +197,12 @@
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+
+  [data-sidebar="group-label"] {
+    color: oklch(0.2 0 0) !important;
+  }
+
+  .dark [data-sidebar="group-label"] {
+    color: oklch(0.98 0 0) !important;
+  }
 }

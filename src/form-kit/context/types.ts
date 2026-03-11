@@ -421,6 +421,19 @@ export interface WizardFormProps<TValues extends FieldValues = FieldValues> {
  */
 export type AutoSaveMode = 'debounce' | 'onBlur'
 
+export interface AutoSaveDraft<TValues extends FieldValues = FieldValues> {
+  values: TValues
+  savedAt: number
+  version?: string
+}
+
+export type AutoSaveConflictResolution = 'draft' | 'current'
+
+export interface AutoSaveConflictContext<TValues extends FieldValues = FieldValues> {
+  draft: AutoSaveDraft<TValues>
+  currentValues: TValues
+}
+
 /**
  * Auto save hook options
  */
@@ -431,7 +444,11 @@ export interface UseAutoSaveOptions<TValues extends FieldValues = FieldValues> {
   debounceMs?: number
   enabled?: boolean
   restoreOnMount?: boolean
+  draftVersion?: string
   onAutoSave?: (values: TValues) => void | Promise<void>
+  onRestoreConflict?: (
+    context: AutoSaveConflictContext<TValues>
+  ) => AutoSaveConflictResolution | Promise<AutoSaveConflictResolution>
 }
 
 /**

@@ -7,4 +7,4 @@ export type {
   FeedbackProviderProps,
 } from './context/types'
 
-export const FEEDBACK_KIT_VERSION = '0.1.0'
+export const FEEDBACK_KIT_VERSION = '1.1.0'

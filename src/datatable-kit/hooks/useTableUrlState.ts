@@ -84,10 +84,15 @@ export function useTableUrlState(
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const searchKey = searchParams?.toString() || ''
+  const defaultSortingKey = JSON.stringify(defaultSorting)
+  const defaultFiltersKey = JSON.stringify(defaultFilters)
 
   // Parse initial state from URL
   const parseInitialState = useCallback(() => {
-    const params = new URLSearchParams(searchParams?.toString() || '')
+    const params = new URLSearchParams(searchKey)
+    const parsedDefaultSorting = JSON.parse(defaultSortingKey) as SortingState
+    const parsedDefaultFilters = JSON.parse(defaultFiltersKey) as ColumnFiltersState
 
     // Parse pagination
     const pagination: PaginationState = {
@@ -100,40 +105,41 @@ export function useTableUrlState(
     }
 
     // Parse sorting
-    let sorting: SortingState = defaultSorting
+    let sorting: SortingState = parsedDefaultSorting
     if (enableSorting) {
       const sortParam = params.get('sort')
       if (sortParam) {
         try {
           sorting = JSON.parse(sortParam)
         } catch {
-          sorting = defaultSorting
+          sorting = parsedDefaultSorting
         }
       }
     }
 
     // Parse filters
-    let filters: ColumnFiltersState = defaultFilters
+    let filters: ColumnFiltersState = parsedDefaultFilters
     if (enableFilters) {
       const filtersParam = params.get('filters')
       if (filtersParam) {
         try {
           filters = JSON.parse(filtersParam)
         } catch {
-          filters = defaultFilters
+          filters = parsedDefaultFilters
         }
       }
     }
 
     return { pagination, sorting, filters }
   }, [
-    searchParams,
+    searchKey,
     enablePagination,
     enableSorting,
     enableFilters,
-    defaultPagination,
-    defaultSorting,
-    defaultFilters,
+    defaultPagination.pageIndex,
+    defaultPagination.pageSize,
+    defaultSortingKey,
+    defaultFiltersKey,
   ])
 
   // State

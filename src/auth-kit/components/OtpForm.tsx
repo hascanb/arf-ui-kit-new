@@ -18,6 +18,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
+import { sanitizeAuthErrorMessage } from '../utils'
 
 export function OtpForm({ 
   length = 6,
@@ -27,6 +28,12 @@ export function OtpForm({
   className 
 }: OtpFormProps = {}) {
   const { config, t, lastUsername } = useAuthKit()
+  const exposeErrorDetails = config.debug || config.maskSensitiveErrors === false
+  const sanitizeError = (rawMessage: unknown, fallback: string) =>
+    sanitizeAuthErrorMessage(rawMessage, {
+      fallbackMessage: fallback,
+      exposeDetails: exposeErrorDetails,
+    })
   
   // ========== State ==========
   const [code, setCode] = useState('')
@@ -77,12 +84,12 @@ export function OtpForm({
         const redirectUrl = config.routes.afterOtp || config.routes.afterSignIn
         window.location.href = redirectUrl
       } else {
-        const errorMsg = response.error || t('errors.generic')
+        const errorMsg = sanitizeError(response.error, t('errors.generic'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('errors.networkError')
+      const errorMsg = sanitizeError(err instanceof Error ? err.message : err, t('errors.networkError'))
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
@@ -108,10 +115,10 @@ export function OtpForm({
         setSuccessMsg('Kod tekrar gönderildi')
         setCode('') // Reset code
       } else {
-        setError(response.error || t('errors.generic'))
+        setError(sanitizeError(response.error, t('errors.generic')))
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('errors.networkError')
+      const errorMsg = sanitizeError(err instanceof Error ? err.message : err, t('errors.networkError'))
       setError(errorMsg)
     } finally {
       setIsResending(false)

@@ -18,7 +18,10 @@ import {
   getExpandedRowModel,
   flexRender,
   type ColumnDef,
+  type ColumnFiltersState,
   type ExpandedState,
+  type Row,
+  type SortingState,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
@@ -82,6 +85,7 @@ export function DataTable<TData>({
   renderRowActions,
   renderSubComponent,
   expandOnRowClick = false,
+  allowVirtualizedExpansion = false,
   
   // Styling
   className,
@@ -106,9 +110,9 @@ export function DataTable<TData>({
     pageSize: 10,
   })
   
-  const [internalSorting, setInternalSorting] = React.useState<any[]>([])
+  const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
   const [internalGlobalFilter, setInternalGlobalFilter] = React.useState('')
-  const [internalColumnFilters, setInternalColumnFilters] = React.useState<any[]>([])
+  const [internalColumnFilters, setInternalColumnFilters] = React.useState<ColumnFiltersState>([])
   const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<Record<string, boolean>>({})
   const [internalRowSelection, setInternalRowSelection] = React.useState<Record<string, boolean>>({})
   const [internalExpanded, setInternalExpanded] = React.useState<ExpandedState>({})
@@ -122,14 +126,15 @@ export function DataTable<TData>({
   const columnFiltersState = columnFilters ?? internalColumnFilters
   const columnVisibilityState = columnVisibility ?? internalColumnVisibility
   const rowSelectionState = rowSelection ?? internalRowSelection
+  const canRenderExpandedRows = !!renderSubComponent && (!virtualized || allowVirtualizedExpansion)
 
-  const computedColumns = useMemo<ColumnDef<TData, any>[]>(() => {
+  const computedColumns = useMemo<ColumnDef<TData, unknown>[]>(() => {
     if (!renderRowActions) {
-      return columns as ColumnDef<TData, any>[]
+      return columns as ColumnDef<TData, unknown>[]
     }
 
     return [
-      ...(columns as ColumnDef<TData, any>[]),
+      ...(columns as ColumnDef<TData, unknown>[]),
       {
         id: '__inline_actions__',
         header: 'Actions',
@@ -169,7 +174,7 @@ export function DataTable<TData>({
       globalFilterFn: 'includesString',
     }),
 
-    ...(renderSubComponent && {
+    ...(canRenderExpandedRows && {
       getExpandedRowModel: getExpandedRowModel(),
       enableExpanding: true,
       getRowCanExpand: () => true,
@@ -183,7 +188,7 @@ export function DataTable<TData>({
       columnFilters: columnFiltersState,
       ...(enableColumnVisibility && { columnVisibility: columnVisibilityState }),
       ...(enableRowSelection && { rowSelection: rowSelectionState }),
-      ...(renderSubComponent && { expanded: internalExpanded }),
+      ...(canRenderExpandedRows && { expanded: internalExpanded }),
     },
     
     // State updaters
@@ -193,7 +198,7 @@ export function DataTable<TData>({
     onColumnFiltersChange: onColumnFiltersChange ?? setInternalColumnFilters,
     onColumnVisibilityChange: onColumnVisibilityChange ?? setInternalColumnVisibility,
     onRowSelectionChange: onRowSelectionChange ?? setInternalRowSelection,
-    ...(renderSubComponent && { onExpandedChange: setInternalExpanded }),
+    ...(canRenderExpandedRows && { onExpandedChange: setInternalExpanded }),
     
     // Row selection config
     enableRowSelection,
@@ -203,9 +208,17 @@ export function DataTable<TData>({
   // Expose table instance to parent
   React.useEffect(() => {
     if (onTableReady) {
-      onTableReady(table as any)
+      onTableReady(table)
     }
   }, [table, onTableReady])
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && virtualized && renderSubComponent && !allowVirtualizedExpansion) {
+      console.warn(
+        'DataTable: expanded sub-rows are disabled while virtualization is enabled unless allowVirtualizedExpansion is explicitly set to true.'
+      )
+    }
+  }, [allowVirtualizedExpansion, renderSubComponent, virtualized])
 
   const rows = table.getRowModel().rows
 
@@ -224,14 +237,14 @@ export function DataTable<TData>({
       ? totalVirtualSize - virtualRows[virtualRows.length - 1].end
       : 0
 
-  const hasInteractiveRow = !!onRowClick || !!onRowDoubleClick || (expandOnRowClick && !!renderSubComponent)
+  const hasInteractiveRow = !!onRowClick || !!onRowDoubleClick || (expandOnRowClick && canRenderExpandedRows)
 
-  const renderMainRow = (row: any) => (
+  const renderMainRow = (row: Row<TData>) => (
     <React.Fragment key={row.id}>
       <TableRow
         data-state={row.getIsSelected() && 'selected'}
         onClick={() => {
-          if (renderSubComponent && expandOnRowClick) {
+          if (canRenderExpandedRows && expandOnRowClick) {
             row.toggleExpanded()
           }
           onRowClick?.(row.original)
@@ -239,7 +252,7 @@ export function DataTable<TData>({
         onDoubleClick={() => onRowDoubleClick?.(row.original)}
         className={hasInteractiveRow ? 'cursor-pointer' : undefined}
       >
-        {row.getVisibleCells().map((cell: any, index: number) => (
+        {row.getVisibleCells().map((cell, index: number) => (
           <TableCell
             key={cell.id}
             className={
@@ -255,7 +268,7 @@ export function DataTable<TData>({
         ))}
       </TableRow>
 
-      {renderSubComponent && row.getIsExpanded() && (
+      {canRenderExpandedRows && row.getIsExpanded() && (
         <TableRow>
           <TableCell colSpan={row.getVisibleCells().length} className="bg-muted/40">
             {renderSubComponent(row.original)}

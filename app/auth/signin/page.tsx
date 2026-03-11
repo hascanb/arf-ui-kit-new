@@ -1,4 +1,4 @@
-import { SignInPageContent } from '@arftech/arfweb-shared-lib/auth-kit'
+import { SignInPageContent } from '@hascanb/arf-ui-kit/auth-kit'
 
 export default function SignInPage() {
   return <SignInPageContent />

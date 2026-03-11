@@ -1,16 +1,54 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 import { UploadCloud, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { FileUploaderProps } from '../context/types'
+import type { FileUploadStatus, FileUploaderProps } from '../context/types'
 
 function fileKey(file: File): string {
   return `${file.name}-${file.size}-${file.lastModified}`
+}
+
+function dedupeSelectedFiles(files: File[], enabled: boolean): File[] {
+  if (!enabled) return files
+
+  const seen = new Set<string>()
+  return files.filter((file) => {
+    const key = fileKey(file)
+    if (seen.has(key)) {
+      return false
+    }
+
+    seen.add(key)
+    return true
+  })
+}
+
+function FileImagePreview({ file }: { file: File }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file)
+    setPreviewUrl(objectUrl)
+
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [file])
+
+  if (!previewUrl) {
+    return (
+      <div className="flex h-12 w-12 items-center justify-center rounded bg-muted">
+        <ImageIcon className="h-5 w-5" />
+      </div>
+    )
+  }
+
+  return <img src={previewUrl} alt={file.name} className="h-12 w-12 rounded object-cover" />
 }
 
 export function FileUploader({
@@ -23,12 +61,15 @@ export function FileUploader({
   disabled = false,
   className,
   showPreview = true,
+  dedupeFiles = true,
+  uploadStrategy = 'sequential',
   onUpload,
   header,
 }: FileUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [progressMap, setProgressMap] = useState<Record<string, number>>({})
+  const [statusMap, setStatusMap] = useState<Record<string, FileUploadStatus>>({})
 
   const maxSizeBytes = maxSizeMb * 1024 * 1024
 
@@ -59,10 +100,11 @@ export function FileUploader({
   const emitFiles = async (incoming: File[]) => {
     if (disabled || incoming.length === 0) return
 
-    const selected = multiple ? [...value, ...incoming].slice(0, maxFiles) : [incoming[0]]
+    const selected = multiple ? [...value, ...incoming] : [incoming[0]]
+    const dedupedSelection = dedupeSelectedFiles(selected, dedupeFiles).slice(0, maxFiles)
     const validFiles: File[] = []
 
-    for (const file of selected) {
+    for (const file of dedupedSelection) {
       const parsed = validator.safeParse(file)
       if (!parsed.success) {
         toast.error(parsed.error.issues[0]?.message || 'Dosya dogrulanamadi', {
@@ -77,18 +119,38 @@ export function FileUploader({
 
     if (!onUpload) return
 
-    for (const file of validFiles) {
+    const uploadFile = async (file: File) => {
       const key = fileKey(file)
+      setStatusMap((prev) => ({ ...prev, [key]: 'uploading' }))
       setProgressMap((prev) => ({ ...prev, [key]: 0 }))
 
       try {
         await onUpload(file, (percent) => {
           setProgressMap((prev) => ({ ...prev, [key]: Math.max(0, Math.min(100, percent)) }))
         })
+        setStatusMap((prev) => ({ ...prev, [key]: 'success' }))
         setProgressMap((prev) => ({ ...prev, [key]: 100 }))
       } catch {
+        setStatusMap((prev) => ({ ...prev, [key]: 'error' }))
         toast.error('Yukleme basarisiz', { description: file.name })
       }
+    }
+
+    setStatusMap((prev) => {
+      const next = { ...prev }
+      validFiles.forEach((file) => {
+        next[fileKey(file)] = 'queued'
+      })
+      return next
+    })
+
+    if (uploadStrategy === 'parallel') {
+      await Promise.all(validFiles.map((file) => uploadFile(file)))
+      return
+    }
+
+    for (const file of validFiles) {
+      await uploadFile(file)
     }
   }
 
@@ -99,8 +161,27 @@ export function FileUploader({
   }
 
   const removeFile = (index: number) => {
+    const removedFile = value[index]
     const next = value.filter((_, i) => i !== index)
+    const key = removedFile ? fileKey(removedFile) : null
+    if (key) {
+      setProgressMap((prev) => {
+        const nextProgressMap = { ...prev }
+        delete nextProgressMap[key]
+        return nextProgressMap
+      })
+      setStatusMap((prev) => {
+        const nextStatusMap = { ...prev }
+        delete nextStatusMap[key]
+        return nextStatusMap
+      })
+    }
     onChange?.(next)
+  }
+
+  const retryFile = async (file: File) => {
+    if (!onUpload) return
+    await emitFiles([file])
   }
 
   return (
@@ -152,15 +233,14 @@ export function FileUploader({
           {value.map((file, index) => {
             const key = fileKey(file)
             const progress = progressMap[key]
+            const status = statusMap[key]
             const isImage = file.type.startsWith('image/')
-            const previewUrl = isImage && showPreview ? URL.createObjectURL(file) : null
 
             return (
               <div key={key} className="rounded-md border p-3">
                 <div className="flex items-center gap-3">
-                  {isImage && previewUrl ? (
-                    // URL object is only used as short-lived preview source for local files.
-                    <img src={previewUrl} alt={file.name} className="h-12 w-12 rounded object-cover" />
+                  {isImage && showPreview ? (
+                    <FileImagePreview file={file} />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded bg-muted">
                       {isImage ? <ImageIcon className="h-5 w-5" /> : <FileIcon className="h-5 w-5" />}
@@ -170,12 +250,21 @@ export function FileUploader({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{file.name}</p>
                     <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    {status && <p className="text-xs text-muted-foreground">Durum: {status}</p>}
                     {typeof progress === 'number' && <Progress value={progress} className="mt-2" />}
                   </div>
 
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeFile(index)} disabled={disabled}>
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {status === 'error' && (
+                      <Button type="button" variant="outline" size="sm" onClick={() => void retryFile(file)} disabled={disabled}>
+                        Tekrar Dene
+                      </Button>
+                    )}
+
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeFile(index)} disabled={disabled}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )

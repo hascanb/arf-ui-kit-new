@@ -15,6 +15,7 @@ import type {
   OnChangeFn,
   Table as TanStackTable
 } from '@tanstack/react-table'
+import type { ExcelImportSecurityOptions } from './utils/excel'
 
 /**
  * DataTable ana props
@@ -22,7 +23,7 @@ import type {
 export interface DataTableProps<TData = unknown> {
   // Required
   data: TData[]
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TData, unknown>[]
   
   // Pagination
   enablePagination?: boolean
@@ -52,16 +53,17 @@ export interface DataTableProps<TData = unknown> {
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>
   
   // Row Selection
-  enableRowSelection?: boolean | ((row: any) => boolean)
+  enableRowSelection?: boolean | ((row: RowData) => boolean)
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
   enableMultiRowSelection?: boolean
   
   // Custom Actions
-  renderRowActions?: (row: any) => React.ReactNode
-  renderBulkActions?: (selectedRows: any[]) => React.ReactNode
-  renderSubComponent?: (row: any) => React.ReactNode
+  renderRowActions?: (row: TData) => React.ReactNode
+  renderBulkActions?: (selectedRows: TData[]) => React.ReactNode
+  renderSubComponent?: (row: TData) => React.ReactNode
   expandOnRowClick?: boolean
+  allowVirtualizedExpansion?: boolean
   
   // Toolbar
   showToolbar?: boolean
@@ -90,8 +92,8 @@ export interface DataTableProps<TData = unknown> {
   loadingMessage?: string
   
   // Callbacks
-  onRowClick?: (row: any) => void
-  onRowDoubleClick?: (row: any) => void
+  onRowClick?: (row: TData) => void
+  onRowDoubleClick?: (row: TData) => void
   onTableReady?: (table: TanStackTable<TData>) => void
 }
 
@@ -99,7 +101,7 @@ export interface DataTableProps<TData = unknown> {
  * Pagination component props
  */
 export interface DataTablePaginationProps {
-  table: TanStackTable<any>
+  table: TanStackTable<unknown>
   pageSizeOptions?: number[]
   showPageInfo?: boolean
   showPageSizeSelector?: boolean
@@ -109,7 +111,7 @@ export interface DataTablePaginationProps {
  * Column header props
  */
 export interface DataTableColumnHeaderProps<TData = unknown> {
-  column: any
+  column: TanStackTable<TData>['getColumn'] extends (id: string) => infer R ? NonNullable<R> : never
   title: string
   className?: string
 }
@@ -120,6 +122,9 @@ export interface DataTableColumnHeaderProps<TData = unknown> {
 export interface DataTableToolbarProps<TData = unknown> {
   table: TanStackTable<TData>
   searchKey?: string
+  searchValue?: string
+  onSearchValueChange?: (value: string) => void
+  isSearchPending?: boolean
   showSearch?: boolean
   showColumnSelector?: boolean
   showExcelExport?: boolean
@@ -168,8 +173,8 @@ export interface FacetedFilterOption {
 /**
  * Faceted filter props
  */
-export interface DataTableFacetedFilterProps<TData, TValue> {
-  column?: any
+export interface DataTableFacetedFilterProps<TData, _TValue> {
+  column?: TanStackTable<TData>['getColumn'] extends (id: string) => infer R ? R : never
   title?: string
   options: FacetedFilterOption[]
 }
@@ -185,6 +190,9 @@ export interface DataTableExcelActionsProps<TData> {
   onImport?: (data: TData[]) => void
   exportLabel?: string
   importLabel?: string
+  excelSecurity?: ExcelImportSecurityOptions
+  requireTrustedSourceConfirmation?: boolean
+  trustedSourceConfirmationMessage?: string
 }
 
 /**
@@ -203,5 +211,9 @@ declare module '@tanstack/react-table' {
     // Excel
     excelFormat?: string
     excelWidth?: number
+
+    // Type anchors (lint için generic parametreleri gerçek kullanımda tutar)
+    __rowType?: TData
+    __valueType?: TValue
   }
 }

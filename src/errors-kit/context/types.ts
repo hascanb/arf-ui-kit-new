@@ -105,7 +105,7 @@ export interface NormalizedError {
   code?: string
   message?: string
   level?: ErrorLevel
-  data?: any
+  data?: unknown
   originalError: unknown
 }
 
@@ -115,7 +115,7 @@ export interface NormalizedError {
 export interface AxiosError {
   response?: {
     status?: number
-    data?: any
+    data?: unknown
   }
   message?: string
 }

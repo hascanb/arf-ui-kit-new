@@ -4,7 +4,7 @@
  * Custom hook that integrates react-hook-form with Zod validation.
  */
 
-import { useForm, UseFormReturn, DefaultValues, FieldValues } from 'react-hook-form'
+import { useForm, UseFormReturn, DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useCallback } from 'react'

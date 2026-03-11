@@ -17,6 +17,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-03-11
+
+### Added
+
+#### App — Shared Utilities (`app/_shared`)
+- `entry-policy.ts`: Role-based entry visibility policy (`resolveEntryVisibilityPolicy`) — controls which workspaces appear on the entry chooser. Supports `cargo-operator`, `qa`, `developer` roles; extensible for future RBAC.
+- `states.tsx`: Shared UI state components used across both workspaces — `EmptyState`, `ErrorState`, `LoadingState`, `CardSkeleton`.
+
+#### Test Hub — Auth Routes
+- Added missing demo target pages under `/test/auth/pages/*`:
+  - `signin2`, `otp`, `forgot-password`, `reset-password`
+- Added missing demo target pages under `/test/auth/components/*`:
+  - `signin-form`, `otp-form`, `forgot-password-form`, `reset-password-form`
+
+### Changed
+
+#### App — Gallery Ownership
+- `/test/gallery` now contains the full component gallery (previously at `/cargo/gallery`).
+- `/cargo/gallery` redirects to `/test/gallery`.
+- Root `/gallery` redirect updated to point to `/test/gallery`.
+
+#### App — Turkish Localization
+- Corrected Turkish diacritics and orthography across all demo pages (`feedback/demo`, `errors/demo`, `file-uploader/demo`, `form/advanced`).
+- Fixed broken Turkish in core shell files: `app/page.tsx`, `app/layout.tsx`, `app/cargo/layout.tsx`, `app/test/page.tsx`, `app/test/layout.tsx`.
+- Kit landing pages (`app/test/*/page.tsx`) updated with proper Turkish descriptions while preserving technical terms in English.
+- `app/test/_components/kit-page-template.tsx` UI copy normalized to proper Turkish.
+
+#### App — Sidebar & Navigation
+- Test Hub sidebar restructured with full demo navigation links for each kit.
+- Auth section expanded with granular `pages/*` and `components/*` links.
+
+#### Documentation
+- `README.md`: Removed Storybook badge and Interactive Documentation section (Storybook infrastructure removed in v1.1.0).
+- `README.md`: Fixed broken Turkish text in Architecture section.
+- `README.md`: Architecture section title and workspace guides updated with proper Turkish.
+
+### Removed
+- Storybook badge from `README.md` header.
+- MIGRATION.md root reference from `README.md` (file lives in `agent/` folder, excluded from distribution).
+
+---
+
 ## [1.1.0] - 2026-03-10
 
 ### Added

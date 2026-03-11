@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 export interface GlobalErrorBoundaryProps {
   children: ReactNode
   homePath?: string
+  genericMessage?: string
+  showErrorDetails?: boolean
   onError?: (error: Error, errorInfo: ErrorInfo) => void
   onReset?: () => void
   onGoHome?: () => void
@@ -67,17 +69,24 @@ export class GlobalErrorBoundary extends React.Component<GlobalErrorBoundaryProp
       })
     }
 
+    const shouldShowDetails =
+      this.props.showErrorDetails ?? process.env.NODE_ENV !== 'production'
+    const errorDetails = this.state.error?.message
+      ? this.state.error.message.replace(/\s+/g, ' ').slice(0, 260)
+      : ''
+
     return (
       <div className="flex min-h-[320px] items-center justify-center p-6">
         <div className="w-full max-w-md space-y-4 rounded-lg border bg-card p-6 text-center">
           <h2 className="text-xl font-semibold">Uygulama hatasi olustu</h2>
           <p className="text-sm text-muted-foreground">
-            Beklenmeyen bir hata yakalandi. Sayfayi sifirlayabilir veya ana sayfaya donebilirsiniz.
+            {this.props.genericMessage ||
+              'Beklenmeyen bir hata yakalandi. Sayfayi sifirlayabilir veya ana sayfaya donebilirsiniz.'}
           </p>
 
-          {this.state.error?.message && (
+          {shouldShowDetails && !!errorDetails && (
             <p className="rounded-md bg-muted p-2 text-left text-xs text-muted-foreground">
-              {this.state.error.message}
+              {errorDetails}
             </p>
           )}
 

@@ -10,7 +10,12 @@ import React from 'react'
 import { Download, Upload } from 'lucide-react'
 import { Table as TanStackTable } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
-import { exportToExcel, importFromExcel, validateExcelFile } from '../utils/excel'
+import {
+  exportToExcel,
+  importFromExcel,
+  validateExcelFile,
+  type ExcelImportSecurityOptions,
+} from '../utils/excel'
 import { toast } from 'sonner'
 
 export interface DataTableExcelActionsProps<TData> {
@@ -27,6 +32,12 @@ export interface DataTableExcelActionsProps<TData> {
   exportLabel?: string
   /** Custom import button text */
   importLabel?: string
+  /** Excel import security controls */
+  excelSecurity?: ExcelImportSecurityOptions
+  /** Ask user confirmation for trusted source import */
+  requireTrustedSourceConfirmation?: boolean
+  /** Confirmation prompt override */
+  trustedSourceConfirmationMessage?: string
 }
 
 export function DataTableExcelActions<TData>({
@@ -37,8 +48,21 @@ export function DataTableExcelActions<TData>({
   onImport,
   exportLabel = 'Export',
   importLabel = 'Import',
+  excelSecurity,
+  requireTrustedSourceConfirmation = true,
+  trustedSourceConfirmationMessage =
+    'Bu dosyayi sadece guvenilir bir kaynaktan aldiginizdan eminseniz ice aktariniz. Devam etmek istiyor musunuz?',
 }: DataTableExcelActionsProps<TData>) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const allowedExtensions = React.useMemo(() => {
+    if (excelSecurity?.allowedExtensions?.length) {
+      return excelSecurity.allowLegacyXls
+        ? Array.from(new Set([...excelSecurity.allowedExtensions, '.xls']))
+        : excelSecurity.allowedExtensions
+    }
+
+    return excelSecurity?.allowLegacyXls ? ['.xlsx', '.csv', '.xls'] : ['.xlsx', '.csv']
+  }, [excelSecurity])
 
   // Handle Excel export
   const handleExport = () => {
@@ -91,8 +115,10 @@ export function DataTableExcelActions<TData>({
     try {
       // Validate file
       const validation = await validateExcelFile(file, {
-        maxSizeBytes: 10 * 1024 * 1024, // 10MB
-        allowedExtensions: ['.xlsx', '.xls'],
+        maxSizeBytes: excelSecurity?.maxSizeBytes ?? 10 * 1024 * 1024,
+        allowedExtensions,
+        allowedMimeTypes: excelSecurity?.allowedMimeTypes,
+        allowLegacyXls: excelSecurity?.allowLegacyXls,
       })
 
       if (!validation.valid) {
@@ -100,9 +126,22 @@ export function DataTableExcelActions<TData>({
         return
       }
 
+      if (validation.warning) {
+        toast.warning(validation.warning)
+      }
+
+      if (requireTrustedSourceConfirmation && !window.confirm(trustedSourceConfirmationMessage)) {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        return
+      }
+
       // Import data
       const importedData = await importFromExcel<TData>(file, {
         skipRows: 0,
+        maxRows: excelSecurity?.maxRows,
+        maxColumns: excelSecurity?.maxColumns,
       })
 
       if (importedData.length === 0) {
@@ -165,7 +204,7 @@ export function DataTableExcelActions<TData>({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls"
+            accept={allowedExtensions.join(',')}
             onChange={handleImport}
             className="hidden"
           />

@@ -1,4 +1,4 @@
-import { OtpPageContent } from '@arftech/arfweb-shared-lib/auth-kit'
+import { OtpPageContent } from '@hascanb/arf-ui-kit/auth-kit'
 
 export default function OtpPage() {
   return <OtpPageContent />

@@ -116,7 +116,7 @@ export function createPasswordStrengthRefine(
       if (requireNumber && !/[0-9]/.test(password)) return false
 
       // Special character
-      if (requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return false
+      if (requireSpecialChar && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) return false
 
       // Custom pattern
       if (customPattern && !customPattern.test(password)) return false

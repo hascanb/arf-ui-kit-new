@@ -1,3 +1,4 @@
+/* global document, window */
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
@@ -110,7 +111,7 @@ function SidebarRail({ className, ...props }) {
     return (_jsx("button", { "data-sidebar": "rail", "data-slot": "sidebar-rail", "aria-label": "Toggle Sidebar", tabIndex: -1, onClick: toggleSidebar, title: "Toggle Sidebar", className: cn('hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 sm:flex', 'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize', '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize', 'hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full', '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2', '[[data-side=right][data-collapsible=offcanvas]_&]:-left-2', className), ...props }));
 }
 function SidebarInset({ className, ...props }) {
-    return (_jsx("main", { "data-slot": "sidebar-inset", className: cn('bg-background relative flex w-full flex-1 flex-col', 'md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2', className), ...props }));
+    return (_jsx("div", { "data-slot": "sidebar-inset", className: cn('bg-background relative flex w-full flex-1 flex-col', 'md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2', className), ...props }));
 }
 function SidebarInput({ className, ...props }) {
     return (_jsx(Input, { "data-slot": "sidebar-input", "data-sidebar": "input", className: cn('bg-background h-8 w-full shadow-none', className), ...props }));
@@ -132,7 +133,7 @@ function SidebarGroup({ className, ...props }) {
 }
 function SidebarGroupLabel({ className, asChild = false, ...props }) {
     const Comp = asChild ? Slot : 'div';
-    return (_jsx(Comp, { "data-slot": "sidebar-group-label", "data-sidebar": "group-label", className: cn('text-sidebar-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0', 'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0', className), ...props }));
+    return (_jsx(Comp, { "data-slot": "sidebar-group-label", "data-sidebar": "group-label", className: cn('!text-black dark:!text-white ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-semibold outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0', 'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0', className), ...props }));
 }
 function SidebarGroupAction({ className, asChild = false, ...props }) {
     const Comp = asChild ? Slot : 'button';

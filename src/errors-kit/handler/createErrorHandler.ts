@@ -68,13 +68,14 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
       normalized.status = error.response?.status
       normalized.data = error.response?.data
       normalized.message = error.message
+      const responseData = error.response?.data as Record<string, unknown> | undefined
       
       // Extract code from response data
-      if (error.response?.data?.code) {
-        normalized.code = error.response.data.code
+      if (typeof responseData?.code === 'string') {
+        normalized.code = responseData.code
       }
-      if (error.response?.data?.message) {
-        normalized.message = error.response.data.message
+      if (typeof responseData?.message === 'string') {
+        normalized.message = responseData.message
       }
     }
     // Fetch-style error
@@ -198,7 +199,7 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
         }
         break
 
-      case 'redirect':
+      case 'redirect': {
         const slug = getSlug(error)
         if (slug && onRedirect) {
           const path = `${errorsBasePath}/${slug}`
@@ -213,6 +214,7 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
           }
         }
         break
+      }
 
       case 'reload':
         if (typeof window !== 'undefined') {

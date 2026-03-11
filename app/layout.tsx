@@ -15,7 +15,7 @@ const fontMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'Kargo Otomasyon Sistemi',
-  description: 'Profesyonel Kargo Yonetim ve Takip Sistemi',
+  description: 'Profesyonel Kargo Yönetim ve Takip Sistemi',
   generator: 'v0.app',
 }
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body className={`${fontSans.variable} ${fontMono.variable} antialiased`}>
         {children}
         <Analytics />

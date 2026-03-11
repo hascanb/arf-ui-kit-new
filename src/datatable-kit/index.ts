@@ -4,7 +4,7 @@
  * TanStack Table-based data table components with sorting, filtering, pagination.
  * 
  * @status Sprint 2 Complete (Advanced Features)
- * @version 0.2.0
+ * @version 1.1.0
  */
 
 // Core component
@@ -52,6 +52,8 @@ export type {
 } from './types'
 export type {
   ExcelImportOptions,
+  ExcelImportSecurityOptions,
+  ExcelValidationResult,
 } from './utils/excel'
 export type {
   TableUrlStateOptions,
@@ -62,4 +64,4 @@ export type {
   DataTableSyncState,
 } from './hooks/useDataTableSync'
 
-export const DATATABLE_KIT_VERSION = '0.2.0'
+export const DATATABLE_KIT_VERSION = '1.1.0'

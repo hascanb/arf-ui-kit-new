@@ -1,6 +1,3 @@
-// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
-import storybook from "eslint-plugin-storybook";
-
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
@@ -33,6 +30,26 @@ js.configs.recommended, ...tseslint.configs.recommended, prettier, // Global ign
     'react/react-in-jsx-scope': 'off', // Not needed in Next.js
     'react/prop-types': 'off', // Using TypeScript
   },
-}, ...storybook.configs["flat/recommended"]];
+},
+{
+  files: [
+    'src/externals.d.ts',
+    'src/form-kit/context/types.ts',
+    'src/form-kit/hooks/useSchemaForm.ts',
+    'src/form-kit/components/SchemaForm.tsx',
+    'src/form-kit/components/WizardForm.tsx',
+    'src/form-kit/utils/buildSchema.ts',
+    'src/form-kit/utils/create-refine.ts',
+  ],
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'off',
+  },
+},
+{
+  files: ['src/externals.d.ts'],
+  rules: {
+    '@typescript-eslint/no-empty-object-type': 'off',
+  },
+}];
 
 export default config;

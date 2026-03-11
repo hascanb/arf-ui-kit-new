@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert } from '@/components/ui/alert'
+import { sanitizeAuthErrorMessage } from '../utils'
 
 export function ResetPasswordForm({ 
   token,
@@ -21,6 +22,12 @@ export function ResetPasswordForm({
   className 
 }: ResetPasswordFormProps) {
   const { config, t } = useAuthKit()
+  const exposeErrorDetails = config.debug || config.maskSensitiveErrors === false
+  const sanitizeError = (rawMessage: unknown, fallback: string) =>
+    sanitizeAuthErrorMessage(rawMessage, {
+      fallbackMessage: fallback,
+      exposeDetails: exposeErrorDetails,
+    })
   
   // ========== State ==========
   const [password, setPassword] = useState('')
@@ -87,12 +94,12 @@ export function ResetPasswordForm({
           window.location.href = config.routes.signIn
         }, 2000)
       } else {
-        const errorMsg = response.error || t('errors.generic')
+        const errorMsg = sanitizeError(response.error, t('errors.generic'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('errors.networkError')
+      const errorMsg = sanitizeError(err instanceof Error ? err.message : err, t('errors.networkError'))
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {

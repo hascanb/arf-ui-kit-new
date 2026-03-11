@@ -1,6 +1,6 @@
 'use client'
 
-import { ResetPasswordPageContent } from '@arftech/arfweb-shared-lib/auth-kit'
+import { ResetPasswordPageContent } from '@hascanb/arf-ui-kit/auth-kit'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 

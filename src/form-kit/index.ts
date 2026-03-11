@@ -4,7 +4,7 @@
  * Schema-driven form generation with Zod validation and react-hook-form.
  * 
  * @status Phase 3 Complete (100%)
- * @version 0.1.0
+ * @version 1.1.0
  * @features
  * - Schema-driven form generation
  * - Zod validation integration
@@ -98,6 +98,9 @@ export type {
   WizardFormConfig,
   WizardFormProps,
   AutoSaveMode,
+  AutoSaveDraft,
+  AutoSaveConflictContext,
+  AutoSaveConflictResolution,
   UseAutoSaveOptions,
   UseAutoSaveReturn,
   
@@ -109,7 +112,7 @@ export type {
 // Version & Metadata
 // ============================================================================
 
-export const FORM_KIT_VERSION = '0.1.0'
+export const FORM_KIT_VERSION = '1.1.0'
 export const FORM_KIT_STATUS = 'Phase 3 Complete'
 
 /**

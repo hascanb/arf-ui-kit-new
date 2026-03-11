@@ -12,7 +12,6 @@ import {
   BarChart3,
   Wallet,
   Settings,
-  Truck,
   TestTube2,
   ShieldCheck,
   LayoutDashboard,

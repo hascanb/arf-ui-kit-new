@@ -13,13 +13,13 @@ import type { AuthKitTranslations } from '../context/types'
  * Nested object'te key path ile değer bul
  * @example getNestedValue({ a: { b: 'value' } }, 'a.b') -> 'value'
  */
-function getNestedValue(obj: any, path: string): string | undefined {
+function getNestedValue(obj: AuthKitTranslations, path: string): string | undefined {
   const keys = path.split('.')
-  let current = obj
+  let current: unknown = obj
   
   for (const key of keys) {
     if (current && typeof current === 'object' && key in current) {
-      current = current[key]
+      current = (current as Record<string, unknown>)[key]
     } else {
       return undefined
     }

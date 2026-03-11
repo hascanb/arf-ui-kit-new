@@ -32,3 +32,11 @@ export {
   getTokenExpiresIn,
   sessionStorage,
 } from './token'
+
+// Error sanitization utility
+export {
+  sanitizeAuthErrorMessage,
+} from './sanitize-error'
+export type {
+  SanitizeAuthErrorOptions,
+} from './sanitize-error'

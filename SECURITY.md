@@ -4,8 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.2.x   | :white_check_mark: |
-| 0.1.x   | :white_check_mark: |
+| 1.x     | :white_check_mark: |
+| 0.x     | :x:                |
 
 ## Known Security Issues
 
@@ -135,4 +135,4 @@ Run `npm audit` to check for known vulnerabilities in your installation.
 
 ---
 
-**Last Updated:** March 10, 2026
+**Last Updated:** March 11, 2026

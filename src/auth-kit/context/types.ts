@@ -22,7 +22,7 @@ export interface SignInResponse {
   error?: string
   message?: string
   data?: {
-    user?: any
+    user?: unknown
     token?: string
     refreshToken?: string
   }
@@ -39,7 +39,7 @@ export interface OtpResponse {
   message?: string
   data?: {
     token?: string
-    user?: any
+    user?: unknown
   }
 }
 
@@ -201,9 +201,15 @@ export interface AuthKitConfig {
   
   /** Debug modu */
   debug?: boolean
+
+  /** Hassas backend hata detaylarini kullaniciya gostermeyi kapat (varsayilan: true) */
+  maskSensitiveErrors?: boolean
   
   /** Session timeout (ms) */
   sessionTimeout?: number
+
+  /** Session timeout tetiklenince calisacak callback */
+  onSessionTimeout?: () => void
 }
 
 // ============================================================================

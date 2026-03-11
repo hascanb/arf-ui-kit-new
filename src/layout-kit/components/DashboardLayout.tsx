@@ -19,6 +19,9 @@ export function DashboardLayout({
   brand,
   user,
   navGroups,
+  mainContentId = 'main-content',
+  showSkipToContent = true,
+  skipToContentLabel = 'Ana icerige gec',
   breadcrumbs,
   searchPlaceholder,
   notificationCount,
@@ -30,6 +33,14 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
+      {showSkipToContent && (
+        <a
+          href={`#${mainContentId}`}
+          className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+        >
+          {skipToContentLabel}
+        </a>
+      )}
       <AppSidebar
         brand={brand}
         user={user}
@@ -44,7 +55,7 @@ export function DashboardLayout({
           onSearchClick={onSearchClick}
           onNotificationClick={onNotificationClick}
         />
-        <main className="flex flex-1 flex-col">
+        <main id={mainContentId} tabIndex={-1} className="flex flex-1 flex-col">
           {children}
         </main>
         {showFooter && <AppFooter {...footerProps} />}

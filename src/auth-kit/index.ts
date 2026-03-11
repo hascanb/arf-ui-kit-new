@@ -73,6 +73,7 @@ export {
   isTokenExpired,
   getTokenExpiresIn,
   sessionStorage,
+  sanitizeAuthErrorMessage,
 } from './utils'
 
 // ========== Brand Icons ==========

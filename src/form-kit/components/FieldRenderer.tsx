@@ -483,7 +483,7 @@ function FileField({ config, control, showDescription, showRequired }: FieldRend
     <Controller
       name={fieldConfig.name}
       control={control}
-      render={({ field: { value, onChange, ...field }, fieldState }) => (
+      render={({ field: { value: _value, onChange, ...field }, fieldState }) => (
         <div className="space-y-2">
           <Label htmlFor={fieldConfig.name}>
             {fieldConfig.label}
