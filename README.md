@@ -1,198 +1,305 @@
 # ARF UI Kit
 
-> Production-ready React UI Kit with comprehensive components for modern web applications
+Production-ready React UI Kit for modern operational and dashboard applications.
 
 [![Version](https://img.shields.io/npm/v/@hascanb/arf-ui-kit.svg)](https://www.npmjs.com/package/@hascanb/arf-ui-kit)
-[![License](https://img.shields.io/npm/l/@hascanb/arf-ui-kit.svg)](https://github.com/arftech/arf-ui-kit/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@hascanb/arf-ui-kit.svg)](https://github.com/hascanb/arf-ui-kit-new/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18+-61dafb.svg)](https://reactjs.org/)
+[![React](https://img.shields.io/badge/React-18+-61dafb.svg)](https://react.dev/)
 
-> ⚠️ **Security Notice:** DataTable-Kit uses `xlsx` library which has known vulnerabilities. See [SECURITY.md](SECURITY.md) for details and mitigation strategies.
+Security note: DataTable-Kit uses `xlsx`. Review [SECURITY.md](SECURITY.md) before enabling Excel upload/import in production.
 
-## 📦 What's Included
+## Table of Contents
 
-ARF UI Kit provides 7 specialized kits for building modern web applications:
+- [Overview](#overview)
+- [Installation](#installation)
+- [Global Setup (Recommended)](#global-setup-recommended)
+- [Kit Selection Map](#kit-selection-map)
+- [Auth-Kit](#auth-kit)
+- [DataTable-Kit](#datatable-kit)
+- [Form-Kit](#form-kit)
+- [File-Kit](#file-kit)
+- [Feedback-Kit](#feedback-kit)
+- [Errors-Kit](#errors-kit)
+- [Layout-Kit](#layout-kit)
+- [Release Flow](#release-flow)
+- [Links](#links)
 
-- 🔐 **[Auth-Kit](#auth-kit)** - Authentication forms and flows (Sign In, OTP, Password Reset)
-- 📊 **[DataTable-Kit](#datatable-kit)** - Advanced data tables with sorting, filtering, Excel export
-- 📝 **[Form-Kit](#form-kit)** - Schema-driven forms with Zod validation
-- 📁 **[File-Kit](#file-kit)** - File upload workflows with preview, progress, and RHF integration
-- 🔔 **[Feedback-Kit](#feedback-kit)** - Centralized toast and in-app feedback orchestration
-- ❌ **[Errors-Kit](#errors-kit)** - Centralized error handling with level-based actions
-- 🎨 **[Layout-Kit](#layout-kit)** - Dashboard layouts, headers, sidebars, footers
+## Overview
 
-## 🏗️ Uygulama Mimarisi (Cargo / Test Hub)
+ARF UI Kit is split into 7 independent modules:
 
-Bu repodaki Next.js uygulaması iki ayrı çalışma alanına ayrılmıştır:
+- `auth-kit`: sign-in, OTP, forgot/reset password flow components
+- `datatable-kit`: data table with sorting/filtering/pagination/selection/Excel helpers
+- `form-kit`: schema-driven forms with Zod + React Hook Form
+- `file-kit`: upload widgets with preview, progress, dedupe, RHF integration
+- `feedback-kit`: centralized toast notification layer
+- `errors-kit`: normalized error handling and level-based actions
+- `layout-kit`: dashboard shell components (header/sidebar/footer/layout)
 
-- **Cargo Workspace (`/cargo`)**: Operasyonel ekranlar — sevkiyat oluşturma, müşteri, şube, finans ve raporlama.
-- **Test & Docs Hub (`/test`)**: Kit doğrulama, canlı demo, API referansları ve erişilebilirlik panelleri.
-- **Giriş Seçici (`/`)**: Kullanıcıyı bilinçli olarak iki çalışma alanından birine yönlendirir.
+You can import all kits from root:
 
-### Information Architecture
-
-```mermaid
-flowchart TD
-  A[/ / Entry Chooser] --> B[/cargo / Cargo Workspace]
-  A --> C[/test / Test & Docs Hub]
-
-  B --> B1[/cargo/shipments]
-  B --> B2[/cargo/customers]
-  B --> B3[/cargo/branches]
-  B --> B4[/cargo/reports]
-  B --> B5[/cargo/finance]
-
-  C --> C1[/test/auth]
-  C --> C2[/test/datatable]
-  C --> C3[/test/layout-kit]
-  C --> C4[/test/form]
-  C --> C5[/test/file-uploader]
-  C --> C6[/test/errors]
-  C --> C7[/test/feedback]
-  C --> C8[/test/gallery]
-  C --> C9[/test/a11y]
-  C --> C10[/test/benchmarks]
+```tsx
+import { AuthKitProvider, DataTable, SchemaForm } from '@hascanb/arf-ui-kit'
 ```
 
-### Cargo Workspace Rehberi
+Or use subpath imports for clear boundaries:
 
-- Odak: Kargo oluşturma, listeleme, takip ve raporlama.
-- Hedef URL: `http://localhost:3000/cargo`
-- Başlangıç akışları:
-  - Yeni kargo: `/cargo/shipments/new`
-  - Takip: `/cargo/shipments/track`
-  - Raporlar: `/cargo/reports`
+```tsx
+import { AuthKitProvider, SignInForm } from '@hascanb/arf-ui-kit/auth-kit'
+import { DataTable } from '@hascanb/arf-ui-kit/datatable-kit'
+```
 
-### Test & Docs Hub Rehberi
-
-- Odak: Kit bazlı demo, API referansları ve test senaryoları.
-- Hedef URL: `http://localhost:3000/test`
-- Kritik sayfalar:
-  - DataTable genel bakış: `/test/datatable`
-  - Layout Kit genel bakış: `/test/layout-kit`
-  - Bileşen galerisi: `/test/gallery`
-  - A11y paneli: `/test/a11y`
-  - Benchmark paneli: `/test/benchmarks`
-
-## 🚀 Installation
+## Installation
 
 ```bash
 npm install @hascanb/arf-ui-kit
-# or
-yarn add @hascanb/arf-ui-kit
-# or
-pnpm add @hascanb/arf-ui-kit
 ```
 
-### Peer Dependencies
+Required peer dependencies:
 
 ```bash
-npm install react react-dom next
-npm install @radix-ui/react-* lucide-react
-npm install @tanstack/react-table
+npm install react react-dom
+npm install next
 npm install react-hook-form zod
-npm install tailwindcss class-variance-authority clsx tailwind-merge
+npm install lucide-react
+npm install tailwindcss
 ```
 
-## 📚 Documentation
+Recommended app dependencies (commonly used with this kit):
 
-### Auth-Kit
+```bash
+npm install @tanstack/react-table sonner class-variance-authority clsx tailwind-merge
+```
 
-Complete authentication UI components with i18n support.
+Next.js recommendation:
 
-#### Features
-- ✅ 4 form components (SignIn, ForgotPassword, ResetPassword, OTP)
-- ✅ 5 page layouts (single/split column)
-- ✅ OAuth integration (Google, Apple)
-- ✅ i18n support (en/tr)
-- ✅ Zod validation
-- ✅ Session timeout contract (`sessionTimeout`, `onSessionTimeout`)
-- ✅ Sensitive backend error masking (`maskSensitiveErrors`, default: `true`)
+```js
+// next.config.mjs
+const nextConfig = {
+  transpilePackages: ['@hascanb/arf-ui-kit'],
+}
 
-#### Quick Start
+export default nextConfig
+```
+
+Tailwind recommendation:
+
+```js
+// tailwind.config.js
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './node_modules/@hascanb/arf-ui-kit/**/*.{js,ts,jsx,tsx}',
+  ],
+}
+```
+
+## Global Setup (Recommended)
+
+In medium/large apps, wire providers once in the root layout.
 
 ```tsx
-import { SignInForm, AuthKitProvider } from '@hascanb/arf-ui-kit/auth-kit'
+'use client'
 
-function App() {
+import { ReactNode } from 'react'
+import {
+  AuthKitProvider,
+  FeedbackProvider,
+  ErrorsKitProvider,
+  FormKitProvider,
+} from '@hascanb/arf-ui-kit'
+
+const errorMap = {
+  'not-found': ({ message }: { message?: string }) => <div>Not found: {message}</div>,
+  forbidden: ({ message }: { message?: string }) => <div>Forbidden: {message}</div>,
+  'internal-server-error': ({ message }: { message?: string }) => <div>Server error: {message}</div>,
+}
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    <FeedbackProvider position="top-right" richColors>
+      <ErrorsKitProvider
+        errorMap={errorMap}
+        handlerConfig={{
+          onToast: (message) => console.error(message),
+          onRedirect: (path) => {
+            window.location.href = path
+          },
+          on401: '/auth/signin',
+        }}
+      >
+        <FormKitProvider
+          config={{
+            defaultFieldSize: 'default',
+            defaultLayout: { columns: 12, gap: 'default' },
+          }}
+        >
+          <AuthKitProvider
+            config={{
+              onSignIn: async ({ username, password }) => {
+                const response = await fetch('/api/auth/signin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ username, password }),
+                })
+
+                if (!response.ok) {
+                  return { success: false, error: 'Authentication failed' }
+                }
+
+                return { success: true }
+              },
+              routes: {
+                afterSignIn: '/dashboard',
+                forgotPassword: '/auth/forgot-password',
+                resetPassword: '/auth/reset-password',
+                signIn: '/auth/signin',
+              },
+            }}
+          >
+            {children}
+          </AuthKitProvider>
+        </FormKitProvider>
+      </ErrorsKitProvider>
+    </FeedbackProvider>
+  )
+}
+```
+
+## Kit Selection Map
+
+| Need | Kit | Result |
+|---|---|---|
+| Sign-in and password flows | `auth-kit` | Authentication pages/forms with callback-based backend integration |
+| Advanced data grid | `datatable-kit` | Search/sort/filter/paginate/select table experience |
+| Dynamic form generation | `form-kit` | Field config + Zod schema driven forms |
+| Upload pipeline | `file-kit` | Upload component with preview and progress |
+| User notifications | `feedback-kit` | Centralized success/error/warning/info toasts |
+| Unified error policy | `errors-kit` | One error handling contract for all layers |
+| Dashboard shell | `layout-kit` | Sidebar/header/footer/content layout primitives |
+
+## Auth-Kit
+
+### What it provides
+
+- `AuthKitProvider` for global auth config
+- Forms: `SignInForm`, `OtpForm`, `ForgotPasswordForm`, `ResetPasswordForm`
+- Page content blocks: `SignInPageContent`, `SignIn2PageContent`, `OtpPageContent`, `ForgotPasswordPageContent`, `ResetPasswordPageContent`
+
+### Required config
+
+At minimum, pass:
+
+- `onSignIn`
+- `routes.afterSignIn`
+- `routes.forgotPassword`
+- `routes.resetPassword`
+- `routes.signIn`
+
+### End-to-end usage
+
+```tsx
+'use client'
+
+import { useRouter } from 'next/navigation'
+import {
+  AuthKitProvider,
+  SignInForm,
+  OtpForm,
+  type SignInCredentials,
+} from '@hascanb/arf-ui-kit/auth-kit'
+
+export default function AuthPage() {
+  const router = useRouter()
+
+  async function onSignIn(credentials: SignInCredentials) {
+    const response = await fetch('/api/auth/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    })
+
+    if (!response.ok) {
+      return { success: false, error: 'Invalid credentials' }
+    }
+
+    const payload = (await response.json()) as { requiresOtp?: boolean }
+    return { success: true, requiresOtp: payload.requiresOtp }
+  }
+
   return (
     <AuthKitProvider
       config={{
-        apiBaseUrl: 'https://api.example.com',
+        onSignIn,
+        onOtpVerify: async ({ code, username }) => {
+          const res = await fetch('/api/auth/otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, username }),
+          })
+          return res.ok ? { success: true } : { success: false, error: 'OTP failed' }
+        },
+        routes: {
+          afterSignIn: '/dashboard',
+          afterOtp: '/dashboard',
+          forgotPassword: '/auth/forgot-password',
+          resetPassword: '/auth/reset-password',
+          signIn: '/auth/signin',
+        },
+        locale: 'tr',
         maskSensitiveErrors: true,
         sessionTimeout: 30 * 60 * 1000,
-        onSessionTimeout: () => {
-          // clear session and redirect login
-          router.push('/auth/signin')
-        },
-        onSuccess: (data) => console.log('Success:', data),
-        onError: (error) => console.error('Error:', error),
+        onSessionTimeout: () => router.push('/auth/signin'),
       }}
     >
-      <SignInForm
-        enableRememberMe
-        enableSocialLogin
-        onForgotPassword={() => navigate('/forgot-password')}
-      />
+      <SignInForm onSuccess={() => router.push('/dashboard')} />
+      <OtpForm />
     </AuthKitProvider>
   )
 }
 ```
 
-#### Components
+### Production guidance
 
-- `SignInForm` - Email/password with social login
-- `ForgotPasswordForm` - Email validation
-- `ResetPasswordForm` - Password strength validation
-- `OtpForm` - 6-digit verification
-- Page layouts: `SignInPageContent`, `SignIn2PageContent`, etc.
+- Keep `maskSensitiveErrors` enabled.
+- Use HTTPS-only cookie/session strategy in backend.
+- Clear local auth state on `onSessionTimeout`.
+- Add rate limits and lockout policies for OTP routes.
 
----
+## DataTable-Kit
 
-### DataTable-Kit
+### What it provides
 
-Advanced data tables with TanStack Table v8.
+- Main component: `DataTable`
+- Optional building blocks: `DataTableToolbar`, `DataTablePagination`, `DataTableViewOptions`, `DataTableBulkActions`, `DataTableExcelActions`, `DataTableFacetedFilter`
+- State hooks: `useDataTableSync`, `useTableUrlState`
+- Excel helpers: `exportToExcel`, `importFromExcel`, `validateExcelFile`, `downloadExcelTemplate`
 
-#### Features
-- ✅ Sorting, filtering, pagination
-- ✅ Row selection (single/bulk)
-- ✅ Column visibility
-- ✅ Excel import/export
-- ✅ Excel import security controls (size/mime/rows/columns/trusted source confirmation)
-- ✅ URL state synchronization
-- ✅ Faceted filters
-- ✅ Server-side pagination support
-
-#### Quick Start
+### End-to-end usage
 
 ```tsx
 'use client'
 
-import { DataTable, useDataTableSync } from '@hascanb/arf-ui-kit/datatable-kit'
 import { ColumnDef } from '@tanstack/react-table'
+import { DataTable, useDataTableSync } from '@hascanb/arf-ui-kit/datatable-kit'
 
-interface Payment {
+type Order = {
   id: string
+  customer: string
   amount: number
-  status: 'pending' | 'success' | 'failed'
+  status: 'pending' | 'delivered' | 'canceled'
 }
 
-const columns: ColumnDef<Payment>[] = [
-  {
-    accessorKey: 'id',
-    header: 'ID',
-  },
-  {
-    accessorKey: 'amount',
-    header: 'Amount',
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-  },
+const columns: ColumnDef<Order, unknown>[] = [
+  { accessorKey: 'id', header: 'Order ID' },
+  { accessorKey: 'customer', header: 'Customer' },
+  { accessorKey: 'amount', header: 'Amount' },
+  { accessorKey: 'status', header: 'Status' },
 ]
 
-function PaymentsTable({ data }: { data: Payment[] }) {
+export function OrdersTable({ data }: { data: Order[] }) {
   const sync = useDataTableSync({
     defaultPagination: { pageIndex: 0, pageSize: 10 },
     searchColumnId: 'id',
@@ -201,69 +308,165 @@ function PaymentsTable({ data }: { data: Payment[] }) {
 
   return (
     <DataTable
-      columns={columns}
       data={data}
+      columns={columns}
       pagination={sync.pagination}
       sorting={sync.sorting}
       columnFilters={sync.columnFilters}
       onPaginationChange={sync.onPaginationChange}
       onSortingChange={sync.onSortingChange}
       onColumnFiltersChange={sync.onColumnFiltersChange}
-      enableFiltering
+      enablePagination
       enableSorting
+      enableGlobalFilter
+      enableColumnVisibility
       enableRowSelection
+      showToolbar
+      showSearch
+      showColumnSelector
+      showExcelExport
     />
   )
 }
 ```
 
-#### Components
+### Server-side mode
 
-- `DataTable` - Main table component
-- `DataTablePagination` - Pagination controls
-- `DataTableToolbar` - Search, filters, actions
-- `DataTableColumnHeader` - Sortable headers
-- `DataTableViewOptions` - Column visibility
-- `DataTableBulkActions` - Mass operations
-- `DataTableExcelActions` - Excel import/export
-- `SelectionColumn` - Checkbox helper
+When data comes from backend paging/filtering:
 
-#### Hooks & Utils
+- Set `manualPagination`, `manualSorting`, `manualFiltering`.
+- Pass `pageCount` from backend response.
+- Use `onSearchApplied` in `useDataTableSync` to trigger request updates.
 
-- `useDataTableSync` - URL query sync, debounced search state, and server-side friendly table coordination
-- `useTableUrlState` - Low-level URL state sync helper
-- `excel.ts` - Excel export/import/template/validate
-- `get-page-numbers.ts` - Pagination helpers
+### Security guidance (Excel)
 
-#### Security Notes (Excel)
+- Accept only trusted files.
+- Keep strict file size/type/row limits.
+- Validate imported data again on backend before persistence.
 
-- Import only trusted files
-- Keep legacy `.xls` disabled unless you absolutely need it
-- Apply strict size and row limits in UI and server
-- Always run server-side validation before persistence
+## Form-Kit
 
----
+### What it provides
 
-### File-Kit
+- Components: `SchemaForm`, `FieldRenderer`, `WizardForm`
+- Provider: `FormKitProvider`
+- Helpers: `buildSchema`, `addRefinements`, `buildField`
+- Refinements: `createPasswordConfirmRefine`, `createDateRangeRefine`, `createConditionalRequiredRefine`, `createFieldComparisonRefine`, `createPasswordStrengthRefine`
 
-File upload bileşenleri with preview, dedupe, upload states and RHF integration.
-
-#### Quick Start
+### End-to-end usage
 
 ```tsx
+'use client'
+
+import {
+  SchemaForm,
+  buildSchema,
+  addRefinements,
+  createPasswordConfirmRefine,
+  type FieldConfig,
+} from '@hascanb/arf-ui-kit/form-kit'
+
+const fields: FieldConfig[] = [
+  {
+    type: 'email',
+    name: 'email',
+    label: 'Email',
+    required: true,
+    layout: { span: 12 },
+  },
+  {
+    type: 'password',
+    name: 'password',
+    label: 'Password',
+    required: true,
+    minLength: 8,
+    layout: { span: 6 },
+  },
+  {
+    type: 'password',
+    name: 'confirmPassword',
+    label: 'Confirm Password',
+    required: true,
+    minLength: 8,
+    layout: { span: 6 },
+  },
+]
+
+const schema = addRefinements(buildSchema(fields), [
+  createPasswordConfirmRefine('password', 'confirmPassword'),
+])
+
+export function RegistrationForm() {
+  return (
+    <SchemaForm
+      config={{
+        schema,
+        fields,
+        onSubmit: async (data) => {
+          await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          })
+        },
+        submitButton: {
+          label: 'Create Account',
+          variant: 'default',
+          fullWidth: true,
+        },
+      }}
+      showDescriptions
+      showRequired
+    />
+  )
+}
+```
+
+### Form-Kit implementation tips
+
+- Build field list from business metadata if your form changes by tenant/role.
+- Keep UI-level validation in schema, business validation in backend.
+- Use `WizardForm` for long, multi-step forms.
+- Use `useAutoSave` for drafts and conflict resolution.
+
+## File-Kit
+
+### What it provides
+
+- `FileUploader` for standalone upload flows
+- `RHFFileUploader` for React Hook Form-managed forms
+- `toFormData` for nested value to multipart conversion
+
+### Standalone usage
+
+```tsx
+'use client'
+
 import { FileUploader, toFormData } from '@hascanb/arf-ui-kit/file-kit'
 
-function FileDemo() {
+export function AttachmentUploader() {
   return (
     <FileUploader
       maxFiles={5}
-      maxSizeMb={5}
-      uploadStrategy="sequential"
+      maxSizeMb={10}
+      multiple
+      showPreview
       dedupeFiles
+      uploadStrategy="sequential"
       onUpload={async (file, onProgress) => {
-        onProgress(35)
-        const formData = toFormData({ file, module: 'profile' })
-        await fetch('/api/upload', { method: 'POST', body: formData })
+        onProgress(25)
+
+        const formData = toFormData({
+          file,
+          module: 'shipment',
+          uploadedAt: new Date(),
+        })
+
+        await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
         onProgress(100)
       }}
     />
@@ -271,254 +474,176 @@ function FileDemo() {
 }
 ```
 
----
-
-### Feedback-Kit
-
-Sonner tabanlı merkezi bildirim katmanı.
-
-#### Quick Start
+### React Hook Form usage
 
 ```tsx
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { RHFFileUploader } from '@hascanb/arf-ui-kit/file-kit'
+
+type FormValues = {
+  documents: File[]
+}
+
+export function DocumentForm() {
+  const { control, handleSubmit } = useForm<FormValues>({
+    defaultValues: { documents: [] },
+  })
+
+  return (
+    <form onSubmit={handleSubmit((values) => console.log(values))}>
+      <RHFFileUploader<FormValues>
+        control={control}
+        name="documents"
+        maxFiles={3}
+        maxSizeMb={5}
+      />
+      <button type="submit">Submit</button>
+    </form>
+  )
+}
+```
+
+### Upload security checklist
+
+- Validate MIME type and extension on backend.
+- Perform virus/malware scan if required by policy.
+- Apply role-based access control to upload endpoints.
+- Store immutable audit logs for critical document flows.
+
+## Feedback-Kit
+
+### What it provides
+
+- `FeedbackProvider`
+- `useFeedback`
+- API: `notify`, `success`, `error`, `warning`, `info`
+
+### End-to-end usage
+
+```tsx
+'use client'
+
 import { FeedbackProvider, useFeedback } from '@hascanb/arf-ui-kit/feedback-kit'
 
 function SaveButton() {
   const feedback = useFeedback()
 
   return (
-    <button onClick={() => feedback.success('Kaydedildi', 'Değişiklikleriniz başarıyla kaydedildi.')}>
-      Kaydet
+    <button
+      onClick={() => {
+        feedback.success('Saved', 'Changes have been successfully persisted.')
+      }}
+    >
+      Save
     </button>
   )
 }
 
-function App() {
+export function FeedbackDemo() {
   return (
-    <FeedbackProvider>
+    <FeedbackProvider position="top-right" richColors>
       <SaveButton />
     </FeedbackProvider>
   )
 }
 ```
 
----
+### Operational tips
 
-### Form-Kit
+- Keep toast messages short and action-oriented.
+- Use `error` for user action errors, reserve `warning` for risky but recoverable situations.
+- Do not expose sensitive backend payloads in toast descriptions.
 
-Schema-driven form generation with Zod validation.
+## Errors-Kit
 
-#### Features
-- ✅ 10 field types (text, email, password, number, textarea, select, combobox, checkbox, radio, date, file, custom)
-- ✅ Schema-driven generation
-- ✅ Zod validation integration
-- ✅ Cross-field validation
-- ✅ Layout system (1-12 columns)
-- ✅ Type-safe configurations
+### What it provides
 
-#### Quick Start
+- Components: `ErrorRenderer`, `GlobalErrorBoundary`
+- Provider: `ErrorsKitProvider`
+- Hook: `useErrorHandler`
+- Factory: `createErrorHandler`
+
+### End-to-end usage
 
 ```tsx
-import { SchemaForm, FieldConfig, buildSchema } from '@hascanb/arf-ui-kit/form-kit'
+'use client'
 
-const fields: FieldConfig[] = [
-  {
-    name: 'email',
-    type: 'email',
-    label: 'Email Address',
-    required: true,
-    layout: { span: 12 },
-  },
-  {
-    name: 'password',
-    type: 'password',
-    label: 'Password',
-    required: true,
-    minLength: 8,
-    layout: { span: 12 },
-  },
-]
+import { ErrorsKitProvider, useErrorHandler } from '@hascanb/arf-ui-kit/errors-kit'
 
-const schema = buildSchema(fields)
+const errorMap = {
+  'not-found': ({ message }: { message?: string }) => <div>Not found: {message}</div>,
+  forbidden: ({ message }: { message?: string }) => <div>Forbidden: {message}</div>,
+  'internal-server-error': ({ message }: { message?: string }) => <div>Server error: {message}</div>,
+}
 
-function RegistrationForm() {
-  const handleSubmit = async (data: any) => {
-    console.log('Form data:', data)
-  }
+function FetchButton() {
+  const { handleError } = useErrorHandler()
 
   return (
-    <SchemaForm
-      config={{
-        schema,
-        fields,
-        layout: { columns: 12, gap: 'lg' },
-        submitButton: { label: 'Register', variant: 'default' },
-        onSubmit: handleSubmit,
+    <button
+      onClick={async () => {
+        try {
+          const response = await fetch('/api/resource')
+          if (!response.ok) {
+            throw { status: response.status, message: 'Request failed' }
+          }
+        } catch (error) {
+          handleError(error)
+        }
       }}
-    />
+    >
+      Fetch
+    </button>
   )
 }
-```
 
-#### Field Types
-
-| Type | Description | Validation |
-|------|-------------|------------|
-| `text` | Text input | minLength, maxLength, pattern |
-| `email` | Email input | Email validation |
-| `password` | Password input | minLength, strength |
-| `number` | Number input | min, max |
-| `textarea` | Multi-line text | minLength, maxLength, rows |
-| `select` | Dropdown select | Options, searchable |
-| `combobox` | Searchable select | Options, search |
-| `checkbox` | Single checkbox | Boolean |
-| `radio` | Radio group | Options |
-| `date` | Date picker | minDate, maxDate |
-| `file` | File upload | accept, multiple |
-| `custom` | Custom render | - |
-
-#### Cross-Field Validation
-
-```tsx
-import { 
-  addRefinements, 
-  createPasswordConfirmRefine,
-  createDateRangeRefine 
-} from '@hascanb/arf-ui-kit/form-kit'
-
-const schema = addRefinements(buildSchema(fields), [
-  createPasswordConfirmRefine('password', 'confirmPassword'),
-  createDateRangeRefine('startDate', 'endDate'),
-])
-```
-
-**Available Refinements:**
-- `createPasswordStrengthRefine` - Password strength validation
-- `createPasswordConfirmRefine` - Password confirmation
-- `createDateRangeRefine` - Date range validation
-- `createConditionalRequiredRefine` - Conditional required fields
-- `createFieldComparisonRefine` - Field comparison
-- `createMinMaxRefine` - Min/max value validation
-
----
-
-### Errors-Kit
-
-Centralized error handling with level-based actions.
-
-#### Features
-- ✅ 4 error levels (low, medium, high, critical)
-- ✅ Level-based actions (toast, redirect, reload, modal)
-- ✅ Error normalization (Axios, Fetch, Custom)
-- ✅ Status to level mapping
-- ✅ Special 401 handling
-- ✅ Dynamic error pages
-
-#### Quick Start
-
-```tsx
-import { 
-  ErrorsKitProvider, 
-  useErrorHandler,
-  ErrorRenderer 
-} from '@hascanb/arf-ui-kit/errors-kit'
-
-// Error page components
-const errorMap = {
-  'not-found': NotFoundPage,
-  'unauthorized': UnauthorizedPage,
-  'forbidden': ForbiddenPage,
-  'internal-server-error': ServerErrorPage,
-}
-
-function App() {
+export function ErrorsDemo() {
   return (
     <ErrorsKitProvider
       errorMap={errorMap}
       handlerConfig={{
-        onToast: (msg) => toast.error(msg),
-        onRedirect: (path) => router.push(path),
-        on401: '/login',
+        onToast: (message) => console.error(message),
+        onRedirect: (path) => {
+          window.location.href = path
+        },
+        on401: '/auth/signin',
       }}
     >
-      <YourApp />
+      <FetchButton />
     </ErrorsKitProvider>
   )
 }
-
-// In components
-function MyComponent() {
-  const { handleError } = useErrorHandler()
-
-  const fetchData = async () => {
-    try {
-      await apiCall()
-    } catch (error) {
-      handleError(error) // Auto-handled based on level
-    }
-  }
-
-  return <button onClick={fetchData}>Fetch</button>
-}
 ```
 
-#### Error Levels
+### Error policy design guidance
 
-| Level | Action | Use Case |
-|-------|--------|----------|
-| `low` | Toast | Minor validation errors |
-| `medium` | Toast | Request timeouts, 400 errors |
-| `high` | Redirect | 401, 403, 404 errors |
-| `critical` | Modal | 500, 503 server errors |
+- Define one status-to-slug map and keep it stable.
+- Route 401/403 handling through one security policy.
+- Log normalized errors centrally for observability.
 
-#### Custom Handler
+## Layout-Kit
 
-```tsx
-import { createErrorHandler } from '@hascanb/arf-ui-kit/errors-kit'
+### What it provides
 
-const handler = createErrorHandler({
-  levelForStatus: {
-    400: 'medium',
-    401: 'high',
-    403: 'high',
-    404: 'high',
-    500: 'critical',
-  },
-  onToast: (message) => toast.error(message),
-  onRedirect: (path) => navigate(path),
-  on401: () => {
-    localStorage.removeItem('token')
-    navigate('/login')
-  },
-})
+- Layout components: `DashboardLayout`, `AppHeader`, `AppSidebar`, `AppFooter`, `ThemeProvider`
+- Ready navigation data: `basicNavGroups`, `testNavGroups`, `ecommerceNavGroups`, `cargoNavGroups`, `nestedNavGroups`
+- Demo data: `exampleBrandData`, `exampleUserData`
 
-handler.handleError(error)
-```
-
----
-
-### Layout-Kit
-
-Dashboard layouts with responsive design.
-
-#### Features
-- ✅ Responsive dashboard layout
-- ✅ Collapsible sidebar
-- ✅ Sticky header
-- ✅ Footer with links
-- ✅ Breadcrumb support
-- ✅ Navigation presets
-
-#### Quick Start
+### End-to-end usage
 
 ```tsx
-import { 
+'use client'
+
+import {
   DashboardLayout,
   basicNavGroups,
   exampleBrandData,
   exampleUserData,
 } from '@hascanb/arf-ui-kit/layout-kit'
 
-function App() {
+export function DashboardPage({ children }: { children: React.ReactNode }) {
   return (
     <DashboardLayout
       brand={exampleBrandData}
@@ -526,6 +651,11 @@ function App() {
       navGroups={basicNavGroups}
       showSkipToContent
       mainContentId="main-content"
+      showFooter
+      breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }]}
+      onLogout={() => {
+        window.location.href = '/auth/signin'
+      }}
     >
       {children}
     </DashboardLayout>
@@ -533,140 +663,32 @@ function App() {
 }
 ```
 
-#### Navigation Structure
+### Layout implementation tips
 
-```tsx
-const navigation = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Reports",
-    icon: FileText,
-    items: [
-      { title: "Sales", url: "/reports/sales" },
-      { title: "Analytics", url: "/reports/analytics" },
-    ],
-  },
-]
+- Keep navigation data in one typed source.
+- Keep `mainContentId` stable for accessibility and skip-links.
+- Define role-based nav filtering before passing `navGroups`.
+
+## Release Flow
+
+This repository publishes to npm via GitHub Actions on tag push.
+
+1. Update `package.json` and `CHANGELOG.md`.
+2. Commit changes.
+3. Push tag:
+
+```bash
+git tag vX.Y.Z
+git push origin main --tags
 ```
 
----
+`publish.yml` triggers on `push.tags: v*`. It can also be manually run from Actions.
 
-## 🎨 Styling
+## Links
 
-This library uses **Tailwind CSS** and **Shadcn UI** patterns. Make sure you have Tailwind configured:
-
-```js
-// tailwind.config.js
-module.exports = {
-  content: [
-    './app/**/*.{js,ts,jsx,tsx}',
-    './node_modules/@hascanb/arf-ui-kit/**/*.{js,ts,jsx,tsx}',
-  ],
-  // ... rest of config
-}
-```
-
-### CSS Variables
-
-The library uses CSS variables for theming. Add these to your `globals.css`:
-
-```css
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    /* ... other variables */
-  }
-}
-```
-
----
-
-## 🔧 Configuration
-
-### TypeScript
-
-The library is fully typed. Add these to your `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    "paths": {
-      "@hascanb/arf-ui-kit/*": ["./node_modules/@hascanb/arf-ui-kit/dist/*"]
-    }
-  }
-}
-```
-
-### Next.js
-
-For Next.js projects, configure `next.config.js`:
-
-```js
-module.exports = {
-  transpilePackages: ['@hascanb/arf-ui-kit'],
-}
-```
-
----
-
-## 📖 Examples
-
-Check out the [examples folder](./examples) for full working examples:
-
-- **Next.js App Router** - Full-stack example with all kits
-- **Vite + React** - Client-only example
-- **Form Wizard** - Multi-step form example
-- **Admin Dashboard** - Complete dashboard example
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [contributing guidelines](./CONTRIBUTING.md) first.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-MIT © [ARF Technology](https://github.com/arftech)
-
----
-
-## 🙏 Acknowledgments
-
-Built with:
-- [React](https://reactjs.org/)
-- [Next.js](https://nextjs.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Shadcn UI](https://ui.shadcn.com/)
-- [TanStack Table](https://tanstack.com/table)
-- [React Hook Form](https://react-hook-form.com/)
-- [Zod](https://zod.dev/)
-- [Radix UI](https://www.radix-ui.com/)
-- [Lucide Icons](https://lucide.dev/)
-
----
-
-## 📞 Support
-
-- 📧 Email: support@arftech.com
-- 💬 Discord: [Join our community](https://discord.gg/arftech)
-- 🐛 Issues: [GitHub Issues](https://github.com/arftech/arf-ui-kit/issues)
-- 📚 Docs: [Full Documentation](https://docs.arftech.com)
-
----
-
-**Made with ❤️ by ARF Technology**
+- npm: https://www.npmjs.com/package/@hascanb/arf-ui-kit
+- repository: https://github.com/hascanb/arf-ui-kit-new
+- demo/deploy: https://arf-ui-kit.vercel.app
+- changelog: [CHANGELOG.md](CHANGELOG.md)
+- security policy: [SECURITY.md](SECURITY.md)
+- license: [LICENSE](LICENSE)
