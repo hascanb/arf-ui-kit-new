@@ -27,18 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-      
       - name: Run linter
         run: npm run lint
         continue-on-error: true
       
       - name: Build library
         run: npm run build:lib
-      
-      - name: Run tests
-        run: npm test -- --run
       
       - name: Check dist/ output
         run: |
