@@ -13,6 +13,7 @@ Security note: DataTable-Kit uses `xlsx`. Review [SECURITY.md](SECURITY.md) befo
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Optional shadcn Setup](#optional-shadcn-setup)
 - [Global Setup (Recommended)](#global-setup-recommended)
 - [Kit Selection Map](#kit-selection-map)
 - [Auth-Kit](#auth-kit)
@@ -71,6 +72,25 @@ Recommended app dependencies (commonly used with this kit):
 ```bash
 npm install @tanstack/react-table sonner class-variance-authority clsx tailwind-merge
 ```
+
+## Optional shadcn Setup
+
+If your app team also builds custom local UI components with shadcn, initialize it in the consuming app:
+
+```bash
+npx shadcn@latest init
+```
+
+Then add any local components you need:
+
+```bash
+npx shadcn@latest add button input dialog dropdown-menu sheet
+```
+
+Notes:
+
+- ARF UI Kit itself works without running the shadcn CLI.
+- This setup is only needed when you want extra app-specific shadcn components in your own codebase.
 
 Next.js recommendation:
 
