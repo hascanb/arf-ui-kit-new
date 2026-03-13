@@ -16,7 +16,6 @@ import {
   Settings,
   TestTube2,
   ShieldCheck,
-  Plus,
   LayoutDashboard,
   FileText,
   Bell,

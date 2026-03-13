@@ -193,6 +193,14 @@ declare module '@/components/ui/dropdown-menu' {
   export const DropdownMenuShortcut: React.FC<any>
 }
 
+declare module '@/components/ui/hover-card' {
+  import * as React from 'react'
+
+  export const HoverCard: React.FC<any>
+  export const HoverCardTrigger: React.ForwardRefExoticComponent<any>
+  export const HoverCardContent: React.ForwardRefExoticComponent<any>
+}
+
 declare module '@/components/ui/pagination' {
   export * from '@/components/ui/pagination'
 }
