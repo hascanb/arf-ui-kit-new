@@ -16,6 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-03-13
+
+### Fixed
+
+#### CI/CD
+- `src/externals.d.ts`: Added missing `@/components/ui/hover-card` module declaration to resolve TypeScript build error in CI (`Cannot find module '@/components/ui/hover-card'`).
+- `src/layout-kit/utils/navigation-examples.ts`: Removed unused `Plus` import to fix lint warning.
+
+### Changed
+
+#### Release
+- Bumped package version from `1.4.0` to `1.4.1` (`package.json`, `package-lock.json`).
+
+---
+
 ## [1.3.1] - 2026-03-11
 
 ### Changed
