@@ -6,7 +6,9 @@
 
 import {
   Home,
+  LifeBuoy,
   Package,
+  Send,
   Users,
   Building2,
   BarChart3,
@@ -14,13 +16,20 @@ import {
   Settings,
   TestTube2,
   ShieldCheck,
+  Plus,
   LayoutDashboard,
   FileText,
   Bell,
   Table,
   Palette,
 } from 'lucide-react'
-import type { BrandData, UserData, NavGroup } from '../context/types'
+import type {
+  BrandData,
+  BrandSwitcherItem,
+  SidebarQuickActionItem,
+  UserData,
+  NavGroup,
+} from '../context/types'
 
 /**
  * Örnek Marka/Logo Verisi
@@ -31,6 +40,48 @@ export const exampleBrandData: BrandData = {
   url: '/',
   icon: LayoutDashboard,
 }
+
+export const exampleBrandOptions: BrandSwitcherItem[] = [
+  {
+    id: 'arf-ui-kit',
+    title: 'ARF UI Kit',
+    subtitle: 'Component Library',
+    url: '/',
+    icon: LayoutDashboard,
+    shortcut: '⌘1',
+  },
+  {
+    id: 'cargo-ops',
+    title: 'Cargo Ops',
+    subtitle: 'Operations Workspace',
+    url: '/cargo',
+    icon: Package,
+    shortcut: '⌘2',
+  },
+  {
+    id: 'test-hub',
+    title: 'Test Hub',
+    subtitle: 'Playground & Docs',
+    url: '/test',
+    icon: TestTube2,
+    shortcut: '⌘3',
+  },
+]
+
+export const exampleQuickActions: SidebarQuickActionItem[] = [
+  {
+    id: 'support',
+    label: 'Support',
+    url: '/support',
+    icon: LifeBuoy,
+  },
+  {
+    id: 'feedback',
+    label: 'Feedback',
+    url: '/feedback',
+    icon: Send,
+  },
+]
 
 /**
  * Örnek Kullanıcı Verisi

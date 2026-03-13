@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert } from '@/components/ui/alert'
 import { sanitizeAuthErrorMessage } from '../utils'
+import { GoogleIcon, AppleIcon } from '../icons/BrandIcons'
 
 export function SignInForm({ 
   onSuccess, 
@@ -23,6 +24,10 @@ export function SignInForm({
   className 
 }: SignInFormProps = {}) {
   const { config, t, setLastUsername } = useAuthKit()
+  const tOr = (key: string, fallback: string) => {
+    const value = t(key)
+    return value === key ? fallback : value
+  }
   const exposeErrorDetails = config.debug || config.maskSensitiveErrors === false
   const sanitizeError = (rawMessage: unknown, fallback: string) =>
     sanitizeAuthErrorMessage(rawMessage, {
@@ -35,7 +40,11 @@ export function SignInForm({
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [socialLoading, setSocialLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const enabledProviders = config.ui?.socialProviders || ['google', 'apple']
+  const canUseGoogle = enabledProviders.includes('google') && !!config.onGoogleSignIn
+  const canUseApple = enabledProviders.includes('apple') && !!config.onAppleSignIn
   
   // ========== Validation ==========
   const validate = (): boolean => {
@@ -89,16 +98,72 @@ export function SignInForm({
           window.location.href = config.routes.afterSignIn
         }
       } else {
-        const errorMsg = sanitizeError(response.error, t('errors.generic'))
+        const errorMsg = sanitizeError(response.error, tOr('errors.generic', 'Bir hata olustu'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
-      const errorMsg = sanitizeError(err instanceof Error ? err.message : err, t('errors.networkError'))
+        const errorMsg = sanitizeError(
+          err instanceof Error ? err.message : err,
+          tOr('errors.networkError', 'Baglanti hatasi olustu')
+        )
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // ========== Social Auth Handlers ==========
+  const handleGoogleSignIn = async () => {
+    setError(null)
+    setSocialLoading('google')
+    try {
+      const response = await config.onGoogleSignIn?.()
+      if (response?.success) {
+        setLastUsername(response.data?.user?.username || 'google-user')
+        onSuccess?.(response)
+        window.location.href = config.routes.afterSignIn
+      } else {
+        const errorMsg = sanitizeError(response?.error, tOr('errors.generic', 'Bir hata olustu'))
+        setError(errorMsg)
+        onError?.(errorMsg)
+      }
+    } catch (err) {
+      const errorMsg = sanitizeError(
+        err instanceof Error ? err.message : err,
+        tOr('errors.networkError', 'Baglanti hatasi olustu')
+      )
+      setError(errorMsg)
+      onError?.(errorMsg)
+    } finally {
+      setSocialLoading(null)
+    }
+  }
+
+  const handleAppleSignIn = async () => {
+    setError(null)
+    setSocialLoading('apple')
+    try {
+      const response = await config.onAppleSignIn?.()
+      if (response?.success) {
+        setLastUsername(response.data?.user?.username || 'apple-user')
+        onSuccess?.(response)
+        window.location.href = config.routes.afterSignIn
+      } else {
+        const errorMsg = sanitizeError(response?.error, tOr('errors.generic', 'Bir hata olustu'))
+        setError(errorMsg)
+        onError?.(errorMsg)
+      }
+    } catch (err) {
+      const errorMsg = sanitizeError(
+        err instanceof Error ? err.message : err,
+        tOr('errors.networkError', 'Baglanti hatasi olustu')
+      )
+      setError(errorMsg)
+      onError?.(errorMsg)
+    } finally {
+      setSocialLoading(null)
     }
   }
   
@@ -114,13 +179,13 @@ export function SignInForm({
         
         {/* Username Field */}
         <div className="space-y-2">
-          <Label htmlFor="username">{t('signIn.username')}</Label>
+          <Label htmlFor="username">{tOr('signIn.username', 'Kullanici Adi')}</Label>
           <Input
             id="username"
             type="text"
             value={username}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-            placeholder={t('signIn.username')}
+            placeholder={tOr('signIn.username', 'Kullanici Adi')}
             disabled={isLoading}
             autoComplete="username"
             autoFocus
@@ -129,13 +194,13 @@ export function SignInForm({
         
         {/* Password Field */}
         <div className="space-y-2">
-          <Label htmlFor="password">{t('signIn.password')}</Label>
+          <Label htmlFor="password">{tOr('signIn.password', 'Sifre')}</Label>
           <Input
             id="password"
             type="password"
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            placeholder={t('signIn.password')}
+            placeholder={tOr('signIn.password', 'Sifre')}
             disabled={isLoading}
             autoComplete="current-password"
           />
@@ -152,7 +217,7 @@ export function SignInForm({
                 disabled={isLoading}
               />
               <Label htmlFor="rememberMe" className="text-sm cursor-pointer">
-                {t('signIn.rememberMe')}
+                {tOr('signIn.rememberMe', 'Beni Hatirla')}
               </Label>
             </div>
           )}
@@ -162,7 +227,7 @@ export function SignInForm({
               href={config.routes.forgotPassword}
               className="text-sm text-primary hover:underline"
             >
-              {t('signIn.forgotPassword')}
+              {tOr('signIn.forgotPassword', 'Sifremi Unuttum')}
             </a>
           )}
         </div>
@@ -170,18 +235,74 @@ export function SignInForm({
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full"
-          disabled={isLoading}
+          className="w-full h-11 font-semibold"
+          disabled={isLoading || socialLoading !== null}
         >
-          {isLoading ? '...' : t('signIn.submit')}
+          {isLoading ? '...' : tOr('signIn.submit', 'Giris Yap')}
         </Button>
+        
+        {/* Social Login Divider */}
+        {config.ui?.showSocialLogins && (canUseGoogle || canUseApple) && (
+          <>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-background text-muted-foreground">
+                  {tOr('signIn.orContinueWith', 'veya')}
+                </span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {canUseGoogle && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isLoading || socialLoading !== null}
+                  onClick={handleGoogleSignIn}
+                  className="w-full h-11"
+                >
+                  {socialLoading === 'google' ? (
+                    '...'
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <GoogleIcon size={18} />
+                      Google
+                    </span>
+                  )}
+                </Button>
+              )}
+              
+              {canUseApple && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isLoading || socialLoading !== null}
+                  onClick={handleAppleSignIn}
+                  className="w-full h-11"
+                >
+                  {socialLoading === 'apple' ? (
+                    '...'
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <AppleIcon size={18} />
+                      Apple
+                    </span>
+                  )}
+                </Button>
+              )}
+            </div>
+          </>
+        )}
         
         {/* Sign Up Link */}
         {config.ui?.showSignUpLink && config.routes.signUp && (
           <div className="text-center text-sm text-muted-foreground">
-            {t('signIn.noAccount')}{' '}
+            {tOr('signIn.noAccount', 'Hesabiniz yok mu?')}{' '}
             <a href={config.routes.signUp} className="text-primary hover:underline">
-              {t('signIn.signUp')}
+              {tOr('signIn.signUp', 'Kayit Ol')}
             </a>
           </div>
         )}

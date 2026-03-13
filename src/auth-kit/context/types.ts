@@ -10,6 +10,13 @@
 // Request & Response Types
 // ============================================================================
 
+export interface User {
+  username?: string
+  email?: string
+  id?: string
+  [key: string]: unknown
+}
+
 export interface SignInCredentials {
   username: string
   password: string
@@ -22,7 +29,7 @@ export interface SignInResponse {
   error?: string
   message?: string
   data?: {
-    user?: unknown
+    user?: User
     token?: string
     refreshToken?: string
   }
@@ -39,7 +46,7 @@ export interface OtpResponse {
   message?: string
   data?: {
     token?: string
-    user?: unknown
+    user?: User
   }
 }
 
@@ -80,6 +87,7 @@ export interface AuthKitTranslations {
     forgotPassword: string
     noAccount: string
     signUp: string
+    orContinueWith: string
   }
   otp: {
     title: string
@@ -141,6 +149,17 @@ export interface AuthKitRoutes {
   signUp?: string
 }
 
+export interface AuthKitSignIn2Content {
+  badge?: string
+  title?: string
+  description?: string
+  securityLabel?: string
+  securityValue?: string
+  securityDescription?: string
+  backgroundImageUrl?: string
+  backgroundImageAlt?: string
+}
+
 export interface AuthKitUIConfig {
   /** "Beni Hatırla" checkbox'ını göster */
   showRememberMe?: boolean
@@ -148,10 +167,24 @@ export interface AuthKitUIConfig {
   showForgotPassword?: boolean
   /** Kayıt linkini göster */
   showSignUpLink?: boolean
+  /** Sosyal login butonlarını göster */
+  showSocialLogins?: boolean
+  /** Sosyal login sağlayıcıları */
+  socialProviders?: ('google' | 'apple' | 'microsoft')[] 
   /** Logo URL */
   logoUrl?: string
   /** Marka adı */
   brandName?: string
+  /** Tema (light/dark) */
+  theme?: 'light' | 'dark'
+  /** Birincil renk (hex) */
+  primaryColor?: string
+  /** Vurgu rengi (hex) */
+  accentColor?: string
+  /** Border radius (tailwind class) */
+  borderRadius?: string
+  /** SignIn2 sayfası içerik ayarları */
+  signIn2?: AuthKitSignIn2Content
   /** Özel class name'ler */
   classNames?: {
     container?: string
@@ -166,6 +199,15 @@ export interface AuthKitConfig {
   
   /** Kullanıcı giriş callback'i */
   onSignIn: (credentials: SignInCredentials) => Promise<SignInResponse>
+  
+  /** Google giriş callback'i */
+  onGoogleSignIn?: () => Promise<SignInResponse>
+  
+  /** Apple giriş callback'i */
+  onAppleSignIn?: () => Promise<SignInResponse>
+  
+  /** Microsoft giriş callback'i */
+  onMicrosoftSignIn?: () => Promise<SignInResponse>
   
   /** OTP doğrulama callback'i */
   onOtpVerify?: (data: OtpData) => Promise<OtpResponse>

@@ -46,9 +46,9 @@
  *   
  *   // Routes
  *   routes: {
- *     signIn: '/auth/signin',
+ *     signIn: '/test/auth/pages/signin',
  *     afterSignIn: '/dashboard',
- *     forgotPassword: '/auth/forgot-password'
+ *     forgotPassword: '/test/auth/pages/forgot-password'
  *   },
  *   
  *   // UI Options
@@ -389,9 +389,9 @@ export default function SignInPage() {
     }
   },
   routes: {
-    signIn: '/auth/signin',
+    signIn: '/test/auth/pages/signin',
     afterSignIn: '/dashboard',
-    forgotPassword: '/auth/forgot-password'
+    forgotPassword: '/test/auth/pages/forgot-password'
   },
   ui: {
     showRememberMe: true,

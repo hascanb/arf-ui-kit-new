@@ -1,0 +1,20 @@
+<svg width="1280" height="800" viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Teslimat kanit resmi 2">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ecfeff"/>
+      <stop offset="100%" stop-color="#cffafe"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="800" fill="url(#bg2)"/>
+  <rect x="90" y="70" width="1100" height="660" rx="26" fill="#ffffff" stroke="#99f6e4" stroke-width="3"/>
+  <text x="140" y="150" font-size="42" font-family="Arial, sans-serif" font-weight="700" fill="#042f2e">Teslimat Kaniti (Test Görseli)</text>
+  <text x="140" y="200" font-size="28" font-family="Arial, sans-serif" fill="#134e4a">Takip No: 1001 | Parça No: 100106</text>
+  <text x="140" y="242" font-size="24" font-family="Arial, sans-serif" fill="#0f766e">Parça Tipi: Palet</text>
+  <text x="140" y="278" font-size="24" font-family="Arial, sans-serif" fill="#0f766e">Teslim Alan: Mehmet Demir</text>
+  <rect x="140" y="330" width="1000" height="300" rx="18" fill="#f0fdfa" stroke="#14b8a6" stroke-width="2"/>
+  <circle cx="320" cy="480" r="90" fill="#99f6e4"/>
+  <rect x="470" y="405" width="510" height="150" rx="14" fill="#ccfbf1"/>
+  <text x="520" y="470" font-size="34" font-family="Arial, sans-serif" fill="#0f766e">AI Test Mock Palet Teslimi</text>
+  <text x="520" y="515" font-size="22" font-family="Arial, sans-serif" fill="#115e59">Bu görsel geliştirme amaçlıdır.</text>
+  <text x="140" y="685" font-size="22" font-family="Arial, sans-serif" fill="#0f766e">Oluşturulma: 2026-03-13 17:47</text>
+</svg>

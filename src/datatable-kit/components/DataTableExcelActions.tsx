@@ -46,8 +46,8 @@ export function DataTableExcelActions<TData>({
   exportSelected = false,
   enableImport = false,
   onImport,
-  exportLabel = 'Export',
-  importLabel = 'Import',
+  exportLabel = 'Dışa Aktar',
+  importLabel = 'İçe Aktar',
   excelSecurity,
   requireTrustedSourceConfirmation = true,
   trustedSourceConfirmationMessage =

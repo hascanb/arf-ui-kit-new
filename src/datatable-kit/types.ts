@@ -80,6 +80,7 @@ export interface DataTableProps<TData = unknown> {
   overscan?: number
   stickyFirstColumn?: boolean
   stickyLastColumn?: boolean
+  stickyRightColumnCount?: number
   enableColumnResizing?: boolean
   
   // Styling
@@ -105,6 +106,7 @@ export interface DataTablePaginationProps {
   pageSizeOptions?: number[]
   showPageInfo?: boolean
   showPageSizeSelector?: boolean
+  totalRows?: number
 }
 
 /**
@@ -114,6 +116,8 @@ export interface DataTableColumnHeaderProps<TData = unknown> {
   column: TanStackTable<TData>['getColumn'] extends (id: string) => infer R ? NonNullable<R> : never
   title: string
   className?: string
+  /** Kolon bazlı arama (mercek ikonu) — varsayılan: true */
+  enableSearch?: boolean
 }
 
 /**

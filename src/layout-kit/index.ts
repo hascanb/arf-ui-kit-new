@@ -24,6 +24,8 @@ export type {
   NavGroup,
   UserData,
   BrandData,
+  BrandSwitcherItem,
+  SidebarQuickActionItem,
   AppSidebarProps,
   
   // AppFooter
@@ -42,6 +44,7 @@ export type {
 // ========== Utils ==========
 export {
   exampleBrandData,
+  exampleBrandOptions,
   exampleUserData,
   basicNavGroups,
   testNavGroups,

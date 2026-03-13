@@ -256,7 +256,7 @@ const handleLogin = (token: string) => {
 // Logout
 const handleLogout = () => {
   clearAuth()
-  router.push('/auth/signin')
+  router.push('/test/auth/pages/signin')
 }`}
           </pre>
         </CardContent>

@@ -28,13 +28,14 @@ export function DataTablePagination({
   pageSizeOptions = [10, 20, 30, 40, 50],
   showPageInfo = true,
   showPageSizeSelector = true,
+  totalRows,
 }: DataTablePaginationProps) {
   const currentPage = table.getState().pagination.pageIndex + 1
   const totalPages = table.getPageCount()
   const pageSize = table.getState().pagination.pageSize
-  const totalRows = table.getFilteredRowModel().rows.length
-  const startRow = totalRows === 0 ? 0 : currentPage * pageSize - pageSize + 1
-  const endRow = Math.min(currentPage * pageSize, totalRows)
+  const resolvedTotalRows = totalRows ?? table.getFilteredRowModel().rows.length
+  const startRow = resolvedTotalRows === 0 ? 0 : currentPage * pageSize - pageSize + 1
+  const endRow = Math.min(currentPage * pageSize, resolvedTotalRows)
 
   return (
     <div className="flex items-center justify-between px-2 py-4">
@@ -42,13 +43,13 @@ export function DataTablePagination({
       <div className="flex items-center space-x-6">
         {showPageInfo && (
           <div className="flex-1 text-sm text-muted-foreground">
-            Showing {startRow} to {endRow} of {totalRows} row(s)
+            {startRow} - {endRow} arası, toplam {resolvedTotalRows} kayıt
           </div>
         )}
         
         {showPageSizeSelector && (
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+            <p className="text-sm font-medium">Sayfa başına</p>
             <Select
               value={`${pageSize}`}
               onValueChange={(value: string) => {
@@ -73,7 +74,7 @@ export function DataTablePagination({
       {/* Right: Navigation buttons */}
       <div className="flex items-center space-x-2">
         <div className="flex items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
+          Sayfa {currentPage} / {totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -82,7 +83,7 @@ export function DataTablePagination({
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
           >
-            <span className="sr-only">Go to first page</span>
+            <span className="sr-only">İlk sayfaya git</span>
             <ChevronsLeftIcon className="h-4 w-4" />
           </Button>
           <Button
@@ -91,7 +92,7 @@ export function DataTablePagination({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            <span className="sr-only">Go to previous page</span>
+            <span className="sr-only">Önceki sayfaya git</span>
             <ChevronLeftIcon className="h-4 w-4" />
           </Button>
           <Button
@@ -100,7 +101,7 @@ export function DataTablePagination({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            <span className="sr-only">Go to next page</span>
+            <span className="sr-only">Sonraki sayfaya git</span>
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
           <Button
@@ -109,7 +110,7 @@ export function DataTablePagination({
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
           >
-            <span className="sr-only">Go to last page</span>
+            <span className="sr-only">Son sayfaya git</span>
             <ChevronsRightIcon className="h-4 w-4" />
           </Button>
         </div>

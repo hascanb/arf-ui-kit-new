@@ -19,7 +19,8 @@ export function DataTableToolbar<TData>({
   searchValue,
   onSearchValueChange,
   isSearchPending = false,
-  searchPlaceholder = 'Search...',
+  showColumnSelector = true,
+  searchPlaceholder = 'Ara...',
   children,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0 || !!table.getState().globalFilter
@@ -66,14 +67,14 @@ export function DataTableToolbar<TData>({
             }}
             className="h-8 px-2 lg:px-3"
           >
-            Reset
+            Sıfırla
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>
       
       {/* Right side: Column selector */}
-      <DataTableViewOptions table={table} />
+      {showColumnSelector && <DataTableViewOptions table={table} />}
     </div>
   )
 }

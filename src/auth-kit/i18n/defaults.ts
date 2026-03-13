@@ -19,6 +19,7 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
       forgotPassword: 'Şifremi Unuttum?',
       noAccount: 'Hesabınız yok mu?',
       signUp: 'Kayıt Ol',
+      orContinueWith: 'veya şununla devam et',
     },
     otp: {
       title: 'Doğrulama Kodu',
@@ -72,6 +73,7 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
       forgotPassword: 'Forgot Password?',
       noAccount: "Don't have an account?",
       signUp: 'Sign Up',
+      orContinueWith: 'or continue with',
     },
     otp: {
       title: 'Verification Code',

@@ -2,69 +2,126 @@
 
 /**
  * Auth Kit - Sign In Page Content (Alternative Layout)
- * 
- * Split-screen layout: Sol tarafta görsel, sağ tarafta form
- * Modern ve görsel ağırlıklı tasarım
+ *
+ * login-02 bazli: sol panel branding, sag panel form
  */
 
-import React from 'react'
+import React, { useState } from 'react'
+import { GalleryVerticalEnd, ShieldCheck, Sparkles, Globe } from 'lucide-react'
 import { useAuthKit } from '../context/useAuthKit'
-import { SignInForm } from '../components/SignInForm'
+import { SignIn2LoginForm } from '../components/SignIn2LoginForm'
 
 export function SignIn2PageContent() {
   const { config, t } = useAuthKit()
+  const [logoError, setLogoError] = useState(false)
+  const tOr = (key: string, fallback: string) => {
+    const value = t(key)
+    return value === key ? fallback : value
+  }
+  const primaryColor = config.ui?.primaryColor || '#0f172a'
+  const accentColor = config.ui?.accentColor || '#334155'
   
   return (
-    <div className="flex min-h-screen">
-      {/* Left Panel - Visual/Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center p-12">
-        <div className="max-w-md text-white space-y-6">
-          {config.ui?.logoUrl && (
-            <img 
-              src={config.ui.logoUrl} 
-              alt={config.ui.brandName || 'Logo'}
-              className="h-16 w-auto mb-8"
-            />
-          )}
-          {config.ui?.brandName && (
-            <>
-              <h1 className="text-4xl font-bold">
-                Hoş Geldiniz
-              </h1>
-              <p className="text-lg text-primary-foreground/80">
-                {config.ui.brandName} platformuna giriş yapın ve işlemlerinize devam edin.
-              </p>
-            </>
-          )}
+    <div className="grid min-h-svh bg-zinc-50 lg:grid-cols-2">
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <a href={config.routes.signIn} className="inline-flex items-center gap-3 font-medium text-slate-900">
+            <div className="flex size-7 items-center justify-center rounded-md text-white" style={{ background: primaryColor }}>
+              <GalleryVerticalEnd className="size-4" />
+            </div>
+            {config.ui?.brandName || 'ARF'}
+          </a>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <SignIn2LoginForm />
+          </div>
         </div>
       </div>
-      
-      {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md space-y-8">
-          {/* Mobile Logo */}
-          {config.ui?.logoUrl && (
-            <div className="flex justify-center lg:hidden">
-              <img 
-                src={config.ui.logoUrl} 
-                alt={config.ui.brandName || 'Logo'}
-                className="h-12 w-auto"
-              />
-            </div>
+
+      <div className="relative hidden lg:block">
+        {config.ui?.signIn2?.backgroundImageUrl && (
+          <img
+            src={config.ui.signIn2.backgroundImageUrl}
+            alt={config.ui.signIn2.backgroundImageAlt || 'Background'}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+        {config.ui?.signIn2?.backgroundImageUrl ? (
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-black/20" />
+        ) : (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(900px 460px at 15% 12%, rgba(255,255,255,0.32), transparent 48%), radial-gradient(1100px 540px at 85% 92%, rgba(255,255,255,0.18), transparent 52%), linear-gradient(150deg, ${primaryColor} 0%, ${accentColor} 100%)`,
+              }}
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(15,23,42,0.30),rgba(15,23,42,0.14))]" />
+            <div className="absolute inset-0 opacity-[0.22] bg-[repeating-linear-gradient(120deg,rgba(255,255,255,0.14)_0,rgba(255,255,255,0.14)_1px,transparent_1px,transparent_12px)]" />
+            <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.55)_1px,transparent_0)] bg-size-[20px_20px]" />
+          </>
+        )}
+
+        <div className="relative z-10 flex h-full flex-col justify-end p-12 text-white">
+          {config.ui?.logoUrl && !logoError && (
+            <img
+              src={config.ui.logoUrl}
+              alt={config.ui.brandName || 'Logo'}
+              className="mb-8 h-12 w-auto"
+              onError={() => setLogoError(true)}
+            />
           )}
-          
-          {/* Header */}
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold">
-              {t('signIn.title')}
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              {t('signIn.subtitle')}
+
+          {config.ui?.signIn2?.badge && (
+            <p className="mb-4 inline-flex w-fit rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.16em] text-white/80">
+              {config.ui.signIn2.badge}
             </p>
+          )}
+
+          <h2 className="max-w-xl text-[42px] font-semibold leading-[1.08] tracking-tight">
+            {config.ui?.signIn2?.title || tOr('signIn.welcome', 'Hos Geldiniz')}
+          </h2>
+
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-white/88">
+            {config.ui?.signIn2?.description || `${config.ui?.brandName || 'ARF'} platformuna giris yaparak islemlerinizi guvenli sekilde yonetebilirsiniz.`}
+          </p>
+
+          <div className="mt-8 grid max-w-xl grid-cols-1 gap-3">
+            {[
+              {
+                icon: ShieldCheck,
+                title: 'Guvenli ve sifreli baglanti',
+                description: 'Tum oturum hareketleri sifrelenmis altyapi uzerinden iletilir.',
+              },
+              {
+                icon: Sparkles,
+                title: 'Hizli kimlik dogrulama',
+                description: 'Kullanici dogrulama sureci sade ve performans odaklidir.',
+              },
+              {
+                icon: Globe,
+                title: 'Sosyal hesaplarla devam',
+                description: 'Google ve Apple ile hizli ve guvenilir sekilde oturum acin.',
+              },
+            ].map((item) => {
+              const IconComponent = item.icon
+              return (
+                <div key={item.title} className="rounded-2xl border border-white/25 bg-white/10 px-4 py-3.5 backdrop-blur-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-lg bg-white/15 p-1.5">
+                      {IconComponent && <IconComponent className="size-4 text-white" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{item.title}</p>
+                      <p className="mt-1 text-sm text-white/78">{item.description}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          
-          {/* Form */}
-          <SignInForm />
         </div>
       </div>
     </div>

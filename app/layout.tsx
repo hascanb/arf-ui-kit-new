@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import '@/styles/globals.css'
@@ -28,6 +29,14 @@ export default function RootLayout({
     <html lang="tr">
       <body className={`${fontSans.variable} ${fontMono.variable} antialiased`}>
         {children}
+        {process.env.NODE_ENV === 'development' && (
+          <Script
+            src="https://tweakcn.com/live-preview.min.js"
+            strategy="afterInteractive"
+            async
+            crossOrigin="anonymous"
+          />
+        )}
         <Analytics />
       </body>
     </html>

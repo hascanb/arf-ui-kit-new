@@ -4,6 +4,8 @@
 
 export {
   exampleBrandData,
+  exampleBrandOptions,
+  exampleQuickActions,
   exampleUserData,
   basicNavGroups,
   testNavGroups,

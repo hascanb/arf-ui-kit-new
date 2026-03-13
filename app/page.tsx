@@ -1,20 +1,12 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { ArrowRight, FlaskConical, Truck } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { resolveEntryVisibilityPolicy } from './_shared/entry-policy'
+import { ARF_ROUTES } from './arf/_shared/routes'
 
 export default function EntrySelectionPage() {
-  const defaultEntry = process.env.APP_DEFAULT_ENTRY
-  if (defaultEntry === 'cargo') {
-    redirect('/cargo')
-  }
-  if (defaultEntry === 'test') {
-    redirect('/test')
-  }
-
   const visibility = resolveEntryVisibilityPolicy()
 
   return (
@@ -50,7 +42,7 @@ export default function EntrySelectionPage() {
                   <li>Kurumsal dashboard deneyimi</li>
                 </ul>
                 <Button asChild className="w-full justify-between bg-emerald-600 hover:bg-emerald-700">
-                  <Link href="/cargo">
+                  <Link href={ARF_ROUTES.cargo.root}>
                     Cargo alanına gir
                     <ArrowRight className="size-4" />
                   </Link>

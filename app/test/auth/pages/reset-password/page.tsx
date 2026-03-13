@@ -1,7 +1,7 @@
 'use client'
 
 import { AuthKitProvider, ResetPasswordPageContent } from '@hascanb/arf-ui-kit/auth-kit'
-import { demoAuthConfig } from '../../../../auth/config'
+import { demoAuthConfig } from '../../config'
 
 export default function TestResetPasswordPage() {
   return (

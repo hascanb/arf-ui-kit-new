@@ -80,6 +80,7 @@ export function DataTable<TData>({
   overscan = 8,
   stickyFirstColumn = false,
   stickyLastColumn = false,
+  stickyRightColumnCount = 0,
 
   // Advanced rows
   renderRowActions,
@@ -137,7 +138,7 @@ export function DataTable<TData>({
       ...(columns as ColumnDef<TData, unknown>[]),
       {
         id: '__inline_actions__',
-        header: 'Actions',
+        header: 'İşlemler',
         cell: ({ row }) => renderRowActions(row.original),
       },
     ]
@@ -239,6 +240,24 @@ export function DataTable<TData>({
 
   const hasInteractiveRow = !!onRowClick || !!onRowDoubleClick || (expandOnRowClick && canRenderExpandedRows)
 
+  const resolveStickyRightCount = (columnCount: number) => {
+    if (stickyRightColumnCount > 0) {
+      return Math.min(stickyRightColumnCount, columnCount)
+    }
+
+    return stickyLastColumn ? 1 : 0
+  }
+
+  const getStickyRightOffset = (columnSizes: number[], index: number, stickyRightCount: number) => {
+    const firstStickyIndex = columnSizes.length - stickyRightCount
+
+    if (stickyRightCount === 0 || index < firstStickyIndex) {
+      return null
+    }
+
+    return columnSizes.slice(index + 1).reduce((sum, nextSize) => sum + nextSize, 0)
+  }
+
   const renderMainRow = (row: Row<TData>) => (
     <React.Fragment key={row.id}>
       <TableRow
@@ -252,20 +271,35 @@ export function DataTable<TData>({
         onDoubleClick={() => onRowDoubleClick?.(row.original)}
         className={hasInteractiveRow ? 'cursor-pointer' : undefined}
       >
-        {row.getVisibleCells().map((cell, index: number) => (
-          <TableCell
-            key={cell.id}
-            className={
-              stickyFirstColumn && index === 0
-                ? 'sticky left-0 z-10 bg-background'
-                : stickyLastColumn && index === row.getVisibleCells().length - 1
-                ? 'sticky right-0 z-10 bg-background'
-                : undefined
-            }
-          >
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </TableCell>
-        ))}
+        {(() => {
+          const visibleCells = row.getVisibleCells()
+          const stickyRightCount = resolveStickyRightCount(visibleCells.length)
+          const columnSizes = visibleCells.map((cell) => cell.column.getSize())
+
+          return visibleCells.map((cell, index: number) => {
+            const stickyRightOffset = getStickyRightOffset(columnSizes, index, stickyRightCount)
+
+            return (
+              <TableCell
+                key={cell.id}
+                style={
+                  stickyRightOffset !== null
+                    ? { right: `${stickyRightOffset}px` }
+                    : undefined
+                }
+                className={
+                  stickyFirstColumn && index === 0
+                    ? 'sticky left-0 z-20 bg-background'
+                    : stickyRightOffset !== null
+                    ? 'sticky z-20 bg-background'
+                    : undefined
+                }
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            )
+          })
+        })()}
       </TableRow>
 
       {canRenderExpandedRows && row.getIsExpanded() && (
@@ -284,25 +318,35 @@ export function DataTable<TData>({
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                style={{
-                  width: header.getSize() !== 150 ? header.getSize() : undefined,
-                }}
-                className={
-                  stickyFirstColumn && header.index === 0
-                    ? 'sticky left-0 z-10 bg-background'
-                    : stickyLastColumn && header.index === headerGroup.headers.length - 1
-                    ? 'sticky right-0 z-10 bg-background'
-                    : undefined
-                }
-              >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
+            {(() => {
+              const headerSizes = headerGroup.headers.map((currentHeader) => currentHeader.getSize())
+              const stickyRightCount = resolveStickyRightCount(headerGroup.headers.length)
+
+              return headerGroup.headers.map((header) => {
+                const stickyRightOffset = getStickyRightOffset(headerSizes, header.index, stickyRightCount)
+
+                return (
+                  <TableHead
+                    key={header.id}
+                    style={{
+                      width: header.getSize() !== 150 ? header.getSize() : undefined,
+                      ...(stickyRightOffset !== null ? { right: `${stickyRightOffset}px` } : {}),
+                    }}
+                    className={
+                      stickyFirstColumn && header.index === 0
+                        ? 'sticky left-0 z-30 bg-background'
+                        : stickyRightOffset !== null
+                        ? 'sticky z-30 bg-background'
+                        : undefined
+                    }
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                )
+              })
+            })()}
           </TableRow>
         ))}
       </TableHeader>
@@ -351,7 +395,7 @@ export function DataTable<TData>({
     <div className={className}>
       {enableHorizontalScroll ? (
         <ScrollArea className="rounded-md border">
-          <div className="relative min-w-max" ref={virtualized ? tableContainerRef : undefined} style={virtualized ? { maxHeight: tableHeight, overflowY: 'auto' } : undefined}>
+          <div className={`relative min-w-max ${(stickyFirstColumn || stickyLastColumn || stickyRightColumnCount > 0) ? '**:data-[slot=table-container]:overflow-visible' : ''}`} ref={virtualized ? tableContainerRef : undefined} style={virtualized ? { maxHeight: tableHeight, overflowY: 'auto' } : undefined}>
             {tableContent}
           </div>
           <ScrollBar orientation="horizontal" />

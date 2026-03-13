@@ -92,10 +92,10 @@
  *   
  *   // Routes
  *   routes: {
- *     signIn: '/auth/signin',
- *     otp: '/auth/otp',
- *     forgotPassword: '/auth/forgot-password',
- *     resetPassword: '/auth/reset-password',
+ *     signIn: '/test/auth/pages/signin',
+ *     otp: '/test/auth/pages/otp',
+ *     forgotPassword: '/test/auth/pages/forgot-password',
+ *     resetPassword: '/test/auth/pages/reset-password',
  *     afterSignIn: '/dashboard'
  *   },
  *   

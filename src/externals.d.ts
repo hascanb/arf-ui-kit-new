@@ -63,6 +63,21 @@ declare module '@/components/ui/form' {
   export * from '@/components/ui/form'
 }
 
+declare module '@/components/ui/field' {
+  export {
+    Field,
+    FieldLabel,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLegend,
+    FieldSeparator,
+    FieldSet,
+    FieldContent,
+    FieldTitle,
+  } from '@/components/ui/field'
+}
+
 declare module '@/components/ui/select' {
   import * as React from 'react'
   

@@ -17,12 +17,29 @@ export interface BreadcrumbData {
 }
 
 /**
+ * AppHeader command palette item
+ */
+export interface HeaderCommandItem {
+  id: string
+  label: string
+  group?: string
+  keywords?: string[]
+  shortcut?: string
+  icon?: React.ReactNode
+  onSelect?: () => void
+}
+
+/**
  * AppHeader bileşeni props'ları
  */
 export interface AppHeaderProps {
   breadcrumbs?: BreadcrumbData[]
   searchPlaceholder?: string
   searchShortcut?: React.ReactNode
+  searchCommands?: HeaderCommandItem[]
+  commandTitle?: string
+  commandDescription?: string
+  searchEmptyMessage?: string
   notificationCount?: number
   notificationsLabel?: string
   onSearchClick?: () => void
@@ -37,6 +54,7 @@ export interface AppHeaderProps {
 export interface NavSubItem {
   title: string
   url: string
+  icon?: React.ElementType
   badge?: string
   items?: NavSubItem[]
 }
@@ -81,10 +99,35 @@ export interface BrandData {
 }
 
 /**
+ * Sidebar header switcher item
+ */
+export interface BrandSwitcherItem extends BrandData {
+  id: string
+  shortcut?: string
+  onSelect?: () => void
+}
+
+/**
+ * Sidebar footer quick action item
+ */
+export interface SidebarQuickActionItem {
+  id: string
+  label: string
+  url?: string
+  icon: React.ElementType
+  onSelect?: () => void
+}
+
+/**
  * AppSidebar bileşeni props'ları
  */
 export interface AppSidebarProps {
   brand: BrandData
+  brandOptions?: BrandSwitcherItem[]
+  brandMenuLabel?: string
+  addBrandLabel?: string
+  onAddBrand?: () => void
+  quickActions?: SidebarQuickActionItem[]
   user: UserData
   navGroups: NavGroup[]
   onLogout?: () => void
@@ -137,6 +180,11 @@ export interface AppFooterProps {
 export interface DashboardLayoutProps {
   children: React.ReactNode
   brand: BrandData
+  brandOptions?: BrandSwitcherItem[]
+  brandMenuLabel?: string
+  addBrandLabel?: string
+  onAddBrand?: () => void
+  quickActions?: SidebarQuickActionItem[]
   user: UserData
   navGroups: NavGroup[]
   mainContentId?: string
@@ -144,6 +192,10 @@ export interface DashboardLayoutProps {
   skipToContentLabel?: string
   breadcrumbs?: BreadcrumbData[]
   searchPlaceholder?: string
+  searchCommands?: HeaderCommandItem[]
+  commandTitle?: string
+  commandDescription?: string
+  searchEmptyMessage?: string
   notificationCount?: number
   showFooter?: boolean
   footerProps?: Omit<AppFooterProps, 'className'>

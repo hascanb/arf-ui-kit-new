@@ -17,6 +17,11 @@ import type { DashboardLayoutProps } from "../context/types"
 export function DashboardLayout({
   children,
   brand,
+  brandOptions,
+  brandMenuLabel,
+  addBrandLabel,
+  onAddBrand,
+  quickActions,
   user,
   navGroups,
   mainContentId = 'main-content',
@@ -24,6 +29,10 @@ export function DashboardLayout({
   skipToContentLabel = 'Ana icerige gec',
   breadcrumbs,
   searchPlaceholder,
+  searchCommands,
+  commandTitle,
+  commandDescription,
+  searchEmptyMessage,
   notificationCount,
   showFooter = false,
   footerProps,
@@ -31,6 +40,58 @@ export function DashboardLayout({
   onSearchClick,
   onNotificationClick,
 }: DashboardLayoutProps) {
+  const resolvedSearchCommands = React.useMemo(() => {
+    if (searchCommands && searchCommands.length > 0) {
+      return searchCommands
+    }
+
+    return navGroups.flatMap((group, groupIndex) => {
+      const groupLabel = group.label || "Navigation"
+
+      return group.items.flatMap((item, itemIndex) => {
+        const commands = [] as Array<{
+          id: string
+          label: string
+          group: string
+          keywords: string[]
+          onSelect?: () => void
+        }>
+
+        if (item.url) {
+          commands.push({
+            id: `nav-${groupIndex}-${itemIndex}`,
+            label: item.title,
+            group: groupLabel,
+            keywords: [item.title, item.url],
+            onSelect: () => {
+              if (typeof window !== "undefined") {
+                window.location.href = item.url as string
+              }
+            },
+          })
+        }
+
+        if (item.items && item.items.length > 0) {
+          item.items.forEach((subItem, subIndex) => {
+            commands.push({
+              id: `nav-${groupIndex}-${itemIndex}-${subIndex}`,
+              label: `${item.title} / ${subItem.title}`,
+              group: groupLabel,
+              keywords: [item.title, subItem.title, subItem.url],
+              onSelect: () => {
+                if (typeof window !== "undefined") {
+                  window.location.href = subItem.url
+                }
+              },
+            })
+          })
+        }
+
+        return commands
+      })
+    })
+  }, [navGroups, searchCommands])
+
   return (
     <SidebarProvider>
       {showSkipToContent && (
@@ -43,6 +104,11 @@ export function DashboardLayout({
       )}
       <AppSidebar
         brand={brand}
+        brandOptions={brandOptions}
+        brandMenuLabel={brandMenuLabel}
+        addBrandLabel={addBrandLabel}
+        onAddBrand={onAddBrand}
+        quickActions={quickActions}
         user={user}
         navGroups={navGroups}
         onLogout={onLogout}
@@ -51,6 +117,10 @@ export function DashboardLayout({
         <AppHeader
           breadcrumbs={breadcrumbs}
           searchPlaceholder={searchPlaceholder}
+          searchCommands={resolvedSearchCommands}
+          commandTitle={commandTitle}
+          commandDescription={commandDescription}
+          searchEmptyMessage={searchEmptyMessage}
           notificationCount={notificationCount}
           onSearchClick={onSearchClick}
           onNotificationClick={onNotificationClick}
