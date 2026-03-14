@@ -79,6 +79,7 @@ export function DataTable<TData>({
   estimateRowHeight = 52,
   overscan = 8,
   stickyFirstColumn = false,
+  stickyLeftColumnCount = 0,
   stickyLastColumn = false,
   stickyRightColumnCount = 0,
 
@@ -248,6 +249,22 @@ export function DataTable<TData>({
     return stickyLastColumn ? 1 : 0
   }
 
+  const resolveStickyLeftCount = (columnCount: number) => {
+    if (stickyLeftColumnCount > 0) {
+      return Math.min(stickyLeftColumnCount, columnCount)
+    }
+
+    return stickyFirstColumn ? 1 : 0
+  }
+
+  const getStickyLeftOffset = (columnSizes: number[], index: number, stickyLeftCount: number) => {
+    if (stickyLeftCount === 0 || index >= stickyLeftCount) {
+      return null
+    }
+
+    return columnSizes.slice(0, index).reduce((sum, size) => sum + size, 0)
+  }
+
   const getStickyRightOffset = (columnSizes: number[], index: number, stickyRightCount: number) => {
     const firstStickyIndex = columnSizes.length - stickyRightCount
 
@@ -273,24 +290,30 @@ export function DataTable<TData>({
       >
         {(() => {
           const visibleCells = row.getVisibleCells()
+          const stickyLeftCount = resolveStickyLeftCount(visibleCells.length)
           const stickyRightCount = resolveStickyRightCount(visibleCells.length)
           const columnSizes = visibleCells.map((cell) => cell.column.getSize())
 
           return visibleCells.map((cell, index: number) => {
+            const stickyLeftOffset = getStickyLeftOffset(columnSizes, index, stickyLeftCount)
             const stickyRightOffset = getStickyRightOffset(columnSizes, index, stickyRightCount)
+            const isStickyCell = stickyLeftOffset !== null || stickyRightOffset !== null
 
             return (
               <TableCell
                 key={cell.id}
                 style={
-                  stickyRightOffset !== null
-                    ? { right: `${stickyRightOffset}px` }
+                  isStickyCell
+                    ? {
+                        width: cell.column.getSize(),
+                        minWidth: cell.column.getSize(),
+                        ...(stickyLeftOffset !== null ? { left: `${stickyLeftOffset}px` } : {}),
+                        ...(stickyRightOffset !== null ? { right: `${stickyRightOffset}px` } : {}),
+                      }
                     : undefined
                 }
                 className={
-                  stickyFirstColumn && index === 0
-                    ? 'sticky left-0 z-20 bg-background'
-                    : stickyRightOffset !== null
+                  stickyLeftOffset !== null || stickyRightOffset !== null
                     ? 'sticky z-20 bg-background'
                     : undefined
                 }
@@ -320,21 +343,26 @@ export function DataTable<TData>({
           <TableRow key={headerGroup.id}>
             {(() => {
               const headerSizes = headerGroup.headers.map((currentHeader) => currentHeader.getSize())
+              const stickyLeftCount = resolveStickyLeftCount(headerGroup.headers.length)
               const stickyRightCount = resolveStickyRightCount(headerGroup.headers.length)
 
               return headerGroup.headers.map((header) => {
+                const stickyLeftOffset = getStickyLeftOffset(headerSizes, header.index, stickyLeftCount)
                 const stickyRightOffset = getStickyRightOffset(headerSizes, header.index, stickyRightCount)
+                const isStickyHeader = stickyLeftOffset !== null || stickyRightOffset !== null
 
                 return (
                   <TableHead
                     key={header.id}
                     style={{
-                      width: header.getSize() !== 150 ? header.getSize() : undefined,
+                      width: isStickyHeader ? header.getSize() : header.getSize() !== 150 ? header.getSize() : undefined,
+                      minWidth: isStickyHeader ? header.getSize() : undefined,
+                      ...(stickyLeftOffset !== null ? { left: `${stickyLeftOffset}px` } : {}),
                       ...(stickyRightOffset !== null ? { right: `${stickyRightOffset}px` } : {}),
                     }}
                     className={
-                      stickyFirstColumn && header.index === 0
-                        ? 'sticky left-0 z-30 bg-background'
+                      stickyLeftOffset !== null
+                        ? 'sticky z-30 bg-background'
                         : stickyRightOffset !== null
                         ? 'sticky z-30 bg-background'
                         : undefined
@@ -395,7 +423,7 @@ export function DataTable<TData>({
     <div className={className}>
       {enableHorizontalScroll ? (
         <ScrollArea className="rounded-md border">
-          <div className={`relative min-w-max ${(stickyFirstColumn || stickyLastColumn || stickyRightColumnCount > 0) ? '**:data-[slot=table-container]:overflow-visible' : ''}`} ref={virtualized ? tableContainerRef : undefined} style={virtualized ? { maxHeight: tableHeight, overflowY: 'auto' } : undefined}>
+          <div className={`relative min-w-max ${(stickyFirstColumn || stickyLeftColumnCount > 0 || stickyLastColumn || stickyRightColumnCount > 0) ? '**:data-[slot=table-container]:overflow-visible' : ''}`} ref={virtualized ? tableContainerRef : undefined} style={virtualized ? { maxHeight: tableHeight, overflowY: 'auto' } : undefined}>
             {tableContent}
           </div>
           <ScrollBar orientation="horizontal" />

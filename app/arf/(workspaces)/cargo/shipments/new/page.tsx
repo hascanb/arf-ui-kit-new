@@ -28,26 +28,24 @@ import { useSidebar } from '@/components/ui/sidebar'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
+  CustomerAddressModal,
+  type AddressFormState,
+  type CustomerCreateStep,
+  type CustomerFormState,
+  type CustomerType,
+  type ModalEntity,
+  type ModalState,
+  type PartySide,
+} from '../_components/customer-address-modal'
+import { DraftsSheet, type ShipmentDraftListItem } from '../_components/drafts-sheet'
+import {
   ChevronDown,
   Pencil,
   Plus,
   Trash2,
-  X,
 } from 'lucide-react'
 
-type PartySide = 'sender' | 'receiver'
-type ModalEntity = 'customer' | 'address'
-type ModalMode = 'create' | 'edit'
 type FlowSection = 'top' | 'piece' | 'pricing'
-type CustomerType = 'corporate' | 'individual'
-type CustomerCreateStep = 'type' | 'customer' | 'address'
-
-interface ModalState {
-  side: PartySide
-  entity: ModalEntity
-  mode: ModalMode
-  targetId?: string
-}
 
 interface CustomerRecord {
   id: string
@@ -134,6 +132,35 @@ interface PieceRow {
   total: number
 }
 
+interface ShipmentDraftSnapshot {
+  customers: CustomerRecord[]
+  addresses: AddressRecord[]
+  senderCustomerId: string | null
+  senderAddressId: string | null
+  receiverCustomerId: string | null
+  receiverAddressId: string | null
+  senderDetailsOpen: boolean
+  receiverDetailsOpen: boolean
+  paymentMethod?: string
+  invoiceTarget: string
+  shipmentType: string
+  notifyReceiver: boolean
+  notifySender: boolean
+  waybillNo: string
+  atfNo: string
+  shippingPrice: string
+  cargoNote: string
+  pieceForm: PieceFormState
+  pieceRows: PieceRow[]
+}
+
+interface ShipmentDraftRecord extends ShipmentDraftListItem {
+  ownerUserId: string
+  createdAtIso: string
+  updatedAtIso: string
+  snapshot: ShipmentDraftSnapshot
+}
+
 const pieceTypeOptions = [
   { value: 'lastik', label: 'Lastik' },
   { value: 'sandik', label: 'Sandık' },
@@ -153,6 +180,119 @@ const STANDARD_SECTION_TITLE_CLASS = 'text-[22px] font-semibold tracking-tight t
 const STANDARD_INPUT_CLASS = 'h-11 rounded-2xl border-slate-200 bg-white px-4 shadow-sm'
 const STANDARD_SELECT_TRIGGER_CLASS = `${STANDARD_INPUT_CLASS} w-full text-left data-[size=default]:h-11`
 const STANDARD_PRIMARY_BUTTON_CLASS = 'h-11 rounded-2xl px-5 text-sm font-semibold'
+const DRAFTS_STORAGE_KEY_PREFIX = 'arf:shipments:new:drafts:v1'
+const USER_ID_STORAGE_CANDIDATES = [
+  'arf:auth:user-id',
+  'auth:user:id',
+  'user:id',
+  'userId',
+]
+const USER_PROFILE_STORAGE_CANDIDATES = [
+  'arf:auth:user',
+  'auth:user',
+  'current-user',
+]
+
+const initialPieceForm: PieceFormState = {
+  pieceType: 'lastik',
+  en: '0',
+  boy: '0',
+  yukseklik: '0',
+  adet: '1',
+  desi: '0',
+  kg: '0',
+  matrah: '0',
+  kdv: '20',
+}
+
+const initialPieceRows: PieceRow[] = [
+  {
+    id: 'piece-initial-1',
+    pieceType: 'Sandık',
+    adet: 1,
+    desi: 2,
+    totalDesi: 2,
+    kg: 2,
+    totalKg: 2,
+    matrah: 115.75,
+    kdv: 20,
+    total: 138.9,
+  },
+]
+
+const initialCustomerFormState: CustomerFormState = {
+  customerType: 'corporate',
+  tradeName: '',
+  taxNumber: '',
+  taxOffice: '',
+  tcIdentityNumber: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  contactName: '',
+  phone: '',
+  city: '',
+  district: '',
+  neighborhood: '',
+  branch: '',
+}
+
+const initialAddressFormState: AddressFormState = {
+  label: '',
+  city: '',
+  district: '',
+  neighborhood: '',
+  line1: '',
+  contactName: '',
+  phone: '',
+  branch: '',
+}
+
+const cloneCustomers = (rows: CustomerRecord[]) => rows.map((item) => ({ ...item }))
+const cloneAddresses = (rows: AddressRecord[]) => rows.map((item) => ({ ...item }))
+const clonePieceRows = (rows: PieceRow[]) => rows.map((item) => ({ ...item }))
+
+const resolveDraftStorageKey = (userId: string) => `${DRAFTS_STORAGE_KEY_PREFIX}:${userId}`
+
+const resolveCurrentUserId = () => {
+  if (typeof window === 'undefined') {
+    return 'demo-user'
+  }
+
+  try {
+    for (const key of USER_ID_STORAGE_CANDIDATES) {
+      const raw = localStorage.getItem(key)?.trim()
+      if (raw) {
+        return raw
+      }
+    }
+
+    for (const key of USER_PROFILE_STORAGE_CANDIDATES) {
+      const raw = localStorage.getItem(key)
+      if (!raw) {
+        continue
+      }
+
+      const parsed = JSON.parse(raw) as { id?: string; userId?: string; sub?: string; email?: string }
+      if (parsed.id) {
+        return parsed.id
+      }
+      if (parsed.userId) {
+        return parsed.userId
+      }
+      if (parsed.sub) {
+        return parsed.sub
+      }
+      if (parsed.email) {
+        return parsed.email
+      }
+    }
+  } catch {
+    // ignore storage parse issues in demo flow
+  }
+
+  return 'demo-user'
+}
 
 const initialCustomers: CustomerRecord[] = [
   {
@@ -206,16 +346,6 @@ const initialCustomers: CustomerRecord[] = [
     neighborhood: 'İkitelli OSB',
     branch: 'İkitelli Şube',
   },
-]
-
-const cityOptions = ['Adana', 'Ankara', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Mersin']
-const districtOptions = ['Seyhan', 'Çankaya', 'Başakşehir', 'Bornova', 'Onikişubat', 'Akdeniz']
-const neighborhoodOptions = ['Alidede', 'Afşar', 'İkitelli OSB', 'Merkez Mahallesi', 'Yeniköy']
-
-const customerCreateSteps = [
-  { id: 'type' as CustomerCreateStep, label: 'Tip Seçimi' },
-  { id: 'customer' as CustomerCreateStep, label: 'Müşteri Bilgileri' },
-  { id: 'address' as CustomerCreateStep, label: 'Adres Bilgileri' },
 ]
 
 const resolveInterlandBranch = (city: string, district: string, neighborhood: string) => {
@@ -295,8 +425,12 @@ export default function YeniKargoPage() {
   const { state: sidebarState } = useSidebar()
   const pieceSectionRef = useRef<HTMLDivElement | null>(null)
   const pricingSectionRef = useRef<HTMLDivElement | null>(null)
-  const [customers, setCustomers] = useState(initialCustomers)
-  const [addresses, setAddresses] = useState(initialAddresses)
+  const [currentUserId, setCurrentUserId] = useState('demo-user')
+  const [isDraftSheetOpen, setIsDraftSheetOpen] = useState(false)
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null)
+  const [draftRecords, setDraftRecords] = useState<ShipmentDraftRecord[]>([])
+  const [customers, setCustomers] = useState(() => cloneCustomers(initialCustomers))
+  const [addresses, setAddresses] = useState(() => cloneAddresses(initialAddresses))
   const [senderCustomerId, setSenderCustomerId] = useState<string | null>(null)
   const [senderAddressId, setSenderAddressId] = useState<string | null>(null)
   const [receiverCustomerId, setReceiverCustomerId] = useState<string | null>(null)
@@ -317,57 +451,10 @@ export default function YeniKargoPage() {
   const [customerCreateStep, setCustomerCreateStep] = useState<CustomerCreateStep>('type')
   const [pendingCustomerId, setPendingCustomerId] = useState<string | null>(null)
   const [modalError, setModalError] = useState('')
-  const [pieceForm, setPieceForm] = useState<PieceFormState>({
-    pieceType: 'lastik',
-    en: '0',
-    boy: '0',
-    yukseklik: '0',
-    adet: '1',
-    desi: '0',
-    kg: '0',
-    matrah: '0',
-    kdv: '20',
-  })
-  const [pieceRows, setPieceRows] = useState<PieceRow[]>([
-    {
-      id: 'piece-initial-1',
-      pieceType: 'Sandık',
-      adet: 1,
-      desi: 2,
-      totalDesi: 2,
-      kg: 2,
-      totalKg: 2,
-      matrah: 115.75,
-      kdv: 20,
-      total: 138.9,
-    },
-  ])
-  const [customerForm, setCustomerForm] = useState({
-    customerType: 'corporate' as CustomerType,
-    tradeName: '',
-    taxNumber: '',
-    taxOffice: '',
-    tcIdentityNumber: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    contactName: '',
-    phone: '',
-    city: '',
-    district: '',
-    neighborhood: '',
-    branch: '',
-  })
-  const [addressForm, setAddressForm] = useState({
-    label: '',
-    city: '',
-    district: '',
-    neighborhood: '',
-    line1: '',
-    contactName: '',
-    phone: '',
-    branch: '',
-  })
+  const [pieceForm, setPieceForm] = useState<PieceFormState>(() => ({ ...initialPieceForm }))
+  const [pieceRows, setPieceRows] = useState<PieceRow[]>(() => clonePieceRows(initialPieceRows))
+  const [customerForm, setCustomerForm] = useState<CustomerFormState>(() => ({ ...initialCustomerFormState }))
+  const [addressForm, setAddressForm] = useState<AddressFormState>(() => ({ ...initialAddressFormState }))
 
   const senderCustomer = customers.find((item) => item.id === senderCustomerId)
   const receiverCustomer = customers.find((item) => item.id === receiverCustomerId)
@@ -399,6 +486,213 @@ export default function YeniKargoPage() {
       description: `${item.district} • ${item.branch}`,
       keywords: `${item.label} ${item.line1} ${item.district}`,
     }))
+
+  const draftStorageKey = resolveDraftStorageKey(currentUserId)
+
+  useEffect(() => {
+    setCurrentUserId(resolveCurrentUserId())
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    try {
+      const raw = localStorage.getItem(draftStorageKey)
+      if (!raw) {
+        setDraftRecords([])
+        return
+      }
+
+      const parsed = JSON.parse(raw) as ShipmentDraftRecord[]
+      const sorted = [...parsed].sort((left, right) => right.updatedAtIso.localeCompare(left.updatedAtIso))
+      setDraftRecords(sorted)
+    } catch {
+      setDraftRecords([])
+    }
+  }, [draftStorageKey])
+
+  const persistDraftRecords = (nextRows: ShipmentDraftRecord[]) => {
+    const sorted = [...nextRows].sort((left, right) => right.updatedAtIso.localeCompare(left.updatedAtIso))
+    setDraftRecords(sorted)
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    try {
+      localStorage.setItem(draftStorageKey, JSON.stringify(sorted))
+    } catch {
+      // ignore storage write errors in demo flow
+    }
+  }
+
+  const createDraftSnapshot = (): ShipmentDraftSnapshot => ({
+    customers: cloneCustomers(customers),
+    addresses: cloneAddresses(addresses),
+    senderCustomerId,
+    senderAddressId,
+    receiverCustomerId,
+    receiverAddressId,
+    senderDetailsOpen,
+    receiverDetailsOpen,
+    paymentMethod,
+    invoiceTarget,
+    shipmentType,
+    notifyReceiver,
+    notifySender,
+    waybillNo,
+    atfNo,
+    shippingPrice,
+    cargoNote,
+    pieceForm: { ...pieceForm },
+    pieceRows: clonePieceRows(pieceRows),
+  })
+
+  const calculateDraftProgress = (snapshot: ShipmentDraftSnapshot) => {
+    const parsedPrice = Number.parseFloat(snapshot.shippingPrice.replace(',', '.').trim())
+
+    const checklist = [
+      Boolean(snapshot.senderCustomerId),
+      Boolean(snapshot.senderAddressId),
+      Boolean(snapshot.receiverCustomerId),
+      Boolean(snapshot.receiverAddressId),
+      Boolean(snapshot.paymentMethod),
+      snapshot.pieceRows.length > 0,
+      Number.isFinite(parsedPrice) && parsedPrice >= 0,
+    ]
+
+    const completedCount = checklist.filter(Boolean).length
+    return Math.round((completedCount / checklist.length) * 100)
+  }
+
+  const resolvePaymentLabel = (value?: string) => {
+    if (value === 'PÖ') {
+      return 'Gönderici'
+    }
+    if (value === 'AÖ') {
+      return 'Alıcı'
+    }
+    if (value === 'CÖ') {
+      return 'Cari'
+    }
+    if (value === 'DÖ') {
+      return 'Diğer'
+    }
+    return 'Ödeme Seçilmedi'
+  }
+
+  const buildDraftSummary = (snapshot: ShipmentDraftSnapshot) => {
+    const senderName = snapshot.customers.find((item) => item.id === snapshot.senderCustomerId)?.tradeName
+    const receiverName = snapshot.customers.find((item) => item.id === snapshot.receiverCustomerId)?.tradeName
+
+    return {
+      title:
+        senderName && receiverName
+          ? `${senderName} → ${receiverName}`
+          : senderName
+            ? `${senderName} → Alıcı Bekleniyor`
+            : receiverName
+              ? `Gönderici Bekleniyor → ${receiverName}`
+              : 'Yeni Kargo Taslağı',
+      subtitle: `${snapshot.pieceRows.length} parça • ${resolvePaymentLabel(snapshot.paymentMethod)}`,
+    }
+  }
+
+  const saveCurrentAsDraft = () => {
+    const snapshot = createDraftSnapshot()
+    const now = new Date()
+    const nowIso = now.toISOString()
+    const nowDisplay = now.toLocaleString('tr-TR')
+    const { title, subtitle } = buildDraftSummary(snapshot)
+    const progress = calculateDraftProgress(snapshot)
+    const nextDraftId = activeDraftId ?? `draft-${Date.now()}`
+
+    const nextRows = (() => {
+      const existingIndex = draftRecords.findIndex((item) => item.id === nextDraftId)
+
+      if (existingIndex === -1) {
+        const newDraft: ShipmentDraftRecord = {
+          id: nextDraftId,
+          ownerUserId: currentUserId,
+          createdAtIso: nowIso,
+          updatedAtIso: nowIso,
+          updatedAt: nowDisplay,
+          title,
+          subtitle,
+          progress,
+          snapshot,
+        }
+
+        return [...draftRecords, newDraft]
+      }
+
+      return draftRecords.map((item) =>
+        item.id === nextDraftId
+          ? {
+              ...item,
+              updatedAtIso: nowIso,
+              updatedAt: nowDisplay,
+              title,
+              subtitle,
+              progress,
+              snapshot,
+            }
+          : item,
+      )
+    })()
+
+    setActiveDraftId(nextDraftId)
+    persistDraftRecords(nextRows)
+    setIsDraftSheetOpen(true)
+  }
+
+  const handleLoadDraft = (draftId: string) => {
+    const target = draftRecords.find((item) => item.id === draftId)
+    if (!target) {
+      return
+    }
+
+    const snapshot = target.snapshot
+
+    setCustomers(cloneCustomers(snapshot.customers))
+    setAddresses(cloneAddresses(snapshot.addresses))
+    setSenderCustomerId(snapshot.senderCustomerId)
+    setSenderAddressId(snapshot.senderAddressId)
+    setReceiverCustomerId(snapshot.receiverCustomerId)
+    setReceiverAddressId(snapshot.receiverAddressId)
+    setSenderDetailsOpen(snapshot.senderDetailsOpen)
+    setReceiverDetailsOpen(snapshot.receiverDetailsOpen)
+    setPaymentMethod(snapshot.paymentMethod)
+    setInvoiceTarget(snapshot.invoiceTarget)
+    setShipmentType(snapshot.shipmentType)
+    setNotifyReceiver(snapshot.notifyReceiver)
+    setNotifySender(snapshot.notifySender)
+    setWaybillNo(snapshot.waybillNo)
+    setAtfNo(snapshot.atfNo)
+    setShippingPrice(snapshot.shippingPrice)
+    setCargoNote(snapshot.cargoNote)
+    setPieceForm({ ...snapshot.pieceForm })
+    setPieceRows(clonePieceRows(snapshot.pieceRows))
+    setCustomerForm({ ...initialCustomerFormState })
+    setAddressForm({ ...initialAddressFormState })
+    setModalState(null)
+    setCustomerCreateStep('type')
+    setPendingCustomerId(null)
+    setModalError('')
+    setActiveSection('top')
+    setActiveDraftId(draftId)
+    setIsDraftSheetOpen(false)
+  }
+
+  const handleDeleteDraft = (draftId: string) => {
+    const nextRows = draftRecords.filter((item) => item.id !== draftId)
+    if (activeDraftId === draftId) {
+      setActiveDraftId(null)
+    }
+    persistDraftRecords(nextRows)
+  }
 
   const openCreateModal = (side: PartySide, entity: ModalEntity) => {
     const selectedCustomer = side === 'sender' ? senderCustomer : receiverCustomer
@@ -1017,21 +1311,9 @@ export default function YeniKargoPage() {
     closeModal()
   }
 
-  const isCustomerCreateFlow = modalState?.entity === 'customer' && modalState?.mode === 'create'
-  const isAddressStepInCreateFlow = isCustomerCreateFlow && customerCreateStep === 'address'
-  const showCustomerStepIndicator = modalState?.entity === 'customer' && isCustomerCreateFlow
-  const activeCustomerStepIndex = customerCreateSteps.findIndex((step) => step.id === customerCreateStep)
-  const selectedCustomerTypeLabel = customerForm.customerType === 'corporate' ? 'Kurumsal Müşteri' : 'Bireysel Müşteri'
-  const selectedCustomerSummary =
-    customerForm.customerType === 'corporate'
-      ? { label: 'Şirket Adı', value: customerForm.tradeName.trim() }
-      : { label: 'Müşteri Ad Ve Soyadı', value: `${customerForm.firstName} ${customerForm.lastName}`.trim() }
-  const contactNameLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Adı' : 'Ad'
-  const contactSurnameLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Soyadı' : 'Soyad'
-  const contactEmailLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Email' : 'Email'
-  const contactPhoneLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Telefonu' : 'Telefon Numarası'
-
   const goBackInModal = () => {
+    const isCustomerCreateFlow = modalState?.entity === 'customer' && modalState?.mode === 'create'
+
     if (!isCustomerCreateFlow) {
       closeModal()
       return
@@ -1364,11 +1646,15 @@ export default function YeniKargoPage() {
           sidebarState === 'collapsed' ? 'md:left-(--sidebar-width-icon)' : 'md:left-(--sidebar-width)',
         )}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button variant="default" className={STANDARD_PRIMARY_BUTTON_CLASS} asChild>
-              <a href="/arf/cargo/shipments">Taslaklar</a>
+            <Button
+              variant="default"
+              className={STANDARD_PRIMARY_BUTTON_CLASS}
+              onClick={() => setIsDraftSheetOpen(true)}
+            >
+              Taslaklar
             </Button>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className={STANDARD_PRIMARY_BUTTON_CLASS}>
+              <Button variant="outline" className={STANDARD_PRIMARY_BUTTON_CLASS} onClick={saveCurrentAsDraft}>
                 Taslak Olarak Kaydet
               </Button>
               <Button className={STANDARD_PRIMARY_BUTTON_CLASS} onClick={handlePrimaryAction} disabled={primaryButtonDisabled}>
@@ -1380,329 +1666,27 @@ export default function YeniKargoPage() {
 
       </div>
 
-      {modalState && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/45 p-4 pt-16 backdrop-blur-[2px]">
-          <div className="max-h-[calc(100vh-5rem)] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-semibold text-slate-900">
-                  {isAddressStepInCreateFlow
-                    ? `${modalState.side === 'sender' ? 'Gönderici' : 'Alıcı'} Adresi Ekle`
-                    : `${modalState.mode === 'edit' ? 'Düzenle' : 'Yeni'} ${modalState.side === 'sender' ? 'Gönderici' : 'Alıcı'} ${modalState.entity === 'customer' ? 'Müşteri' : 'Adres'} ${modalState.mode === 'edit' ? '' : 'Ekle'}`}
-                </h2>
-                <p className="text-sm text-slate-500">
-                  {isAddressStepInCreateFlow
-                    ? 'Müşteri kaydı tamamlandı. Şimdi adres bilgisini ekleyip seçimi tamamlayabilirsiniz.'
-                    : modalState.mode === 'edit'
-                    ? 'Kayıt bilgilerini güncelleyip kaydedin.'
-                    : modalState.entity === 'customer'
-                    ? 'Önce müşteri tipini seçin, ardından formu doldurup adrese geçin.'
-                    : 'Adres bilgisini oluşturun, seçili müşterinin altında anında kullanılabilir olsun.'}
-                </p>
-              </div>
-              <Button variant="ghost" size="icon" className="rounded-2xl" onClick={closeModal}>
-                <X className="size-4" />
-              </Button>
-            </div>
+      <DraftsSheet
+        open={isDraftSheetOpen}
+        onOpenChange={setIsDraftSheetOpen}
+        drafts={draftRecords}
+        activeDraftId={activeDraftId}
+        onContinue={handleLoadDraft}
+        onDelete={handleDeleteDraft}
+      />
 
-            <div className="space-y-5 px-6 py-6">
-              {showCustomerStepIndicator && (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
-                    {customerCreateSteps.map((step, index) => {
-                      const isActive = index === activeCustomerStepIndex
-                      const isCompleted = index < activeCustomerStepIndex
-
-                      return (
-                        <div
-                          key={step.id}
-                          className={cn(
-                            'inline-flex min-w-0 flex-1 items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition',
-                            isActive
-                              ? 'bg-slate-900 text-white shadow-sm'
-                              : isCompleted
-                              ? 'bg-lime-50 text-slate-900'
-                              : 'bg-white text-slate-500',
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              'flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold',
-                              isActive ? 'bg-white/15 text-white' : isCompleted ? 'bg-lime-200 text-slate-900' : 'bg-slate-100 text-slate-500',
-                            )}
-                          >
-                            {index + 1}
-                          </div>
-                          <div className="min-w-0 truncate font-medium">{step.label}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {customerCreateStep !== 'type' && (
-                    <div className="px-1 text-xs font-medium tracking-wide text-slate-500 uppercase">
-                      {customerCreateStep === 'address' ? (
-                        <>
-                          {selectedCustomerSummary.label}:{' '}
-                          <span className="font-semibold text-slate-800">{selectedCustomerSummary.value || '-'}</span>
-                        </>
-                      ) : (
-                        <>
-                          Seçilen tip: <span className="font-semibold text-slate-800">{selectedCustomerTypeLabel}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {modalState.entity === 'customer' && customerCreateStep === 'type' ? (
-                <div className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      className={cn(
-                        'group rounded-[24px] border px-5 py-4 text-left transition',
-                        customerForm.customerType === 'corporate'
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-[0_16px_40px_rgba(15,23,42,0.16)]'
-                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white',
-                      )}
-                      onClick={() => setCustomerForm((current) => ({ ...current, customerType: 'corporate' }))}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-lg font-semibold">Kurumsal Müşteri</div>
-                          <div
-                            className={cn(
-                              'mt-1 text-sm',
-                              customerForm.customerType === 'corporate' ? 'text-white/75' : 'text-slate-500',
-                            )}
-                          >
-                            Vergi bilgileri ve şirket yetkilisi ile kayıt oluşturun.
-                          </div>
-                        </div>
-                        <div
-                          className={cn(
-                            'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition',
-                            customerForm.customerType === 'corporate'
-                              ? 'border-white bg-white text-slate-900'
-                              : 'border-slate-300 bg-white text-transparent group-hover:border-slate-400',
-                          )}
-                        >
-                          <div className="size-2 rounded-full bg-current" />
-                        </div>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      className={cn(
-                        'group rounded-[24px] border px-5 py-4 text-left transition',
-                        customerForm.customerType === 'individual'
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-[0_16px_40px_rgba(15,23,42,0.16)]'
-                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white',
-                      )}
-                      onClick={() => setCustomerForm((current) => ({ ...current, customerType: 'individual' }))}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-lg font-semibold">Bireysel Müşteri</div>
-                          <div
-                            className={cn(
-                              'mt-1 text-sm',
-                              customerForm.customerType === 'individual' ? 'text-white/75' : 'text-slate-500',
-                            )}
-                          >
-                            Kişisel kimlik ve iletişim bilgileriyle hızlı kayıt açın.
-                          </div>
-                        </div>
-                        <div
-                          className={cn(
-                            'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition',
-                            customerForm.customerType === 'individual'
-                              ? 'border-white bg-white text-slate-900'
-                              : 'border-slate-300 bg-white text-transparent group-hover:border-slate-400',
-                          )}
-                        >
-                          <div className="size-2 rounded-full bg-current" />
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                  <p className="text-center text-sm text-slate-500">
-                    Devam etmeden önce müşteri tipini seçin. Sonraki adımda form alanları seçime göre açılacaktır.
-                  </p>
-                </div>
-              ) : modalState.entity === 'customer' && customerCreateStep === 'customer' ? (
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {customerForm.customerType === 'corporate' ? (
-                      <>
-                        <div className="sm:col-span-2">
-                          <FloatingLabelField
-                            label="Şirket Adı"
-                            value={customerForm.tradeName}
-                            placeholder="Şirket adı"
-                            onChange={(value) => setCustomerForm((current) => ({ ...current, tradeName: value }))}
-                          />
-                        </div>
-                        <FloatingLabelField
-                          label="Vergi Numarası"
-                          value={customerForm.taxNumber}
-                          placeholder="Vergi numarası"
-                          onChange={(value) => setCustomerForm((current) => ({ ...current, taxNumber: value }))}
-                        />
-                        <FloatingLabelField
-                          label="Vergi Dairesi"
-                          value={customerForm.taxOffice}
-                          placeholder="Vergi dairesi"
-                          onChange={(value) => setCustomerForm((current) => ({ ...current, taxOffice: value }))}
-                        />
-                        <div className="sm:col-span-2 pt-1">
-                          <h3 className="text-sm font-semibold text-slate-900">Şirket Yetkili Bilgileri</h3>
-                        </div>
-                      </>
-                    ) : null}
-
-                    <FloatingLabelField
-                      label={contactNameLabel}
-                      value={customerForm.firstName}
-                      placeholder={contactNameLabel}
-                      onChange={(value) => setCustomerForm((current) => ({ ...current, firstName: value }))}
-                    />
-                    <FloatingLabelField
-                      label={contactSurnameLabel}
-                      value={customerForm.lastName}
-                      placeholder={contactSurnameLabel}
-                      onChange={(value) => setCustomerForm((current) => ({ ...current, lastName: value }))}
-                    />
-
-                    {customerForm.customerType === 'individual' && (
-                      <div className="sm:col-span-2">
-                        <FloatingLabelField
-                          label="TC Kimlik Numarası"
-                          value={customerForm.tcIdentityNumber}
-                          placeholder="11 haneli TC kimlik numarası"
-                          onChange={(value) => setCustomerForm((current) => ({ ...current, tcIdentityNumber: value }))}
-                        />
-                      </div>
-                    )}
-
-                    <FloatingLabelField
-                      label={contactEmailLabel}
-                      value={customerForm.email}
-                      placeholder={customerForm.customerType === 'corporate' ? 'Yetkili email' : 'Email (bireyselde opsiyonel)'}
-                      onChange={(value) => setCustomerForm((current) => ({ ...current, email: value }))}
-                    />
-                    <FloatingLabelField
-                      label={contactPhoneLabel}
-                      value={customerForm.phone}
-                      placeholder="5XX XXX XX XX"
-                      onChange={(value) => setCustomerForm((current) => ({ ...current, phone: value }))}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-                    <div>
-                      <FloatingLabelField
-                        label="Adres Başlığı"
-                        value={addressForm.label}
-                        placeholder="Örn: Merkez Depo"
-                        onChange={(value) => setAddressForm((current) => ({ ...current, label: value }))}
-                      />
-                    </div>
-
-                    <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-500">Şehir</Label>
-                        <Select value={addressForm.city} onValueChange={(value: string) => setAddressForm((current) => ({ ...current, city: value }))}>
-                          <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white px-4 shadow-sm">
-                            <SelectValue placeholder="Şehir Seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cityOptions.map((city) => (
-                              <SelectItem key={city} value={city}>
-                                {city}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-500">İlçe</Label>
-                        <Select value={addressForm.district} onValueChange={(value: string) => setAddressForm((current) => ({ ...current, district: value }))}>
-                          <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white px-4 shadow-sm">
-                            <SelectValue placeholder="İlçe Seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {districtOptions.map((district) => (
-                              <SelectItem key={district} value={district}>
-                                {district}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-500">Mahalle</Label>
-                        <Select
-                          value={addressForm.neighborhood}
-                          onValueChange={(value: string) => setAddressForm((current) => ({ ...current, neighborhood: value }))}
-                        >
-                          <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white px-4 shadow-sm">
-                            <SelectValue placeholder="Mahalle Seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {neighborhoodOptions.map((neighborhood) => (
-                              <SelectItem key={neighborhood} value={neighborhood}>
-                                {neighborhood}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <Label className="mb-2 block text-sm font-medium text-slate-500">Açık Adres</Label>
-                      <Textarea
-                        value={addressForm.line1}
-                        onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setAddressForm((current) => ({ ...current, line1: event.target.value }))}
-                        placeholder="Cadde, sokak, bina ve kapı numarasını girin"
-                        className="min-h-32 rounded-2xl border-slate-200 bg-white px-4 py-3 shadow-sm focus-visible:ring-slate-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {modalError && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
-                  {modalError}
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end">
-              <Button variant="outline" className="rounded-2xl" onClick={goBackInModal}>
-                Geri
-              </Button>
-              <Button className="rounded-2xl" onClick={saveModal}>
-                {modalState.entity === 'customer' && customerCreateStep === 'type'
-                  ? 'Devam Et'
-                  : isAddressStepInCreateFlow
-                  ? 'Adresi Kaydet ve Seç'
-                  : modalState.entity === 'customer' && modalState.mode === 'create'
-                  ? 'Müşteriyi Kaydet ve Adrese Geç'
-                  : 'Kaydet ve Seç'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CustomerAddressModal
+        modalState={modalState}
+        customerCreateStep={customerCreateStep}
+        customerForm={customerForm}
+        addressForm={addressForm}
+        modalError={modalError}
+        setCustomerForm={setCustomerForm}
+        setAddressForm={setAddressForm}
+        onClose={closeModal}
+        onBack={goBackInModal}
+        onSave={saveModal}
+      />
     </>
   )
 }
@@ -1914,32 +1898,6 @@ function FloatingLabelDisplay({ label, value }: { label: string; value?: string 
           {value || 'Henüz seçilmedi'}
         </p>
       </div>
-    </div>
-  )
-}
-
-function FloatingLabelField({
-  label,
-  value,
-  placeholder,
-  onChange,
-}: {
-  label: string
-  value: string
-  placeholder: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <div className="space-y-2">
-      <Label className="text-sm font-medium text-slate-500">
-        {label}
-      </Label>
-      <Input
-        value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-4 shadow-sm focus-visible:ring-slate-300"
-      />
     </div>
   )
 }

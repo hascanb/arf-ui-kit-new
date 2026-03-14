@@ -25,6 +25,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
+import { ShipmentCancelModal } from "./_components/shipment-cancel-modal"
+import { ShipmentHandoverModal } from "./_components/shipment-handover-modal"
+import { usePieceActions } from "./_hooks/use-piece-actions"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,164 +39,53 @@ import {
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
+  ArrowRightLeft,
+  Building2,
+  ChevronDown,
+  ChevronUp,
   Ban,
   CalendarIcon,
   CheckCircle2,
   Clock,
+  Copy,
   Eye,
   Filter,
   MoreHorizontal,
   Package,
   Plus,
   PlusCircle,
+  Printer,
   Truck,
 } from "lucide-react"
+import {
+  mockCargoList,
+  mockPieceCancelInfoByPieceNo as sharedPieceCancelInfoByPieceNo,
+  mockPieceListRows,
+  shipmentDetailMockData,
+} from "./_mock/shipments-mock-data"
 
-const mockCargos = [
-  {
-    id: "1",
-    takip_no: "ARF-10000300",
-    gonderen_musteri: "Ahmet Yılmaz",
-    gonderen_sube: "İstanbul Merkez Şube",
-    alici_sube: "Ankara Şube",
-    alici_musteri: "Mehmet Demir",
-    alici_telefon: "0532 111 22 33",
-    odeme_turu: "Gönderici Ödemeli",
-    fatura_turu: "Gönderici",
-    matrah: 105.93,
-    kdv: 21.19,
-    toplam: 127.12,
-    t_adet: 3,
-    t_desi: 12,
-    parca_listesi: "3 Parça",
-    irsaliye_no: "IRS-2026001",
-    atf_no: "ATF-000123",
-    olusturulma_zamani: "2024-01-15 09:30",
-    varis_zamani: "2024-01-16 14:00",
-    teslimat_zamani: "2024-01-17 11:20",
-    kargo_durumu: "dagitimda",
-    fatura_durumu: "kesildi",
-    tahsilat_durumu: "tahsil_edildi",
-    olusturan: "Ali Veli",
-  },
-  {
-    id: "2",
-    takip_no: "ARF-10000301",
-    gonderen_musteri: "Fatma Kaya",
-    gonderen_sube: "İzmir Şube",
-    alici_sube: "Bursa Şube",
-    alici_musteri: "Ali Veli",
-    alici_telefon: "0542 222 33 44",
-    odeme_turu: "Alıcı Ödemeli",
-    fatura_turu: "Alıcı",
-    matrah: 75.42,
-    kdv: 15.08,
-    toplam: 90.5,
-    t_adet: 1,
-    t_desi: 5,
-    parca_listesi: "1 Parça",
-    irsaliye_no: "IRS-2026002",
-    atf_no: "ATF-000124",
-    olusturulma_zamani: "2024-01-14 08:15",
-    varis_zamani: "2024-01-15 12:30",
-    teslimat_zamani: "2024-01-15 16:45",
-    kargo_durumu: "teslim_edildi",
-    fatura_durumu: "kesildi",
-    tahsilat_durumu: "tahsil_edildi",
-    olusturan: "Zeynep Arslan",
-  },
-  {
-    id: "3",
-    takip_no: "ARF-10000302",
-    gonderen_musteri: "Zeynep Öztürk",
-    gonderen_sube: "Ankara Şube",
-    alici_sube: "Antalya Şube",
-    alici_musteri: "Can Yıldırım",
-    alici_telefon: "0555 333 44 55",
-    odeme_turu: "Gönderici Ödemeli",
-    fatura_turu: "Gönderici",
-    matrah: 131.36,
-    kdv: 26.27,
-    toplam: 157.63,
-    t_adet: 5,
-    t_desi: 30,
-    parca_listesi: "5 Parça",
-    irsaliye_no: "IRS-2026003",
-    atf_no: "",
-    olusturulma_zamani: "2024-01-15 10:45",
-    varis_zamani: "",
-    teslimat_zamani: "",
-    kargo_durumu: "beklemede",
-    fatura_durumu: "kesilmedi",
-    tahsilat_durumu: "beklemede",
-    olusturan: "Murat Demir",
-  },
-  {
-    id: "4",
-    takip_no: "ARF-10000303",
-    gonderen_musteri: "Murat Çelik",
-    gonderen_sube: "Bursa Şube",
-    alici_sube: "İstanbul Merkez Şube",
-    alici_musteri: "Ayşe Korkmaz",
-    alici_telefon: "0501 444 55 66",
-    odeme_turu: "Alıcı Ödemeli",
-    fatura_turu: "Alıcı",
-    matrah: 65.68,
-    kdv: 13.14,
-    toplam: 78.82,
-    t_adet: 2,
-    t_desi: 8,
-    parca_listesi: "2 Parça",
-    irsaliye_no: "IRS-2026004",
-    atf_no: "ATF-000126",
-    olusturulma_zamani: "2024-01-15 07:00",
-    varis_zamani: "2024-01-16 09:00",
-    teslimat_zamani: "",
-    kargo_durumu: "transfer",
-    fatura_durumu: "kesilmedi",
-    tahsilat_durumu: "beklemede",
-    olusturan: "Ali Veli",
-  },
-  {
-    id: "5",
-    takip_no: "ARF-10000304",
-    gonderen_musteri: "Elif Şahin",
-    gonderen_sube: "Antalya Şube",
-    alici_sube: "İzmir Şube",
-    alici_musteri: "Burak Yıldız",
-    alici_telefon: "0533 555 66 77",
-    odeme_turu: "Gönderici Ödemeli",
-    fatura_turu: "Gönderici",
-    matrah: 94.92,
-    kdv: 18.98,
-    toplam: 113.9,
-    t_adet: 4,
-    t_desi: 18,
-    parca_listesi: "4 Parça",
-    irsaliye_no: "IRS-2026005",
-    atf_no: "ATF-000127",
-    olusturulma_zamani: "2024-01-14 13:20",
-    varis_zamani: "2024-01-15 10:00",
-    teslimat_zamani: "",
-    kargo_durumu: "teslim_alindi",
-    fatura_durumu: "kesildi",
-    tahsilat_durumu: "beklemede",
-    olusturan: "Zeynep Arslan",
-  },
-]
+const mockCargos = mockCargoList
 
 type CargoRow = (typeof mockCargos)[number]
+type CargoStatus = "olusturuldu" | "transfer_surecinde" | "varis_subede" | "dagitimda" | "teslim_edildi" | "devredildi" | "iptal_edildi"
+type ViewCargoRow = Omit<CargoRow, "kargo_durumu"> & {
+  kargo_durumu: CargoStatus
+  parca_durumu_gosterim: string
+  son_islem_zamani: string
+}
 
-const kargoStatusConfig: Record<string, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
-  beklemede: { label: "Beklemede", className: "bg-amber-500/10 text-amber-600 border-amber-500/20", icon: Clock },
-  teslim_alindi: { label: "Teslim Alındı", className: "bg-blue-500/10 text-blue-600 border-blue-500/20", icon: Package },
-  transfer: { label: "Transfer", className: "bg-purple-500/10 text-purple-600 border-purple-500/20", icon: Truck },
+const kargoStatusConfig: Record<CargoStatus, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
+  olusturuldu: { label: "Oluşturuldu", className: "bg-slate-500/10 text-slate-700 border-slate-400/30", icon: Clock },
+  transfer_surecinde: { label: "Transfer Sürecinde", className: "bg-purple-500/10 text-purple-600 border-purple-500/20", icon: Truck },
+  varis_subede: { label: "Varış Şubede", className: "bg-amber-500/10 text-amber-700 border-amber-500/20", icon: Building2 },
   dagitimda: { label: "Dağıtımda", className: "bg-sky-500/10 text-sky-600 border-sky-500/20", icon: Truck },
   teslim_edildi: {
     label: "Teslim Edildi",
     className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
     icon: CheckCircle2,
   },
+  devredildi: { label: "Devredildi", className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20", icon: ArrowRightLeft },
+  iptal_edildi: { label: "Kargo İptal", className: "bg-rose-500/10 text-rose-600 border-rose-500/20", icon: Ban },
 }
 
 const faturaStatusConfig: Record<string, { label: string; className: string }> = {
@@ -208,11 +100,13 @@ const tahsilatStatusConfig: Record<string, { label: string; className: string }>
 }
 
 const statusFilterOptions = [
-  { label: "Beklemede", value: "beklemede" },
-  { label: "Teslim Alındı", value: "teslim_alindi" },
-  { label: "Transfer", value: "transfer" },
+  { label: "Oluşturuldu", value: "olusturuldu" },
+  { label: "Transfer Sürecinde", value: "transfer_surecinde" },
+  { label: "Varış Şubede", value: "varis_subede" },
   { label: "Dağıtımda", value: "dagitimda" },
   { label: "Teslim Edildi", value: "teslim_edildi" },
+  { label: "Devredildi", value: "devredildi" },
+  { label: "Kargo İptal", value: "iptal_edildi" },
 ]
 
 const paymentTypeFilterOptions = [
@@ -230,6 +124,8 @@ const collectionStatusFilterOptions = [
   { label: "Beklemede", value: "beklemede" },
   { label: "İptal", value: "iptal" },
 ]
+
+const SUMMARY_VISIBILITY_STORAGE_KEY = "arf:shipments:list:summary-visible"
 
 const isValidIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -362,16 +258,48 @@ const resolveUpdater = <T,>(updater: Updater<T>, previous: T): T =>
 
 const getDateOnly = (value: string) => value.split(" ")[0] ?? ""
 
+const normalizeDateTime = (value: string): string => {
+  const raw = value.trim()
+  if (!raw) {
+    return ""
+  }
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::\d{2})?$/)
+  if (isoMatch) {
+    const [, year, month, day, hour, minute] = isoMatch
+    return `${year}-${month}-${day} ${hour}:${minute}`
+  }
+
+  const trMatch = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})[ ,]+(\d{1,2}):(\d{2})(?::\d{2})?$/)
+  if (trMatch) {
+    const [, day, month, year, hour, minute] = trMatch
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")} ${hour.padStart(2, "0")}:${minute}`
+  }
+
+  return ""
+}
+
+const getLatestDateTime = (values: string[]): string => {
+  const normalized = values.map(normalizeDateTime).filter(Boolean)
+  if (normalized.length === 0) {
+    return ""
+  }
+
+  return normalized.sort((left, right) => left.localeCompare(right)).at(-1) ?? ""
+}
+
 const queryCargos = ({
+  rows,
   pagination,
   sorting,
   columnFilters,
 }: {
+  rows: ViewCargoRow[]
   pagination: PaginationState
   sorting: SortingState
   columnFilters: ColumnFiltersState
 }) => {
-  let filtered = [...mockCargos]
+  let filtered = [...rows]
 
   for (const filter of columnFilters) {
     if (
@@ -382,7 +310,7 @@ const queryCargos = ({
     ) {
       const selected = Array.isArray(filter.value) ? (filter.value as string[]) : []
       if (selected.length > 0) {
-        filtered = filtered.filter((row) => selected.includes(String(row[filter.id as keyof CargoRow] ?? "")))
+        filtered = filtered.filter((row) => selected.includes(String(row[filter.id as keyof ViewCargoRow] ?? "")))
       }
       continue
     }
@@ -410,8 +338,8 @@ const queryCargos = ({
   if (sorting.length > 0) {
     const [{ id, desc }] = sorting
     filtered.sort((a, b) => {
-      const left = a[id as keyof CargoRow]
-      const right = b[id as keyof CargoRow]
+      const left = a[id as keyof ViewCargoRow]
+      const right = b[id as keyof ViewCargoRow]
 
       if (typeof left === "number" && typeof right === "number") {
         return desc ? right - left : left - right
@@ -443,26 +371,252 @@ const queryCargos = ({
 }
 
 export default function KargolarPage() {
-  const [table, setTable] = useState<TanStackTable<CargoRow> | null>(null)
+  const [table, setTable] = useState<TanStackTable<ViewCargoRow> | null>(null)
   const [showFacetedFilters, setShowFacetedFilters] = useState(false)
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 })
-  const [sorting, setSorting] = useState<SortingState>([{ id: "olusturulma_zamani", desc: true }])
+  const [sorting, setSorting] = useState<SortingState>([{ id: "takip_no", desc: true }])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [data, setData] = useState<CargoRow[]>([])
+  const [data, setData] = useState<ViewCargoRow[]>([])
+  const [allCargos, setAllCargos] = useState<ViewCargoRow[]>([])
   const [totalRows, setTotalRows] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [activeCargo, setActiveCargo] = useState<ViewCargoRow | null>(null)
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false)
+  const [handoverReason, setHandoverReason] = useState("musteri_adreste_degil")
+  const [handoverNote, setHandoverNote] = useState("")
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [cancelCategory, setCancelCategory] = useState("operasyonel")
+  const [cancelReason, setCancelReason] = useState("musteri_talebi")
+  const [cancelNote, setCancelNote] = useState("")
 
   const [createdAtFrom, setCreatedAtFrom] = useState("")
   const [createdAtTo, setCreatedAtTo] = useState("")
   const [createdAtRangeInput, setCreatedAtRangeInput] = useState("")
   const [isDateRangePickerOpen, setIsDateRangePickerOpen] = useState(false)
+  const [isSummaryVisible, setIsSummaryVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return true
+    }
+
+    try {
+      return localStorage.getItem(SUMMARY_VISIBILITY_STORAGE_KEY) !== "0"
+    } catch {
+      return true
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SUMMARY_VISIBILITY_STORAGE_KEY, isSummaryVisible ? "1" : "0")
+    } catch {
+      // ignore storage write errors in demo flow
+    }
+  }, [isSummaryVisible])
+
+  const { loading, submitShipmentHandover, submitShipmentCancel } = usePieceActions()
+
+  const buildViewCargos = useCallback((): ViewCargoRow[] => {
+    return mockCargos.map((cargo) => {
+      const trackingNo = cargo.takip_no.replace("ARF-", "")
+      const canceledPieceNos = new Set<string>()
+      const reportedPieceNos = new Set<string>()
+      const pieceRows = mockPieceListRows.filter((piece) => piece.takip_no === trackingNo)
+
+      Object.keys(sharedPieceCancelInfoByPieceNo).forEach((pieceNo) => {
+        if (pieceNo.startsWith(trackingNo)) {
+          canceledPieceNos.add(pieceNo)
+        }
+      })
+
+      ;(shipmentDetailMockData.parcaDetaylari as Array<{ parca_no: string; ihbar_edildi?: boolean }>).forEach((piece) => {
+        if (piece.ihbar_edildi && String(piece.parca_no).startsWith(trackingNo)) {
+          reportedPieceNos.add(String(piece.parca_no))
+        }
+      })
+
+      let hasShipmentCancel = false
+      let hasShipmentHandover = false
+      let shipmentCancelAt = ""
+      let shipmentHandoverAt = ""
+
+      if (typeof window !== "undefined") {
+        try {
+          const shipmentCancelRaw = localStorage.getItem(`shipment-cancel-info:${trackingNo}`)
+          const shipmentHandoverRaw = localStorage.getItem(`shipment-handover-info:${trackingNo}`)
+
+          hasShipmentCancel = Boolean(shipmentCancelRaw)
+          hasShipmentHandover = Boolean(shipmentHandoverRaw)
+
+          if (shipmentCancelRaw) {
+            const parsed = JSON.parse(shipmentCancelRaw) as { canceledAt?: string }
+            shipmentCancelAt = parsed.canceledAt ?? ""
+          }
+
+          if (shipmentHandoverRaw) {
+            const parsed = JSON.parse(shipmentHandoverRaw) as { transferredAt?: string }
+            shipmentHandoverAt = parsed.transferredAt ?? ""
+          }
+
+          const storedPieceCancelRaw = localStorage.getItem(`shipment-piece-cancel-info:${trackingNo}`)
+          if (storedPieceCancelRaw) {
+            const parsed = JSON.parse(storedPieceCancelRaw) as Record<string, unknown>
+            Object.keys(parsed).forEach((pieceNo) => canceledPieceNos.add(pieceNo))
+          }
+
+          const storedPieceReportRaw = localStorage.getItem(`shipment-piece-report-info:${trackingNo}`)
+          if (storedPieceReportRaw) {
+            const parsed = JSON.parse(storedPieceReportRaw) as Record<string, unknown>
+            Object.keys(parsed).forEach((pieceNo) => reportedPieceNos.add(pieceNo))
+          }
+        } catch {
+          // ignore storage parse errors in demo flow
+        }
+      }
+
+      let normalizedStatus: CargoStatus
+
+      if (hasShipmentCancel) {
+        normalizedStatus = "iptal_edildi"
+      } else if (hasShipmentHandover) {
+        normalizedStatus = "devredildi"
+      } else if (cargo.kargo_durumu === "teslim_edildi") {
+        normalizedStatus = "teslim_edildi"
+      } else if (cargo.kargo_durumu === "dagitimda") {
+        normalizedStatus = "dagitimda"
+      } else if (cargo.kargo_durumu === "transfer") {
+        normalizedStatus = cargo.varis_zamani ? "varis_subede" : "transfer_surecinde"
+      } else {
+        normalizedStatus = "olusturuldu"
+      }
+
+      const pieceStatusDisplay =
+        canceledPieceNos.size > 0
+          ? `Kısmi İptal (${canceledPieceNos.size}/${cargo.t_adet})`
+          : reportedPieceNos.size > 0
+            ? `İhbar (${reportedPieceNos.size} Parçada)`
+            : "-"
+
+      const latestPieceUpdate = getLatestDateTime(pieceRows.map((piece) => piece.guncellenme_zamani))
+      const latestActionAt = getLatestDateTime([
+        cargo.olusturulma_zamani,
+        cargo.varis_zamani,
+        cargo.teslimat_zamani,
+        latestPieceUpdate,
+        shipmentCancelAt,
+        shipmentHandoverAt,
+      ])
+
+      return {
+        ...cargo,
+        kargo_durumu: normalizedStatus,
+        parca_durumu_gosterim: pieceStatusDisplay,
+        son_islem_zamani: latestActionAt || cargo.olusturulma_zamani,
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    setAllCargos(buildViewCargos())
+
+    const handleStorage = () => {
+      setAllCargos(buildViewCargos())
+    }
+
+    window.addEventListener("storage", handleStorage)
+    return () => {
+      window.removeEventListener("storage", handleStorage)
+    }
+  }, [buildViewCargos])
+
+  const openHandoverModal = useCallback((cargo: ViewCargoRow) => {
+    setActiveCargo(cargo)
+    setHandoverReason("musteri_adreste_degil")
+    setHandoverNote("")
+    setHandoverModalOpen(true)
+  }, [])
+
+  const openCancelModal = useCallback((cargo: ViewCargoRow) => {
+    setActiveCargo(cargo)
+    setCancelCategory("operasyonel")
+    setCancelReason("musteri_talebi")
+    setCancelNote("")
+    setCancelModalOpen(true)
+  }, [])
+
+  const handleConfirmShipmentHandover = useCallback(() => {
+    if (!activeCargo || loading.shipmentHandover) {
+      return
+    }
+
+    void (async () => {
+      const result = await submitShipmentHandover({
+        trackingNo: activeCargo.takip_no,
+        reason: handoverReason,
+        note: handoverNote,
+      })
+
+      if (result.ok) {
+        const trackingNo = activeCargo.takip_no.replace("ARF-", "")
+        const handoverInfo = {
+          transferredAt: new Date().toLocaleString("tr-TR"),
+          transferredBy: "Operasyon Merkezi",
+          receiverBranch: activeCargo.alici_sube,
+          reason: handoverReason,
+          note: handoverNote,
+        }
+
+        try {
+          localStorage.setItem(`shipment-handover-info:${trackingNo}`, JSON.stringify(handoverInfo))
+        } catch {
+          // ignore storage write errors in demo flow
+        }
+
+        setAllCargos(buildViewCargos())
+        setHandoverModalOpen(false)
+      }
+    })()
+  }, [activeCargo, buildViewCargos, handoverNote, handoverReason, loading.shipmentHandover, submitShipmentHandover])
+
+  const handleConfirmShipmentCancel = useCallback(() => {
+    if (!activeCargo || loading.shipmentCancel) {
+      return
+    }
+
+    void (async () => {
+      const result = await submitShipmentCancel({
+        trackingNo: activeCargo.takip_no,
+        reason: cancelReason,
+        note: cancelNote,
+      })
+
+      if (result.ok) {
+        const trackingNo = activeCargo.takip_no.replace("ARF-", "")
+        const cancelInfo = {
+          canceledAt: new Date().toLocaleString("tr-TR"),
+          canceledBy: "Operasyon Merkezi",
+          category: cancelCategory,
+          reason: cancelReason,
+          note: cancelNote,
+        }
+
+        try {
+          localStorage.setItem(`shipment-cancel-info:${trackingNo}`, JSON.stringify(cancelInfo))
+        } catch {
+          // ignore storage write errors in demo flow
+        }
+
+        setAllCargos(buildViewCargos())
+        setCancelModalOpen(false)
+      }
+    })()
+  }, [activeCargo, buildViewCargos, cancelCategory, cancelNote, cancelReason, loading.shipmentCancel, submitShipmentCancel])
 
   useEffect(() => {
     let cancelled = false
     setIsLoading(true)
 
     const timer = window.setTimeout(() => {
-      const result = queryCargos({ pagination, sorting, columnFilters })
+      const result = queryCargos({ rows: allCargos, pagination, sorting, columnFilters })
 
       if (!cancelled) {
         setData(result.rows)
@@ -475,7 +629,7 @@ export default function KargolarPage() {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [pagination, sorting, columnFilters])
+  }, [allCargos, pagination, sorting, columnFilters])
 
   const summaryCards = useMemo(() => {
     const totalCargo = mockCargos.length
@@ -503,7 +657,7 @@ export default function KargolarPage() {
     ]
   }, [])
 
-  const handleTableReady = useCallback((nextTable: TanStackTable<CargoRow>) => {
+  const handleTableReady = useCallback((nextTable: TanStackTable<ViewCargoRow>) => {
     setTable(nextTable)
   }, [])
 
@@ -628,10 +782,11 @@ export default function KargolarPage() {
     }
   }, [columnFilters, createdAtFrom, createdAtTo, createdAtRangeInput])
 
-  const columns = useMemo<ColumnDef<CargoRow>[]>(
+  const columns = useMemo<ColumnDef<ViewCargoRow>[]>(
     () => [
       {
         accessorKey: "takip_no",
+        enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Takip No" />,
         cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.original.takip_no}</span>,
       },
@@ -726,6 +881,11 @@ export default function KargolarPage() {
         cell: ({ row }) => <span className="text-muted-foreground">{row.original.olusturulma_zamani}</span>,
       },
       {
+        accessorKey: "son_islem_zamani",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Son İşlem Zamanı" />,
+        cell: ({ row }) => <span className="text-muted-foreground">{row.original.son_islem_zamani}</span>,
+      },
+      {
         accessorKey: "varis_zamani",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Varış Zamanı" />,
         cell: ({ row }) => <span className="text-muted-foreground">{row.original.varis_zamani || "—"}</span>,
@@ -747,6 +907,31 @@ export default function KargolarPage() {
               {status?.label || row.original.kargo_durumu}
             </Badge>
           )
+        },
+      },
+      {
+        accessorKey: "parca_durumu_gosterim",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Parça Durumu" />,
+        cell: ({ row }) => {
+          const value = row.original.parca_durumu_gosterim
+
+          if (value.startsWith("Kısmi İptal")) {
+            return (
+              <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/20">
+                {value}
+              </Badge>
+            )
+          }
+
+          if (value.startsWith("İhbar")) {
+            return (
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/20">
+                {value}
+              </Badge>
+            )
+          }
+
+          return <span className="text-muted-foreground">-</span>
         },
       },
       {
@@ -780,33 +965,77 @@ export default function KargolarPage() {
       },
       {
         id: "actions",
-        header: "İşlemler",
+        header: () => <div className="w-full text-center">İşlemler</div>,
         enableSorting: false,
         enableHiding: false,
-        cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/arf/cargo/shipments/${row.original.id}`}>
-                  <Eye className="mr-2 size-4" />
-                  Detay Görüntüle
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-amber-700 focus:text-amber-700">
-                <Ban className="mr-2 size-4" />
-                İptal Et
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
+        size: 100,
+        minSize: 88,
+        maxSize: 110,
+        cell: ({ row }) => {
+          const backendTrackingLink =
+            (row.original as CargoRow & { takip_linki?: string; tracking_link?: string }).takip_linki ??
+            (row.original as CargoRow & { takip_linki?: string; tracking_link?: string }).tracking_link
+
+          return (
+            <div className="flex justify-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-8">
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel>{`Takip No ${row.original.takip_no} İşlemler:`}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={`/arf/cargo/shipments/${row.original.id}`}>
+                      <Eye className="mr-2 size-4" />
+                      Detay Görüntüle
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/arf/cargo/shipments/${row.original.id}?action=print-slip`}>
+                      <Printer className="mr-2 size-4" />
+                      Bilgi Fişi
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      openHandoverModal(row.original)
+                    }}
+                  >
+                    <ArrowRightLeft className="mr-2 size-4" />
+                    Devret
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-amber-700 focus:text-amber-700"
+                    onSelect={() => {
+                      openCancelModal(row.original)
+                    }}
+                  >
+                    <Ban className="mr-2 size-4" />
+                    İptal
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={!backendTrackingLink}
+                    onSelect={(event: Event) => {
+                      event.preventDefault()
+                      if (!backendTrackingLink) {
+                        return
+                      }
+
+                      void navigator.clipboard?.writeText(backendTrackingLink).catch(() => {})
+                    }}
+                  >
+                    <Copy className="mr-2 size-4" />
+                    Takip Linki
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )
+        },
       },
     ],
     [],
@@ -829,6 +1058,15 @@ export default function KargolarPage() {
             <h1 className="text-2xl font-semibold tracking-tight">Kargo Listesi</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSummaryVisible((prev) => !prev)}
+            >
+              {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
+              {isSummaryVisible ? "Kartları Gizle" : "Kartları Göster"}
+            </Button>
             <Button size="sm" asChild>
               <Link href="/arf/cargo/shipments/new">
                 <Plus className="mr-2 size-4" />
@@ -838,16 +1076,18 @@ export default function KargolarPage() {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {summaryCards.map((card) => (
-            <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
-              <CardContent className="p-4">
-                <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
-                <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isSummaryVisible && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {summaryCards.map((card) => (
+              <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
+                <CardContent className="p-4">
+                  <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
+                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <Card>
           <CardContent className="space-y-4">
@@ -978,6 +1218,7 @@ export default function KargolarPage() {
               manualFiltering
               enableColumnVisibility
               enableHorizontalScroll
+              stickyFirstColumn
               stickyLastColumn
               isLoading={isLoading}
               className="[&_thead_tr]:bg-slate-50 [&_thead_th]:font-semibold [&_thead_th]:text-slate-600"
@@ -990,6 +1231,31 @@ export default function KargolarPage() {
             )}
           </CardContent>
         </Card>
+
+        <ShipmentHandoverModal
+          open={handoverModalOpen}
+          onOpenChange={setHandoverModalOpen}
+          trackingNo={activeCargo?.takip_no || "-"}
+          receiverBranch={activeCargo?.alici_sube || "-"}
+          reason={handoverReason}
+          onReasonChange={setHandoverReason}
+          note={handoverNote}
+          onNoteChange={setHandoverNote}
+          onConfirm={handleConfirmShipmentHandover}
+        />
+
+        <ShipmentCancelModal
+          open={cancelModalOpen}
+          onOpenChange={setCancelModalOpen}
+          trackingNo={activeCargo?.takip_no || "-"}
+          category={cancelCategory}
+          onCategoryChange={setCancelCategory}
+          reason={cancelReason}
+          onReasonChange={setCancelReason}
+          note={cancelNote}
+          onNoteChange={setCancelNote}
+          onConfirm={handleConfirmShipmentCancel}
+        />
       </div>
     </>
   )

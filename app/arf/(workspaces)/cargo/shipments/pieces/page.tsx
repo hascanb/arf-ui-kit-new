@@ -21,6 +21,13 @@ import {
   DataTableToolbar,
 } from "@hascanb/arf-ui-kit/datatable-kit"
 import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
+import { DeliveryInfoModal } from "../_components/delivery-info-modal"
+import { PieceCancelInfoModal } from "../_components/piece-cancel-info-modal"
+import { PieceCancelModal } from "../_components/piece-cancel-modal"
+import { PieceDeliveryEntryModal } from "../_components/piece-delivery-entry-modal"
+import { PieceReportInfoModal } from "../_components/piece-report-info-modal"
+import { PieceReportModal } from "../_components/piece-report-modal"
+import { usePieceActions } from "../_hooks/use-piece-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -36,18 +43,30 @@ import {
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
+  AlertTriangle,
+  ArrowRightLeft,
+  Ban,
   CalendarIcon,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Building2,
   Eye,
   Filter,
   MoreHorizontal,
   Package,
   PlusCircle,
+  Printer,
   Truck,
   X,
 } from "lucide-react"
+import {
+  mockPieceCancelInfoByPieceNo as sharedPieceCancelInfoByPieceNo,
+  mockPieceListRows,
+  shipmentDetailMockData,
+} from "../_mock/shipments-mock-data"
 
-type PieceStatus = "beklemede" | "transfer" | "dagitimda" | "teslim_edildi"
+type PieceStatus = "beklemede" | "transfer" | "varis_subede" | "dagitimda" | "teslim_edildi" | "devredildi" | "iptal_edildi"
 type PieceType = "koli" | "palet" | "cuval"
 
 type PieceRow = {
@@ -69,155 +88,34 @@ type PieceRow = {
   teslim_alan_telefonu: string
   teslimat_resmi_var: boolean
   teslimat_resmi_url: string
+  parca_durumu?: "parca_iptal" | "ihbar_edildi"
 }
 
-type PieceSeed = {
-  kargoId: string
-  takipNo: string
-  odemeTuru: PieceRow["odeme_turu"]
-  kargoDurumu: PieceStatus
-  createdAt: string
-  updatedAt: string
-  arrivalAt: string
-  deliveredAt: string
-  recipientName: string
-  recipientPhone: string
-  hasProofPhoto: boolean
-  specs: Array<{ type: PieceType; count: number; desi: number; agirlik: number; fiyat: number }>
+type PieceCancelInfo = {
+  canceledAt: string
+  canceledBy: string
+  category: string
+  reason: string
+  note: string
 }
 
-const toDateTimeString = (value: Date) => {
-  const year = value.getFullYear()
-  const month = String(value.getMonth() + 1).padStart(2, "0")
-  const day = String(value.getDate()).padStart(2, "0")
-  const hours = String(value.getHours()).padStart(2, "0")
-  const minutes = String(value.getMinutes()).padStart(2, "0")
-  return `${year}-${month}-${day} ${hours}:${minutes}`
+type PieceReportInfo = {
+  reportTime: string
+  reason: string
+  description: string
+  evidenceImageUrl?: string
 }
+const basePieces: PieceRow[] = [...mockPieceListRows]
 
-const addMinutes = (base: string, minutes: number) => {
-  const date = new Date(base)
-  date.setMinutes(date.getMinutes() + minutes)
-  return toDateTimeString(date)
-}
-
-const createPiecesFromSeed = (seed: PieceSeed): PieceRow[] => {
-  let index = 1
-
-  return seed.specs.flatMap((spec) =>
-    Array.from({ length: spec.count }, () => {
-      const suffix = String(index).padStart(2, "0")
-      const pieceNo = `${seed.takipNo}${suffix}`
-      const currentIndex = index
-      index += 1
-
-      const delivered = seed.kargoDurumu === "teslim_edildi"
-
-      return {
-        id: `${seed.kargoId}-${suffix}`,
-        parca_no: pieceNo,
-        takip_no: seed.takipNo,
-        kargo_id: seed.kargoId,
-        odeme_turu: seed.odemeTuru,
-        kargo_durumu: seed.kargoDurumu,
-        parca_tipi: spec.type,
-        desi: spec.desi,
-        agirlik: spec.agirlik,
-        toplam_fiyat: spec.fiyat,
-        olusturulma_zamani: addMinutes(seed.createdAt, currentIndex * 2),
-        guncellenme_zamani: addMinutes(seed.updatedAt, currentIndex),
-        varis_zamani: seed.arrivalAt,
-        teslimat_zamani: delivered ? addMinutes(seed.deliveredAt, currentIndex) : "",
-        teslim_alan_adi: delivered ? seed.recipientName : "—",
-        teslim_alan_telefonu: delivered ? seed.recipientPhone : "—",
-        teslimat_resmi_var: delivered ? seed.hasProofPhoto : false,
-        teslimat_resmi_url:
-          delivered && seed.hasProofPhoto
-            ? `/mock/piece-proof-${((currentIndex - 1) % 2) + 1}.svg`
-            : "",
-      }
-    }),
-  )
-}
-
-const pieceSeeds: PieceSeed[] = [
-  {
-    kargoId: "1",
-    takipNo: "1001",
-    odemeTuru: "Gönderici Ödemeli",
-    kargoDurumu: "teslim_edildi",
-    createdAt: "2026-03-10 09:00",
-    updatedAt: "2026-03-11 12:30",
-    arrivalAt: "2026-03-11 09:45",
-    deliveredAt: "2026-03-11 15:10",
-    recipientName: "Mehmet Demir",
-    recipientPhone: "0532 111 22 33",
-    hasProofPhoto: true,
-    specs: [
-      { type: "koli", count: 5, desi: 4, agirlik: 3.2, fiyat: 78.9 },
-      { type: "palet", count: 1, desi: 18, agirlik: 22.5, fiyat: 196.4 },
-    ],
-  },
-  {
-    kargoId: "2",
-    takipNo: "1002",
-    odemeTuru: "Alıcı Ödemeli",
-    kargoDurumu: "dagitimda",
-    createdAt: "2026-03-09 13:20",
-    updatedAt: "2026-03-10 09:10",
-    arrivalAt: "2026-03-10 08:20",
-    deliveredAt: "2026-03-10 17:00",
-    recipientName: "Ayşe Korkmaz",
-    recipientPhone: "0542 222 33 44",
-    hasProofPhoto: false,
-    specs: [
-      { type: "koli", count: 3, desi: 5, agirlik: 4.1, fiyat: 64.75 },
-      { type: "palet", count: 2, desi: 14, agirlik: 19.2, fiyat: 158.2 },
-    ],
-  },
-  {
-    kargoId: "3",
-    takipNo: "1003",
-    odemeTuru: "Gönderici Ödemeli",
-    kargoDurumu: "transfer",
-    createdAt: "2026-03-08 10:45",
-    updatedAt: "2026-03-09 14:25",
-    arrivalAt: "",
-    deliveredAt: "",
-    recipientName: "Burak Yıldız",
-    recipientPhone: "0555 333 44 55",
-    hasProofPhoto: false,
-    specs: [
-      { type: "koli", count: 4, desi: 6, agirlik: 4.8, fiyat: 71.4 },
-      { type: "cuval", count: 1, desi: 9, agirlik: 8.2, fiyat: 84.6 },
-    ],
-  },
-  {
-    kargoId: "4",
-    takipNo: "1004",
-    odemeTuru: "Alıcı Ödemeli",
-    kargoDurumu: "beklemede",
-    createdAt: "2026-03-07 08:35",
-    updatedAt: "2026-03-07 09:20",
-    arrivalAt: "",
-    deliveredAt: "",
-    recipientName: "Selin Aydın",
-    recipientPhone: "0501 444 55 66",
-    hasProofPhoto: false,
-    specs: [
-      { type: "palet", count: 2, desi: 16, agirlik: 20.3, fiyat: 175.9 },
-      { type: "koli", count: 2, desi: 3, agirlik: 2.6, fiyat: 52.0 },
-    ],
-  },
-]
-
-const allPieces = pieceSeeds.flatMap(createPiecesFromSeed)
 
 const kargoStatusConfig: Record<PieceStatus, { label: string; className: string }> = {
-  beklemede: { label: "Beklemede", className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-  transfer: { label: "Transfer", className: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  beklemede: { label: "Oluşturuldu", className: "bg-slate-500/10 text-slate-700 border-slate-400/30" },
+  transfer: { label: "Transfer Sürecinde", className: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  varis_subede: { label: "Varış Şubede", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
   dagitimda: { label: "Dağıtımda", className: "bg-sky-500/10 text-sky-600 border-sky-500/20" },
   teslim_edildi: { label: "Teslim Edildi", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  devredildi: { label: "Devredildi", className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20" },
+  iptal_edildi: { label: "Kargo İptal", className: "bg-rose-500/10 text-rose-600 border-rose-500/20" },
 }
 
 const pieceTypeConfig: Record<PieceType, { label: string; className: string }> = {
@@ -232,10 +130,13 @@ const odemeFilterOptions = [
 ]
 
 const statusFilterOptions = [
-  { label: "Beklemede", value: "beklemede" },
-  { label: "Transfer", value: "transfer" },
+  { label: "Oluşturuldu", value: "beklemede" },
+  { label: "Transfer Sürecinde", value: "transfer" },
+  { label: "Varış Şubede", value: "varis_subede" },
   { label: "Dağıtımda", value: "dagitimda" },
   { label: "Teslim Edildi", value: "teslim_edildi" },
+  { label: "Devredildi", value: "devredildi" },
+  { label: "Kargo İptal", value: "iptal_edildi" },
 ]
 
 const pieceTypeFilterOptions = [
@@ -243,6 +144,30 @@ const pieceTypeFilterOptions = [
   { label: "Palet", value: "palet" },
   { label: "Çuval", value: "cuval" },
 ]
+
+const pieceCancelReasonLabels: Record<string, string> = {
+  musteri_talebi: "Müşteri talebi",
+  yanlis_parca_kaydi: "Yanlış parça kaydı",
+  teslimat_imkansiz: "Teslimat koşulu sağlanamadı",
+  hasarli_parca: "Parça hasarlı / kullanılamaz",
+  diger_sebep: "Diğer sebep",
+}
+
+const pieceCancelCategoryLabels: Record<string, string> = {
+  operasyonel: "Operasyonel",
+  musteri: "Müşteri",
+  hasar: "Hasar",
+  diger: "Diğer",
+}
+
+const pieceReportReasonLabels: Record<string, string> = {
+  hasarli_kargo: "Hasarlı Kargo",
+  yanlis_urun: "Yanlış Ürün",
+  eksik_hatali_evrak: "Eksik/Hatalı Evrak",
+  saskin_kargo: "Şaşkın Kargo",
+}
+
+const SUMMARY_VISIBILITY_STORAGE_KEY = "arf:shipments:pieces:summary-visible"
 
 const isValidIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -376,15 +301,17 @@ const resolveUpdater = <T,>(updater: Updater<T>, previous: T): T =>
 const getDateOnly = (value: string) => value.split(" ")[0] ?? ""
 
 const queryPieces = ({
+  rows,
   pagination,
   sorting,
   columnFilters,
 }: {
+  rows: PieceRow[]
   pagination: PaginationState
   sorting: SortingState
   columnFilters: ColumnFiltersState
 }) => {
-  let filtered = [...allPieces]
+  let filtered = [...rows]
 
   for (const filter of columnFilters) {
     if (filter.id === "odeme_turu") {
@@ -482,13 +409,167 @@ export default function ParcaListesiPage() {
   const [createdAtRangeInput, setCreatedAtRangeInput] = useState("")
   const [isDateRangePickerOpen, setIsDateRangePickerOpen] = useState(false)
   const [deliveryInfoModalPiece, setDeliveryInfoModalPiece] = useState<PieceRow | null>(null)
+  const [reportInfoModalPiece, setReportInfoModalPiece] = useState<PieceRow | null>(null)
+  const [pieceCancelInfoModalPiece, setPieceCancelInfoModalPiece] = useState<PieceRow | null>(null)
+  const [selectedActionPiece, setSelectedActionPiece] = useState<PieceRow | null>(null)
+  const [pieceDeliveryEntryModalOpen, setPieceDeliveryEntryModalOpen] = useState(false)
+  const [pieceReportModalOpen, setPieceReportModalOpen] = useState(false)
+  const [pieceCancelModalOpen, setPieceCancelModalOpen] = useState(false)
+  const [deliveryEntryFirstName, setDeliveryEntryFirstName] = useState("")
+  const [deliveryEntryLastName, setDeliveryEntryLastName] = useState("")
+  const [deliveryEntryPhone, setDeliveryEntryPhone] = useState("")
+  const [pieceReportReason, setPieceReportReason] = useState("hasarli_kargo")
+  const [pieceReportDescription, setPieceReportDescription] = useState("")
+  const [pieceCancelCategory, setPieceCancelCategory] = useState("operasyonel")
+  const [pieceCancelReason, setPieceCancelReason] = useState("musteri_talebi")
+  const [pieceCancelNote, setPieceCancelNote] = useState("")
+  const [pieceCancelInfoMap, setPieceCancelInfoMap] = useState<Record<string, PieceCancelInfo>>({
+    ...sharedPieceCancelInfoByPieceNo,
+  })
+  const [pieceReportInfoMap, setPieceReportInfoMap] = useState<Record<string, PieceReportInfo>>({})
+  const [allPieces, setAllPieces] = useState<PieceRow[]>(basePieces)
+  const [isSummaryVisible, setIsSummaryVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return true
+    }
+
+    try {
+      return localStorage.getItem(SUMMARY_VISIBILITY_STORAGE_KEY) !== "0"
+    } catch {
+      return true
+    }
+  })
+
+  const { loading, submitDeliveryEntry, submitPieceReport, submitPieceCancel } = usePieceActions()
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SUMMARY_VISIBILITY_STORAGE_KEY, isSummaryVisible ? "1" : "0")
+    } catch {
+      // ignore storage write errors in demo flow
+    }
+  }, [isSummaryVisible])
+
+  useEffect(() => {
+    const applyCancelOverlays = () => {
+      const canceledTrackingNos = new Set<string>()
+      const handedOverTrackingNos = new Set<string>()
+      const nextCancelInfoMap: Record<string, PieceCancelInfo> = {
+        ...(sharedPieceCancelInfoByPieceNo as Record<string, PieceCancelInfo>),
+      }
+      const canceledPieceNos = new Set<string>(Object.keys(nextCancelInfoMap))
+      const reportedPieceNos = new Set<string>()
+      const nextReportInfoMap: Record<string, PieceReportInfo> = {}
+
+      ;(shipmentDetailMockData.parcaDetaylari as Array<{
+        parca_no: string
+        ihbar_edildi?: boolean
+        ihbar_zamani?: string
+        ihbar_sebebi?: string
+        ihbar_aciklama?: string
+        ihbar_kanit_url?: string
+      }>).forEach((piece) => {
+        if (!piece.ihbar_edildi) {
+          return
+        }
+
+        reportedPieceNos.add(piece.parca_no)
+        nextReportInfoMap[piece.parca_no] = {
+          reportTime: piece.ihbar_zamani || "-",
+          reason: piece.ihbar_sebebi || "-",
+          description: piece.ihbar_aciklama || "-",
+          evidenceImageUrl: piece.ihbar_kanit_url || "",
+        }
+      })
+
+      for (const piece of basePieces) {
+        try {
+          const shipmentCancelRaw = localStorage.getItem(`shipment-cancel-info:${piece.takip_no}`)
+          if (shipmentCancelRaw) {
+            canceledTrackingNos.add(piece.takip_no)
+          }
+
+          const shipmentHandoverRaw = localStorage.getItem(`shipment-handover-info:${piece.takip_no}`)
+          if (shipmentHandoverRaw) {
+            handedOverTrackingNos.add(piece.takip_no)
+          }
+
+          const pieceCancelRaw = localStorage.getItem(`shipment-piece-cancel-info:${piece.takip_no}`)
+          if (pieceCancelRaw) {
+            const parsed = JSON.parse(pieceCancelRaw) as Record<string, PieceCancelInfo>
+            for (const pieceNo of Object.keys(parsed)) {
+              canceledPieceNos.add(pieceNo)
+              nextCancelInfoMap[pieceNo] = parsed[pieceNo]
+            }
+          }
+
+          const pieceReportRaw = localStorage.getItem(`shipment-piece-report-info:${piece.takip_no}`)
+          if (pieceReportRaw) {
+            const parsed = JSON.parse(pieceReportRaw) as Record<string, PieceReportInfo>
+            for (const pieceNo of Object.keys(parsed)) {
+              reportedPieceNos.add(pieceNo)
+              nextReportInfoMap[pieceNo] = parsed[pieceNo]
+            }
+          }
+        } catch {
+          // ignore storage parse errors in demo flow
+        }
+      }
+
+      const nextRows: PieceRow[] = basePieces.map((row) => {
+        const canceledByShipment = canceledTrackingNos.has(row.takip_no)
+        const handedOverByShipment = handedOverTrackingNos.has(row.takip_no)
+        const canceledByPiece = canceledPieceNos.has(row.parca_no)
+        const reportedByPiece = reportedPieceNos.has(row.parca_no)
+
+        if (!canceledByShipment && !handedOverByShipment && !canceledByPiece && !reportedByPiece) {
+          return row
+        }
+
+        let nextCargoStatus: PieceStatus = row.kargo_durumu
+
+        if (row.kargo_durumu === "transfer" && row.varis_zamani) {
+          nextCargoStatus = "varis_subede"
+        }
+
+        if (handedOverByShipment) {
+          nextCargoStatus = "devredildi"
+        }
+
+        if (canceledByShipment) {
+          nextCargoStatus = "iptal_edildi"
+        }
+
+        return {
+          ...row,
+          kargo_durumu: nextCargoStatus,
+          parca_durumu: canceledByPiece ? "parca_iptal" : reportedByPiece ? "ihbar_edildi" : undefined,
+        }
+      })
+
+      setPieceCancelInfoMap(nextCancelInfoMap)
+      setPieceReportInfoMap(nextReportInfoMap)
+      setAllPieces(nextRows)
+    }
+
+    applyCancelOverlays()
+
+    const handleStorage = () => {
+      applyCancelOverlays()
+    }
+
+    window.addEventListener("storage", handleStorage)
+    return () => {
+      window.removeEventListener("storage", handleStorage)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     setIsLoading(true)
 
     const timer = window.setTimeout(() => {
-      const result = queryPieces({ pagination, sorting, columnFilters })
+      const result = queryPieces({ rows: allPieces, pagination, sorting, columnFilters })
 
       if (!cancelled) {
         setData(result.rows)
@@ -501,7 +582,7 @@ export default function ParcaListesiPage() {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [pagination, sorting, columnFilters])
+  }, [allPieces, pagination, sorting, columnFilters])
 
   const summaryCards = useMemo(() => {
     const totalPieceCount = allPieces.length
@@ -544,6 +625,221 @@ export default function ParcaListesiPage() {
 
     return { firstName, lastName }
   }, [])
+
+  const openRowDeliveryEntryModal = useCallback(
+    (piece: PieceRow) => {
+      const nameParts = getDeliveryNameParts(piece.teslim_alan_adi)
+      setSelectedActionPiece(piece)
+      setDeliveryEntryFirstName(nameParts.firstName === "-" ? "" : nameParts.firstName)
+      setDeliveryEntryLastName(nameParts.lastName === "-" ? "" : nameParts.lastName)
+      setDeliveryEntryPhone(piece.teslim_alan_telefonu && piece.teslim_alan_telefonu !== "—" ? piece.teslim_alan_telefonu : "")
+      setPieceDeliveryEntryModalOpen(true)
+    },
+    [getDeliveryNameParts],
+  )
+
+  const openRowReportModal = useCallback((piece: PieceRow) => {
+    setSelectedActionPiece(piece)
+    setPieceReportReason("hasarli_kargo")
+    setPieceReportDescription("")
+    setPieceReportModalOpen(true)
+  }, [])
+
+  const openRowCancelModal = useCallback((piece: PieceRow) => {
+    setSelectedActionPiece(piece)
+    setPieceCancelCategory("operasyonel")
+    setPieceCancelReason("musteri_talebi")
+    setPieceCancelNote("")
+    setPieceCancelModalOpen(true)
+  }, [])
+
+  const handleConfirmPieceDelivery = useCallback(() => {
+    if (!selectedActionPiece || loading.deliveryEntry) {
+      return
+    }
+
+    void (async () => {
+      const result = await submitDeliveryEntry({
+        pieceNos: [selectedActionPiece.parca_no],
+        firstName: deliveryEntryFirstName,
+        lastName: deliveryEntryLastName,
+        phone: deliveryEntryPhone,
+      })
+
+      if (!result.ok) {
+        return
+      }
+
+      const deliveryTime = new Date().toLocaleString("tr-TR")
+      const fullName = `${deliveryEntryFirstName} ${deliveryEntryLastName}`.trim() || "—"
+
+      setAllPieces((prev) =>
+        prev.map((piece) =>
+          piece.id === selectedActionPiece.id
+            ? {
+                ...piece,
+                teslimat_zamani: deliveryTime,
+                teslim_alan_adi: fullName,
+                teslim_alan_telefonu: deliveryEntryPhone || "—",
+              }
+            : piece,
+        ),
+      )
+
+      try {
+        const storageKey = `shipment-piece-delivery-info:${selectedActionPiece.takip_no}`
+        const storedDeliveryInfo = localStorage.getItem(storageKey)
+        const parsed = storedDeliveryInfo ? (JSON.parse(storedDeliveryInfo) as Record<string, unknown>) : {}
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            ...parsed,
+            [selectedActionPiece.parca_no]: {
+              firstName: deliveryEntryFirstName || "-",
+              lastName: deliveryEntryLastName || "-",
+              deliveryTime,
+              phone: deliveryEntryPhone || "-",
+              imageUrl: "",
+            },
+          }),
+        )
+      } catch {
+        // ignore storage write errors in demo flow
+      }
+
+      setPieceDeliveryEntryModalOpen(false)
+      setSelectedActionPiece(null)
+    })()
+  }, [
+    deliveryEntryFirstName,
+    deliveryEntryLastName,
+    deliveryEntryPhone,
+    loading.deliveryEntry,
+    selectedActionPiece,
+    submitDeliveryEntry,
+  ])
+
+  const handleConfirmPieceReport = useCallback(() => {
+    if (!selectedActionPiece || loading.pieceReport) {
+      return
+    }
+
+    void (async () => {
+      const result = await submitPieceReport({
+        pieceNos: [selectedActionPiece.parca_no],
+        reason: pieceReportReason,
+        description: pieceReportDescription,
+      })
+
+      if (!result.ok) {
+        return
+      }
+
+      const reportInfo: PieceReportInfo = {
+        reportTime: new Date().toLocaleString("tr-TR"),
+        reason: pieceReportReasonLabels[pieceReportReason] || pieceReportReason,
+        description: pieceReportDescription || "-",
+        evidenceImageUrl: "",
+      }
+
+      setAllPieces((prev) =>
+        prev.map((piece) =>
+          piece.id === selectedActionPiece.id
+            ? {
+                ...piece,
+                parca_durumu: "ihbar_edildi",
+                guncellenme_zamani: reportInfo.reportTime,
+              }
+            : piece,
+        ),
+      )
+
+      setPieceReportInfoMap((prev) => ({ ...prev, [selectedActionPiece.parca_no]: reportInfo }))
+
+      try {
+        const storageKey = `shipment-piece-report-info:${selectedActionPiece.takip_no}`
+        const storedReportInfo = localStorage.getItem(storageKey)
+        const parsed = storedReportInfo ? (JSON.parse(storedReportInfo) as Record<string, PieceReportInfo>) : {}
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            ...parsed,
+            [selectedActionPiece.parca_no]: reportInfo,
+          }),
+        )
+      } catch {
+        // ignore storage write errors in demo flow
+      }
+
+      setPieceReportModalOpen(false)
+      setSelectedActionPiece(null)
+    })()
+  }, [loading.pieceReport, pieceReportDescription, pieceReportReason, selectedActionPiece, submitPieceReport])
+
+  const handleConfirmPieceCancel = useCallback(() => {
+    if (!selectedActionPiece || loading.pieceCancel) {
+      return
+    }
+
+    void (async () => {
+      const result = await submitPieceCancel({
+        pieceNos: [selectedActionPiece.parca_no],
+        reason: pieceCancelReason,
+        note: pieceCancelNote,
+      })
+
+      if (!result.ok) {
+        return
+      }
+
+      const cancelInfo: PieceCancelInfo = {
+        canceledAt: new Date().toLocaleString("tr-TR"),
+        canceledBy: "Operasyon Merkezi",
+        category: pieceCancelCategoryLabels[pieceCancelCategory] || pieceCancelCategory,
+        reason: pieceCancelReasonLabels[pieceCancelReason] || pieceCancelReason,
+        note: pieceCancelNote,
+      }
+
+      setAllPieces((prev) =>
+        prev.map((piece) =>
+          piece.id === selectedActionPiece.id
+            ? {
+                ...piece,
+                parca_durumu: "parca_iptal",
+                guncellenme_zamani: cancelInfo.canceledAt,
+              }
+            : piece,
+        ),
+      )
+
+      setPieceCancelInfoMap((prev) => ({ ...prev, [selectedActionPiece.parca_no]: cancelInfo }))
+
+      try {
+        const storageKey = `shipment-piece-cancel-info:${selectedActionPiece.takip_no}`
+        const storedCancelInfo = localStorage.getItem(storageKey)
+        const parsed = storedCancelInfo ? (JSON.parse(storedCancelInfo) as Record<string, PieceCancelInfo>) : {}
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            ...parsed,
+            [selectedActionPiece.parca_no]: cancelInfo,
+          }),
+        )
+      } catch {
+        // ignore storage write errors in demo flow
+      }
+
+      setPieceCancelModalOpen(false)
+      setSelectedActionPiece(null)
+    })()
+  }, [
+    loading.pieceCancel,
+    pieceCancelCategory,
+    pieceCancelNote,
+    pieceCancelReason,
+    selectedActionPiece,
+    submitPieceCancel,
+  ])
 
   const handlePaginationChange = useCallback((updater: Updater<PaginationState>) => {
     setPagination((previous) => resolveUpdater(updater, previous))
@@ -672,11 +968,13 @@ export default function ParcaListesiPage() {
     () => [
       {
         accessorKey: "parca_no",
+        enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Parça No" />,
         cell: ({ row }) => <span className="font-mono text-sm font-semibold">{row.original.parca_no}</span>,
       },
       {
         accessorKey: "takip_no",
+        enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Takip No" />,
         cell: ({ row }) => <span className="font-mono text-sm">{row.original.takip_no}</span>,
       },
@@ -690,7 +988,18 @@ export default function ParcaListesiPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Kargo Durumu" />,
         cell: ({ row }) => {
           const status = kargoStatusConfig[row.original.kargo_durumu]
-          const statusIcon = row.original.kargo_durumu === "teslim_edildi" ? CheckCircle2 : Truck
+          const statusIcon =
+            row.original.kargo_durumu === "teslim_edildi"
+              ? CheckCircle2
+              : row.original.kargo_durumu === "dagitimda"
+                ? Truck
+                : row.original.kargo_durumu === "devredildi"
+                  ? ArrowRightLeft
+                  : row.original.kargo_durumu === "iptal_edildi"
+                    ? Ban
+                    : row.original.kargo_durumu === "varis_subede"
+                      ? Building2
+                      : Package
           const StatusIcon = statusIcon || Package
           return (
             <Badge variant="outline" className={status.className}>
@@ -698,6 +1007,29 @@ export default function ParcaListesiPage() {
               {status.label}
             </Badge>
           )
+        },
+      },
+      {
+        accessorKey: "parca_durumu",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Parça Durumu" />,
+        cell: ({ row }) => {
+          if (row.original.parca_durumu === "parca_iptal") {
+            return (
+              <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/20">
+                Parça İptal
+              </Badge>
+            )
+          }
+
+          if (row.original.parca_durumu === "ihbar_edildi") {
+            return (
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/20">
+                İhbar Edildi
+              </Badge>
+            )
+          }
+
+          return <span className="text-muted-foreground">-</span>
         },
       },
       {
@@ -738,7 +1070,7 @@ export default function ParcaListesiPage() {
       },
       {
         accessorKey: "guncellenme_zamani",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Güncellenme Zamanı" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Son İşlem Zamanı" />,
         cell: ({ row }) => <span className="text-muted-foreground">{row.original.guncellenme_zamani}</span>,
       },
       {
@@ -752,29 +1084,6 @@ export default function ParcaListesiPage() {
         cell: ({ row }) => <span className="text-muted-foreground">{row.original.teslimat_zamani || "—"}</span>,
       },
       {
-        id: "teslimat_bilgi",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Teslimat Bilgi" />,
-        enableSorting: false,
-        cell: ({ row }) => {
-          if (!hasDeliveryInfo(row.original)) {
-            return <span className="text-muted-foreground">-</span>
-          }
-
-          return (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700"
-              title="Teslimat bilgisini görüntüle"
-              onClick={() => setDeliveryInfoModalPiece(row.original)}
-            >
-              <Eye className="size-4" />
-            </Button>
-          )
-        },
-      },
-      {
         id: "actions",
         header: "İşlem",
         enableSorting: false,
@@ -786,8 +1095,8 @@ export default function ParcaListesiPage() {
                 <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>{`Parça No ${row.original.parca_no} İşlemler:`}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/arf/cargo/shipments/${row.original.kargo_id}`}>
@@ -801,12 +1110,76 @@ export default function ParcaListesiPage() {
                   Parça Detay
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Printer className="mr-2 size-4" />
+                Barkod Yazdır
+              </DropdownMenuItem>
+              {hasDeliveryInfo(row.original) ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    setDeliveryInfoModalPiece(row.original)
+                  }}
+                >
+                  <Eye className="mr-2 size-4" />
+                  Teslim Bilgi
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    openRowDeliveryEntryModal(row.original)
+                  }}
+                >
+                  <CheckCircle2 className="mr-2 size-4" />
+                  Teslim Et
+                </DropdownMenuItem>
+              )}
+              {row.original.parca_durumu === "ihbar_edildi" ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    setReportInfoModalPiece(row.original)
+                  }}
+                >
+                  <Eye className="mr-2 size-4" />
+                  İhbar Bilgi
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    openRowReportModal(row.original)
+                  }}
+                >
+                  <AlertTriangle className="mr-2 size-4" />
+                  İhbar Et
+                </DropdownMenuItem>
+              )}
+              {row.original.parca_durumu === "parca_iptal" ? (
+                <DropdownMenuItem
+                  className="text-rose-700 focus:text-rose-700"
+                  onSelect={() => {
+                    setPieceCancelInfoModalPiece(row.original)
+                  }}
+                >
+                  <Eye className="mr-2 size-4" />
+                  Parça İptal Bilgi
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  className="text-rose-700 focus:text-rose-700"
+                  onSelect={() => {
+                    openRowCancelModal(row.original)
+                  }}
+                >
+                  <Ban className="mr-2 size-4" />
+                  Parça İptal
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [hasDeliveryInfo],
+    [hasDeliveryInfo, openRowCancelModal, openRowDeliveryEntryModal, openRowReportModal],
   )
 
   const pageCount = Math.max(1, Math.ceil(totalRows / pagination.pageSize))
@@ -824,18 +1197,29 @@ export default function ParcaListesiPage() {
       <div className="flex flex-1 flex-col gap-6 p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">Parça Listesi</h1>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSummaryVisible((prev) => !prev)}
+          >
+            {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
+            {isSummaryVisible ? "Kartları Gizle" : "Kartları Göster"}
+          </Button>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {summaryCards.map((card) => (
-            <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
-              <CardContent className="p-4">
-                <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
-                <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isSummaryVisible && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {summaryCards.map((card) => (
+              <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
+                <CardContent className="p-4">
+                  <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
+                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <Card>
           <CardContent className="space-y-4">
@@ -963,6 +1347,7 @@ export default function ParcaListesiPage() {
               manualFiltering
               enableColumnVisibility
               enableHorizontalScroll
+              stickyLeftColumnCount={2}
               stickyLastColumn
               isLoading={isLoading}
               className="[&_thead_tr]:bg-slate-50 [&_thead_th]:font-semibold [&_thead_th]:text-slate-600"
@@ -981,66 +1366,83 @@ export default function ParcaListesiPage() {
         </Card>
       </div>
 
-      {deliveryInfoModalPiece && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <h2 className="text-lg font-semibold text-slate-900">Teslimat Bilgisi - Parça {deliveryInfoModalPiece.parca_no}</h2>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                onClick={() => setDeliveryInfoModalPiece(null)}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
+      <DeliveryInfoModal
+        open={Boolean(deliveryInfoModalPiece)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeliveryInfoModalPiece(null)
+          }
+        }}
+        heading={`Teslimat Bilgisi - Parça ${deliveryInfoModalPiece?.parca_no || "-"}`}
+        firstName={deliveryInfoModalPiece ? getDeliveryNameParts(deliveryInfoModalPiece.teslim_alan_adi).firstName : "-"}
+        lastName={deliveryInfoModalPiece ? getDeliveryNameParts(deliveryInfoModalPiece.teslim_alan_adi).lastName : "-"}
+        deliveryTime={deliveryInfoModalPiece?.teslimat_zamani || "-"}
+        phone={deliveryInfoModalPiece?.teslim_alan_telefonu || "-"}
+        imageUrl={deliveryInfoModalPiece?.teslimat_resmi_url || ""}
+        imageAlt={`${deliveryInfoModalPiece?.parca_no || "Parça"} teslimat resmi`}
+      />
 
-            <div className="space-y-4 p-5">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500">Ad</p>
-                  <Input value={getDeliveryNameParts(deliveryInfoModalPiece.teslim_alan_adi).firstName} readOnly className="h-9" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500">Soyad</p>
-                  <Input value={getDeliveryNameParts(deliveryInfoModalPiece.teslim_alan_adi).lastName} readOnly className="h-9" />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <p className="text-xs text-slate-500">Teslimat Zamanı</p>
-                  <Input value={deliveryInfoModalPiece.teslimat_zamani || "-"} readOnly className="h-9" />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <p className="text-xs text-slate-500">Telefon Numarası</p>
-                  <Input value={deliveryInfoModalPiece.teslim_alan_telefonu || "-"} readOnly className="h-9" />
-                </div>
-              </div>
+      <PieceDeliveryEntryModal
+        open={pieceDeliveryEntryModalOpen}
+        onOpenChange={setPieceDeliveryEntryModalOpen}
+        pieceNos={selectedActionPiece ? [selectedActionPiece.parca_no] : []}
+        firstName={deliveryEntryFirstName}
+        onFirstNameChange={setDeliveryEntryFirstName}
+        lastName={deliveryEntryLastName}
+        onLastNameChange={setDeliveryEntryLastName}
+        phone={deliveryEntryPhone}
+        onPhoneChange={setDeliveryEntryPhone}
+        onConfirm={handleConfirmPieceDelivery}
+      />
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Resim</p>
-                <div className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                  {deliveryInfoModalPiece.teslimat_resmi_url ? (
-                    <img
-                      src={deliveryInfoModalPiece.teslimat_resmi_url}
-                      alt={`${deliveryInfoModalPiece.parca_no} teslimat resmi`}
-                      className="h-56 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-40 items-center justify-center text-sm text-slate-500">-</div>
-                  )}
-                </div>
-              </div>
+      <PieceReportModal
+        open={pieceReportModalOpen}
+        onOpenChange={setPieceReportModalOpen}
+        pieceNos={selectedActionPiece ? [selectedActionPiece.parca_no] : []}
+        reason={pieceReportReason}
+        onReasonChange={setPieceReportReason}
+        description={pieceReportDescription}
+        onDescriptionChange={setPieceReportDescription}
+        onConfirm={handleConfirmPieceReport}
+      />
 
-              <div className="flex justify-end">
-                <Button type="button" variant="outline" onClick={() => setDeliveryInfoModalPiece(null)}>
-                  Kapat
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <PieceCancelModal
+        open={pieceCancelModalOpen}
+        onOpenChange={setPieceCancelModalOpen}
+        pieceNos={selectedActionPiece ? [selectedActionPiece.parca_no] : []}
+        category={pieceCancelCategory}
+        onCategoryChange={setPieceCancelCategory}
+        reason={pieceCancelReason}
+        onReasonChange={setPieceCancelReason}
+        note={pieceCancelNote}
+        onNoteChange={setPieceCancelNote}
+        onConfirm={handleConfirmPieceCancel}
+      />
+
+      <PieceReportInfoModal
+        open={Boolean(reportInfoModalPiece)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReportInfoModalPiece(null)
+          }
+        }}
+        pieceNo={reportInfoModalPiece?.parca_no || "-"}
+        reportTime={reportInfoModalPiece ? pieceReportInfoMap[reportInfoModalPiece.parca_no]?.reportTime || "-" : "-"}
+        reason={reportInfoModalPiece ? pieceReportInfoMap[reportInfoModalPiece.parca_no]?.reason || "-" : "-"}
+        description={reportInfoModalPiece ? pieceReportInfoMap[reportInfoModalPiece.parca_no]?.description || "-" : "-"}
+        evidenceImageUrl={reportInfoModalPiece ? pieceReportInfoMap[reportInfoModalPiece.parca_no]?.evidenceImageUrl || "" : ""}
+      />
+
+      <PieceCancelInfoModal
+        open={Boolean(pieceCancelInfoModalPiece)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPieceCancelInfoModalPiece(null)
+          }
+        }}
+        pieceNo={pieceCancelInfoModalPiece?.parca_no || "-"}
+        info={pieceCancelInfoModalPiece ? pieceCancelInfoMap[pieceCancelInfoModalPiece.parca_no] || null : null}
+      />
     </>
   )
 }

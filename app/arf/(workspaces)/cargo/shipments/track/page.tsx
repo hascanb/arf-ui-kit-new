@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { type ChangeEvent, type KeyboardEvent, useState } from "react"
 import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +16,7 @@ import {
   Truck,
   Warehouse,
 } from "lucide-react"
+import { mockCargoList, mockTrackingRecords } from "../_mock/shipments-mock-data"
 
 type ShipmentStatus = "hazirlaniyor" | "transfer" | "subede" | "dagitimda" | "teslim_edildi"
 
@@ -94,230 +96,8 @@ const statusConfig: Record<
     progress: 100,
   },
 }
+const mockTrackingData = mockTrackingRecords as unknown as TrackingRecord[]
 
-const mockTrackingData: TrackingRecord[] = [
-  {
-    trackingNo: "ARF-10000319",
-    referenceNo: "REF-88917",
-    status: "dagitimda",
-    eta: "Bugün 18:00 - 20:00",
-    sender: {
-      name: "Ahmet Karan Tekstil",
-      city: "Adana",
-      branch: "Adana Transfer Merkezi",
-    },
-    receiver: {
-      name: "Mavi Hanım Lojistik",
-      city: "Mersin",
-      branch: "Mersin Akdeniz Şube",
-    },
-    package: {
-      piece: 3,
-      desi: 14,
-      weight: 22,
-      service: "Standart Kurye",
-      paymentType: "Alıcı Ödemeli",
-    },
-    events: [
-      {
-        id: "evt-1",
-        time: "13 Mar 2026, 11:45",
-        title: "Kurye Dağıtıma Çıktı",
-        description: "Gönderi araçtan teslim çıkışına alındı.",
-        location: "Mersin Akdeniz Şube",
-        status: "dagitimda",
-      },
-      {
-        id: "evt-2",
-        time: "13 Mar 2026, 08:16",
-        title: "Varış Şubesine Kabul",
-        description: "Transfer hattından iniş tamamlandı.",
-        location: "Mersin Akdeniz Şube",
-        status: "subede",
-      },
-      {
-        id: "evt-3",
-        time: "12 Mar 2026, 23:58",
-        title: "Gece Transferi",
-        description: "Adana > Mersin line-haul sevki tamamlandı.",
-        location: "Adana Transfer Merkezi",
-        status: "transfer",
-      },
-      {
-        id: "evt-4",
-        time: "12 Mar 2026, 19:07",
-        title: "Kargo Kabul",
-        description: "Gönderi kabul edilip ayrıştırmaya alındı.",
-        location: "Adana Şube",
-        status: "hazirlaniyor",
-      },
-    ],
-  },
-  {
-    trackingNo: "ARF-10000320",
-    referenceNo: "REF-71230",
-    status: "teslim_edildi",
-    eta: "Teslim edildi",
-    sender: {
-      name: "Selen Gıda",
-      city: "İzmir",
-      branch: "İzmir Bornova Şube",
-    },
-    receiver: {
-      name: "Rota Market",
-      city: "Manisa",
-      branch: "Manisa Yunusemre Şube",
-    },
-    package: {
-      piece: 1,
-      desi: 4,
-      weight: 6,
-      service: "Ekspres",
-      paymentType: "Gönderici Ödemeli",
-    },
-    events: [
-      {
-        id: "evt-5",
-        time: "12 Mar 2026, 16:32",
-        title: "Alıcıya Teslim Edildi",
-        description: "Teslim alan: Burak A.",
-        location: "Manisa Yunusemre",
-        status: "teslim_edildi",
-      },
-      {
-        id: "evt-6",
-        time: "12 Mar 2026, 10:11",
-        title: "Dağıtıma Çıktı",
-        description: "Teslimat rotasına atandı.",
-        location: "Manisa Yunusemre Şube",
-        status: "dagitimda",
-      },
-      {
-        id: "evt-7",
-        time: "11 Mar 2026, 22:04",
-        title: "Transfer Aracında",
-        description: "İzmir > Manisa transfer hattında.",
-        location: "Ege Transfer Hattı",
-        status: "transfer",
-      },
-    ],
-  },
-  {
-    trackingNo: "ARF-10000321",
-    referenceNo: "REF-94482",
-    status: "subede",
-    eta: "Bugün 19:00 - 21:00",
-    sender: {
-      name: "Kuzey Kimya",
-      city: "Bursa",
-      branch: "Bursa Nilüfer Şube",
-    },
-    receiver: {
-      name: "Atlas Endüstri",
-      city: "Kocaeli",
-      branch: "Kocaeli İzmit Şube",
-    },
-    package: {
-      piece: 2,
-      desi: 11,
-      weight: 17,
-      service: "Standart Kurye",
-      paymentType: "Alıcı Ödemeli",
-    },
-    events: [
-      {
-        id: "evt-8",
-        time: "13 Mar 2026, 09:58",
-        title: "Varış Şubesine Kabul",
-        description: "Transfer aracı boşaltıldı ve dağıtım planına alındı.",
-        location: "Kocaeli İzmit Şube",
-        status: "subede",
-      },
-      {
-        id: "evt-9",
-        time: "13 Mar 2026, 02:26",
-        title: "Varış Şubesine Giriş",
-        description: "Transfer aracı boşaltımı tamamlandı.",
-        location: "Kocaeli İzmit Şube",
-        status: "subede",
-      },
-    ],
-  },
-  {
-    trackingNo: "ARF-10000322",
-    referenceNo: "REF-61105",
-    status: "transfer",
-    eta: "Yarın 10:00 - 13:00",
-    sender: {
-      name: "Beta Otomotiv",
-      city: "Ankara",
-      branch: "Ankara Ostim Şube",
-    },
-    receiver: {
-      name: "Nehir Teknoloji",
-      city: "Eskişehir",
-      branch: "Eskişehir Tepebaşı Şube",
-    },
-    package: {
-      piece: 4,
-      desi: 18,
-      weight: 25,
-      service: "Standart Kurye",
-      paymentType: "Gönderici Ödemeli",
-    },
-    events: [
-      {
-        id: "evt-10",
-        time: "13 Mar 2026, 10:12",
-        title: "Transfer Merkezinde",
-        description: "Gönderi ana hatta yüklendi, varış şubesine aktarım sürüyor.",
-        location: "Ankara Transfer Merkezi",
-        status: "transfer",
-      },
-      {
-        id: "evt-11",
-        time: "13 Mar 2026, 08:05",
-        title: "Kargo Kabul",
-        description: "Şube çıkışı için barkodlama tamamlandı.",
-        location: "Ankara Ostim Şube",
-        status: "hazirlaniyor",
-      },
-    ],
-  },
-  {
-    trackingNo: "ARF-10000323",
-    referenceNo: "REF-15087",
-    status: "hazirlaniyor",
-    eta: "Yarın 14:00 - 18:00",
-    sender: {
-      name: "Marmara Medikal",
-      city: "İstanbul",
-      branch: "İstanbul İkitelli Şube",
-    },
-    receiver: {
-      name: "Yıldız Eczane",
-      city: "Tekirdağ",
-      branch: "Tekirdağ Çorlu Şube",
-    },
-    package: {
-      piece: 2,
-      desi: 7,
-      weight: 9,
-      service: "Ekspres",
-      paymentType: "Alıcı Ödemeli",
-    },
-    events: [
-      {
-        id: "evt-12",
-        time: "13 Mar 2026, 12:04",
-        title: "Gönderi Hazırlanıyor",
-        description: "Ayrıştırma ve rota ataması devam ediyor.",
-        location: "İstanbul İkitelli Şube",
-        status: "hazirlaniyor",
-      },
-    ],
-  },
-]
 
 const normalizeTrackingNo = (value: string) => value.toUpperCase().replace(/\s+/g, "").trim()
 
@@ -327,15 +107,18 @@ export default function KargoSorgulaPage() {
   const [errorMessage, setErrorMessage] = useState("")
   const [hasSearched, setHasSearched] = useState(false)
   const [recentQueries, setRecentQueries] = useState<string[]>([
-    "ARF-10000319",
-    "ARF-10000320",
-    "ARF-10000321",
-    "ARF-10000322",
-    "ARF-10000323",
+    "ARF-1000001",
+    "ARF-1000002",
+    "ARF-1000003",
+    "ARF-1000006",
+    "ARF-1000009",
   ])
 
   const activeStatus = selectedRecord ? statusConfig[selectedRecord.status] : null
   const activeStepIndex = selectedRecord ? statusOrder.indexOf(selectedRecord.status) : -1
+  const detailShipmentId = selectedRecord
+    ? mockCargoList.find((item) => item.takip_no === selectedRecord.trackingNo)?.id
+    : undefined
 
   const registerRecent = (query: string) => {
     setRecentQueries((current) => [query, ...current.filter((item) => item !== query)].slice(0, 30))
@@ -397,7 +180,7 @@ export default function KargoSorgulaPage() {
                     <div className="relative flex-1">
                       <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                       <Input
-                        placeholder="Örn: ARF-10000319"
+                        placeholder="Örn: ARF-1000001"
                         value={trackingNo}
                         onChange={(event: ChangeEvent<HTMLInputElement>) => setTrackingNo(event.target.value)}
                         onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
@@ -491,9 +274,16 @@ export default function KargoSorgulaPage() {
                     <CardTitle className="text-[22px] font-semibold tracking-tight text-slate-900">{selectedRecord.trackingNo}</CardTitle>
                     <CardDescription className="mt-1 text-sm text-slate-500">Tahmini Teslim: {selectedRecord.eta}</CardDescription>
                   </div>
-                  <Badge className={cn("rounded-xl border px-3 py-1.5 text-sm font-medium", activeStatus.badgeClass)}>
-                    {activeStatus.label}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={cn("rounded-xl border px-3 py-1.5 text-sm font-medium", activeStatus.badgeClass)}>
+                      {activeStatus.label}
+                    </Badge>
+                    {detailShipmentId ? (
+                      <Button asChild variant="outline" className="h-9 rounded-xl px-4 text-sm font-semibold">
+                        <Link href={`/arf/cargo/shipments/${detailShipmentId}`}>Kargo Detayına Git</Link>
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -521,14 +311,6 @@ export default function KargoSorgulaPage() {
                       </div>
                     )
                   })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[28px] border-slate-200 bg-white shadow-sm">
-              <CardContent className="p-5 lg:p-6">
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-5 text-sm text-slate-600">
-                  Kaydedilen kargoya ait detay bilgiler bu alanda gösterilecek.
                 </div>
               </CardContent>
             </Card>

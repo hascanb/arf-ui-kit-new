@@ -79,6 +79,7 @@ export interface DataTableProps<TData = unknown> {
   estimateRowHeight?: number
   overscan?: number
   stickyFirstColumn?: boolean
+  stickyLeftColumnCount?: number
   stickyLastColumn?: boolean
   stickyRightColumnCount?: number
   enableColumnResizing?: boolean

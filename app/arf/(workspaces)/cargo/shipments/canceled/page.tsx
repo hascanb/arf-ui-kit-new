@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Eye, Filter, MoreHorizontal, PlusCircle } from "lucide-react"
+import { CalendarIcon, ChevronDown, ChevronUp, Eye, Filter, MoreHorizontal, PlusCircle } from "lucide-react"
+import { mockCanceledCargoList } from "../_mock/shipments-mock-data"
 
 type CanceledCargoRow = {
   id: string
@@ -54,99 +55,8 @@ type CanceledCargoRow = {
   iade_tutari: number
   tahsilat_durumu: "tahsil_edildi" | "beklemede" | "iade_edildi"
 }
+const mockCanceledCargos = mockCanceledCargoList as unknown as CanceledCargoRow[]
 
-const mockCanceledCargos: CanceledCargoRow[] = [
-  {
-    id: "c-1",
-    takip_no: "ARF-10000305",
-    gonderen_musteri: "Akın Lojistik",
-    gonderen_sube: "İstanbul Merkez Şube",
-    alici_musteri: "Mavi Gıda",
-    alici_sube: "Ankara Şube",
-    odeme_turu: "Gönderici Ödemeli",
-    toplam: 324.5,
-    olusturulma_zamani: "2024-02-09 10:20",
-    iptal_tarihi: "2024-02-09 13:05",
-    iptal_nedeni: "Müşteri teslimat tarihini erteledi",
-    iptal_nedeni_kategori: "musteri_talebi",
-    iptal_eden: "Ezgi Kaya",
-    iade_durumu: "tamamlandi",
-    iade_tutari: 324.5,
-    tahsilat_durumu: "iade_edildi",
-  },
-  {
-    id: "c-2",
-    takip_no: "ARF-10000306",
-    gonderen_musteri: "Delta Tekstil",
-    gonderen_sube: "İzmir Şube",
-    alici_musteri: "Seçkin Group",
-    alici_sube: "Bursa Şube",
-    odeme_turu: "Alıcı Ödemeli",
-    toplam: 187.75,
-    olusturulma_zamani: "2024-02-08 09:40",
-    iptal_tarihi: "2024-02-08 11:10",
-    iptal_nedeni: "Şube çıkışında araç arızası",
-    iptal_nedeni_kategori: "operasyonel",
-    iptal_eden: "Murat Demir",
-    iade_durumu: "beklemede",
-    iade_tutari: 0,
-    tahsilat_durumu: "beklemede",
-  },
-  {
-    id: "c-3",
-    takip_no: "ARF-10000307",
-    gonderen_musteri: "Anatolia Pharma",
-    gonderen_sube: "Ankara Şube",
-    alici_musteri: "Beta Ecza",
-    alici_sube: "Antalya Şube",
-    odeme_turu: "Gönderici Ödemeli",
-    toplam: 451.2,
-    olusturulma_zamani: "2024-02-07 15:50",
-    iptal_tarihi: "2024-02-07 17:30",
-    iptal_nedeni: "Alıcı adres bilgisi eksik",
-    iptal_nedeni_kategori: "adres_hatasi",
-    iptal_eden: "Ayşe Korkmaz",
-    iade_durumu: "kismi_iade",
-    iade_tutari: 220.6,
-    tahsilat_durumu: "tahsil_edildi",
-  },
-  {
-    id: "c-4",
-    takip_no: "ARF-10000308",
-    gonderen_musteri: "Ege Kimya",
-    gonderen_sube: "Bursa Şube",
-    alici_musteri: "İnci Medikal",
-    alici_sube: "İstanbul Merkez Şube",
-    odeme_turu: "Alıcı Ödemeli",
-    toplam: 96.9,
-    olusturulma_zamani: "2024-02-06 12:15",
-    iptal_tarihi: "2024-02-06 13:00",
-    iptal_nedeni: "Ödeme doğrulama tamamlanamadı",
-    iptal_nedeni_kategori: "odeme_sorunu",
-    iptal_eden: "Ali Veli",
-    iade_durumu: "beklemede",
-    iade_tutari: 0,
-    tahsilat_durumu: "beklemede",
-  },
-  {
-    id: "c-5",
-    takip_no: "ARF-10000309",
-    gonderen_musteri: "Yıldız Elektronik",
-    gonderen_sube: "Antalya Şube",
-    alici_musteri: "Nova Store",
-    alici_sube: "İzmir Şube",
-    odeme_turu: "Gönderici Ödemeli",
-    toplam: 278.3,
-    olusturulma_zamani: "2024-02-05 18:20",
-    iptal_tarihi: "2024-02-05 19:45",
-    iptal_nedeni: "Müşteri siparişi iptal etti",
-    iptal_nedeni_kategori: "musteri_talebi",
-    iptal_eden: "Zeynep Arslan",
-    iade_durumu: "tamamlandi",
-    iade_tutari: 278.3,
-    tahsilat_durumu: "iade_edildi",
-  },
-]
 
 const iptalNedeniLabels: Record<CanceledCargoRow["iptal_nedeni_kategori"], string> = {
   musteri_talebi: "Müşteri Talebi",
@@ -161,6 +71,8 @@ const reasonFilterOptions = [
   { label: "Adres Hatası", value: "adres_hatasi" },
   { label: "Ödeme Sorunu", value: "odeme_sorunu" },
 ]
+
+const SUMMARY_VISIBILITY_STORAGE_KEY = "arf:shipments:canceled:summary-visible"
 
 const isValidIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -386,6 +298,25 @@ export default function IptalKargoListesiPage() {
   const [canceledAtTo, setCanceledAtTo] = useState("")
   const [canceledAtRangeInput, setCanceledAtRangeInput] = useState("")
   const [isCanceledAtPickerOpen, setIsCanceledAtPickerOpen] = useState(false)
+  const [isSummaryVisible, setIsSummaryVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return true
+    }
+
+    try {
+      return localStorage.getItem(SUMMARY_VISIBILITY_STORAGE_KEY) !== "0"
+    } catch {
+      return true
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SUMMARY_VISIBILITY_STORAGE_KEY, isSummaryVisible ? "1" : "0")
+    } catch {
+      // ignore storage write errors in demo flow
+    }
+  }, [isSummaryVisible])
 
   useEffect(() => {
     let cancelled = false
@@ -642,6 +573,7 @@ export default function IptalKargoListesiPage() {
     () => [
       {
         accessorKey: "takip_no",
+        enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Takip No" />,
         cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.original.takip_no}</span>,
       },
@@ -752,18 +684,29 @@ export default function IptalKargoListesiPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">İptal Kargo Listesi</h1>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSummaryVisible((prev) => !prev)}
+          >
+            {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
+            {isSummaryVisible ? "Kartları Gizle" : "Kartları Göster"}
+          </Button>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
-          {summaryCards.map((card) => (
-            <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
-              <CardContent className="p-4">
-                <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
-                <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isSummaryVisible && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+            {summaryCards.map((card) => (
+              <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
+                <CardContent className="p-4">
+                  <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
+                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <Card>
           <CardContent className="space-y-4">
@@ -946,6 +889,7 @@ export default function IptalKargoListesiPage() {
               manualFiltering
               enableColumnVisibility
               enableHorizontalScroll
+              stickyFirstColumn
               stickyLastColumn
               isLoading={isLoading}
               className="[&_thead_tr]:bg-slate-50 [&_thead_th]:font-semibold [&_thead_th]:text-slate-600"
