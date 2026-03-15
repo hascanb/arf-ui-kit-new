@@ -28,7 +28,7 @@ import {
   shipmentDetailMockData,
   shipmentNotesHistoryMock,
 } from "../_mock/shipments-mock-data"
-import { AlertTriangle, ArrowRightLeft, Ban, Building2, CheckCircle2, Copy, Eye, Package, Printer, Route, Truck } from "lucide-react"
+import { AlertTriangle, ArrowRightLeft, Ban, Building2, CheckCircle2, Copy, Eye, Minus, Package, Printer, Route, Truck } from "lucide-react"
 
 type EventStage = "hazirlaniyor" | "transferde" | "varis" | "devredildi" | "iptal" | "dagitimda" | "teslim"
 type EventStatus = "completed" | "active" | "pending"
@@ -115,6 +115,14 @@ type PieceReportInfo = {
   reason: string
   description: string
   evidenceImageUrl?: string
+}
+
+type PieceDeliveryInfo = {
+  firstName: string
+  lastName: string
+  deliveryTime: string
+  phone: string
+  imageUrl?: string
 }
 
 type PieceCancelInfoModalData = {
@@ -558,6 +566,7 @@ export default function KargoDetayPage() {
   const [pieceRows, setPieceRows] = useState<PieceDetailRow[]>(() => detailData.parcaDetaylari as unknown as PieceDetailRow[])
   const [pieceCancelInfoMap, setPieceCancelInfoMap] = useState<Record<string, PieceCancelInfo>>(mockPieceCancelInfoByPieceNo)
   const [pieceReportInfoMap, setPieceReportInfoMap] = useState<Record<string, PieceReportInfo>>({})
+  const [pieceDeliveryInfoMap, setPieceDeliveryInfoMap] = useState<Record<string, PieceDeliveryInfo>>({})
   const [pieceCancelInfoModalData, setPieceCancelInfoModalData] = useState<PieceCancelInfoModalData | null>(null)
   const [deliveryInfoModalPiece, setDeliveryInfoModalPiece] = useState<PieceDetailRow | null>(null)
   const [reportInfoModalPiece, setReportInfoModalPiece] = useState<PieceDetailRow | null>(null)
@@ -621,6 +630,7 @@ export default function KargoDetayPage() {
 
   const pieceCancelStorageKey = `shipment-piece-cancel-info:${detailData.takipNo}`
   const pieceReportStorageKey = `shipment-piece-report-info:${detailData.takipNo}`
+  const pieceDeliveryStorageKey = `shipment-piece-delivery-info:${detailData.takipNo}`
 
   useEffect(() => {
     setPieceRows(detailData.parcaDetaylari as unknown as PieceDetailRow[])
@@ -706,6 +716,35 @@ export default function KargoDetayPage() {
     }
   }, [pieceReportStorageKey])
 
+  useEffect(() => {
+    try {
+      const storedPieceDeliveryInfo = localStorage.getItem(pieceDeliveryStorageKey)
+      const parsed = storedPieceDeliveryInfo ? (JSON.parse(storedPieceDeliveryInfo) as Record<string, PieceDeliveryInfo>) : {}
+      setPieceDeliveryInfoMap(parsed)
+      setPieceRows((prev) =>
+        prev.map((piece) => {
+          const deliveryInfo = parsed[piece.parca_no]
+          if (!deliveryInfo) {
+            return piece
+          }
+
+          return {
+            ...piece,
+            parca_durumu: piece.parca_durumu === "iptal_edildi" ? piece.parca_durumu : "teslim_edildi",
+            guncellenme_zamani: deliveryInfo.deliveryTime || piece.guncellenme_zamani,
+            teslimat_zamani: deliveryInfo.deliveryTime || piece.teslimat_zamani,
+            teslim_alan_ad: deliveryInfo.firstName || piece.teslim_alan_ad,
+            teslim_alan_soyad: deliveryInfo.lastName || piece.teslim_alan_soyad,
+            teslim_alan_telefonu: deliveryInfo.phone || piece.teslim_alan_telefonu,
+            teslimat_resmi_url: deliveryInfo.imageUrl || piece.teslimat_resmi_url,
+          }
+        }),
+      )
+    } catch {
+      // ignore storage read errors in demo flow
+    }
+  }, [pieceDeliveryStorageKey])
+
   const timelineItems = useMemo<EventItem[]>(() => {
     const baseItems = (detailData.takipGecmisi as unknown as EventItem[]).map((item): EventItem => ({ ...item }))
 
@@ -768,8 +807,29 @@ export default function KargoDetayPage() {
   }, [detailData.takipNo])
 
   const hasDeliveryInfo = useCallback((piece: PieceDetailRow) => {
+    if (pieceDeliveryInfoMap[piece.parca_no]) {
+      return true
+    }
+
     return [piece.teslimat_zamani, piece.teslim_alan_ad, piece.teslim_alan_soyad, piece.teslim_alan_telefonu, piece.teslimat_resmi_url]
       .some((value) => Boolean(value && value !== "-"))
+  }, [pieceDeliveryInfoMap])
+
+  const deliveryPieces = useMemo(() => pieceRows.filter((piece) => hasDeliveryInfo(piece)), [hasDeliveryInfo, pieceRows])
+  const pendingDeliveryPieces = useMemo(() => pieceRows.filter((piece) => !hasDeliveryInfo(piece)), [hasDeliveryInfo, pieceRows])
+  const totalPieceCount = pieceRows.length
+  const deliveredPieceCount = deliveryPieces.length
+  const pendingPieceCount = pendingDeliveryPieces.length
+  const deliveryRate = totalPieceCount > 0 ? Math.round((deliveredPieceCount / totalPieceCount) * 100) : 0
+  const hasPartialDelivery = deliveredPieceCount > 0 && pendingPieceCount > 0
+
+  const openSinglePieceDeliveryModal = useCallback((piece: PieceDetailRow) => {
+    setBulkActionNotice("")
+    setDeliveryEntryPieceNos([piece.parca_no])
+    setDeliveryEntryFirstName(piece.teslim_alan_ad && piece.teslim_alan_ad !== "-" ? piece.teslim_alan_ad : "")
+    setDeliveryEntryLastName(piece.teslim_alan_soyad && piece.teslim_alan_soyad !== "-" ? piece.teslim_alan_soyad : "")
+    setDeliveryEntryPhone(piece.teslim_alan_telefonu && piece.teslim_alan_telefonu !== "-" ? piece.teslim_alan_telefonu : "")
+    setDeliveryEntryModalOpen(true)
   }, [])
 
   const handleOpenDeliveryEntryModal = useCallback(() => {
@@ -836,6 +896,46 @@ export default function KargoDetayPage() {
       })
 
       if (result.ok) {
+        const deliveryTime = new Date().toLocaleString("tr-TR")
+        const deliveryInfo: PieceDeliveryInfo = {
+          firstName: deliveryEntryFirstName || "-",
+          lastName: deliveryEntryLastName || "-",
+          deliveryTime,
+          phone: deliveryEntryPhone || "-",
+          imageUrl: "",
+        }
+
+        setPieceRows((prev) =>
+          prev.map((piece) =>
+            deliveryEntryPieceNos.includes(piece.parca_no)
+              ? {
+                  ...piece,
+                  parca_durumu: piece.parca_durumu === "iptal_edildi" ? piece.parca_durumu : "teslim_edildi",
+                  guncellenme_zamani: deliveryTime,
+                  teslimat_zamani: deliveryTime,
+                  teslim_alan_ad: deliveryInfo.firstName,
+                  teslim_alan_soyad: deliveryInfo.lastName,
+                  teslim_alan_telefonu: deliveryInfo.phone,
+                }
+              : piece,
+          ),
+        )
+
+        try {
+          const storedDeliveryInfo = localStorage.getItem(pieceDeliveryStorageKey)
+          const parsed = storedDeliveryInfo ? (JSON.parse(storedDeliveryInfo) as Record<string, PieceDeliveryInfo>) : {}
+          const next = { ...parsed }
+
+          deliveryEntryPieceNos.forEach((pieceNo) => {
+            next[pieceNo] = deliveryInfo
+          })
+
+          localStorage.setItem(pieceDeliveryStorageKey, JSON.stringify(next))
+          setPieceDeliveryInfoMap(next)
+        } catch {
+          // ignore storage write errors in demo flow
+        }
+
         setDeliveryEntryModalOpen(false)
         setBulkActionNotice("")
         return
@@ -843,7 +943,15 @@ export default function KargoDetayPage() {
 
       setBulkActionNotice(`Hata: ${result.message || "Teslimat bilgisi kaydedilemedi."}`)
     })()
-  }, [deliveryEntryFirstName, deliveryEntryLastName, deliveryEntryPhone, deliveryEntryPieceNos, loading.deliveryEntry, submitDeliveryEntry])
+  }, [
+    deliveryEntryFirstName,
+    deliveryEntryLastName,
+    deliveryEntryPhone,
+    deliveryEntryPieceNos,
+    loading.deliveryEntry,
+    pieceDeliveryStorageKey,
+    submitDeliveryEntry,
+  ])
 
   const handleConfirmPieceReport = useCallback(() => {
     if (loading.pieceReport) {
@@ -1107,22 +1215,27 @@ export default function KargoDetayPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Teslimat" />,
         enableSorting: false,
         enableHiding: false,
-        size: 80,
+        size: 136,
         cell: ({ row }) => {
           if (!hasDeliveryInfo(row.original)) {
-            return <span className="text-muted-foreground">-</span>
+            return (
+              <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400">
+                <Minus className="size-3.5 stroke-[2.5]" />
+              </span>
+            )
           }
 
           return (
             <Button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700"
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-lg border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
               aria-label="Teslimat bilgisini görüntüle"
               onClick={() => setDeliveryInfoModalPiece(row.original)}
             >
-              <Eye className="size-4" />
+              <Truck className="mr-1 size-3.5" />
+              Teslim
             </Button>
           )
         },
@@ -1131,22 +1244,27 @@ export default function KargoDetayPage() {
         id: "ihbar_bilgi",
         header: ({ column }) => <DataTableColumnHeader column={column} title="İhbar" />,
         enableSorting: false,
-        size: 80,
+        size: 120,
         cell: ({ row }) => {
           if (!row.original.ihbar_edildi) {
-            return <span className="text-muted-foreground">-</span>
+            return (
+              <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400">
+                <Minus className="size-3.5 stroke-[2.5]" />
+              </span>
+            )
           }
 
           return (
             <Button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700"
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-lg border-amber-200 bg-amber-50 px-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-800"
               aria-label="İhbar bilgisini görüntüle"
               onClick={() => setReportInfoModalPiece(row.original)}
             >
-              <Eye className="size-4" />
+              <AlertTriangle className="mr-1 size-3.5" />
+              İhbar
             </Button>
           )
         },
@@ -1155,23 +1273,28 @@ export default function KargoDetayPage() {
         id: "iptal_bilgi",
         header: ({ column }) => <DataTableColumnHeader column={column} title="İptal" />,
         enableSorting: false,
-        size: 80,
+        size: 120,
         cell: ({ row }) => {
           const cancelInfo = pieceCancelInfoMap[row.original.parca_no]
           if (!cancelInfo) {
-            return <span className="text-muted-foreground">-</span>
+            return (
+              <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400">
+                <Minus className="size-3.5 stroke-[2.5]" />
+              </span>
+            )
           }
 
           return (
             <Button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-lg border-rose-200 bg-rose-50 px-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-800"
               aria-label="Parça iptal bilgisini görüntüle"
               onClick={() => setPieceCancelInfoModalData({ pieceNo: row.original.parca_no, info: cancelInfo })}
             >
-              <Eye className="size-4" />
+              <Ban className="mr-1 size-3.5" />
+              İptal
             </Button>
           )
         },
@@ -1181,16 +1304,17 @@ export default function KargoDetayPage() {
         header: "Detay",
         enableSorting: false,
         enableHiding: false,
-        size: 84,
+        size: 110,
         cell: ({ row }) => (
           <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-lg border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900"
             asChild
           >
             <Link href={`/arf/cargo/shipments/pieces/${row.original.id}`} aria-label="Parça detayına git">
-              <Eye className="size-4" />
+              <Eye className="mr-1 size-3.5" />
+              Detay
             </Link>
           </Button>
         ),
@@ -1318,12 +1442,18 @@ export default function KargoDetayPage() {
         </Card>
 
         <Tabs defaultValue="details" className="space-y-3">
-          <TabsList className="grid h-10 w-full grid-cols-4 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
+          <TabsList className="grid h-10 w-full grid-cols-5 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
             <TabsTrigger
               value="details"
               className="rounded-lg border border-transparent text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
             >
               Detaylar
+            </TabsTrigger>
+            <TabsTrigger
+              value="delivery-info"
+              className="rounded-lg border border-transparent text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+            >
+              Teslimat Bilgi
             </TabsTrigger>
             <TabsTrigger
               value="billing"
@@ -1421,6 +1551,137 @@ export default function KargoDetayPage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="delivery-info" className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard label="Toplam Parça" value={String(totalPieceCount)} />
+              <StatCard label="Teslim Edilen" value={String(deliveredPieceCount)} />
+              <StatCard label="Teslim Edilmeyen" value={String(pendingPieceCount)} />
+              <StatCard label="Teslimat Oranı" value={`%${deliveryRate}`} />
+            </div>
+
+            <Card className="rounded-xl border-slate-200 bg-white shadow-sm">
+              <CardContent className="p-3.5">
+                {hasPartialDelivery ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <AlertTriangle className="size-4" />
+                      Kısmi teslimat var
+                    </div>
+                    <p className="mt-1">
+                      {deliveredPieceCount}/{totalPieceCount} parça teslim edildi, {pendingPieceCount} parça için teslimat bekleniyor.
+                    </p>
+                  </div>
+                ) : deliveredPieceCount === totalPieceCount && totalPieceCount > 0 ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <CheckCircle2 className="size-4" />
+                      Tüm parçalar teslim edildi
+                    </div>
+                    <p className="mt-1">Bu gönderideki tüm parçalara ait teslimat bilgileri tamamlandı.</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Package className="size-4" />
+                      Henüz teslimat yapılmadı
+                    </div>
+                    <p className="mt-1">Bu gönderide teslimat kaydı bulunan parça bulunmuyor.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Card className="rounded-xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="space-y-3 p-3.5">
+                  <h3 className="text-xl font-semibold tracking-tight text-slate-900">Teslim Edilen Parçalar</h3>
+                  {deliveryPieces.length === 0 ? (
+                    <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                      Teslimat bilgisi girilmiş parça yok.
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {deliveryPieces.map((piece) => (
+                        <div key={`delivered-${piece.parca_no}`} className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs text-slate-500">Parça No</p>
+                              <p className="text-sm font-semibold text-slate-900">{piece.parca_no}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8 rounded-lg px-2.5 text-xs font-semibold"
+                              onClick={() => setDeliveryInfoModalPiece(piece)}
+                            >
+                              <Eye className="size-3.5" />
+                              Teslim Bilgi
+                            </Button>
+                          </div>
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            <div>
+                              <p className="text-[11px] text-slate-500">Teslimat Zamanı</p>
+                              <p className="text-sm font-medium text-slate-800">{piece.teslimat_zamani || "-"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-slate-500">Teslim Alan</p>
+                              <p className="text-sm font-medium text-slate-800">
+                                {`${piece.teslim_alan_ad || ""} ${piece.teslim_alan_soyad || ""}`.trim() || "-"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="space-y-3 p-3.5">
+                  <h3 className="text-xl font-semibold tracking-tight text-slate-900">Teslimat Bekleyen Parçalar</h3>
+                  {pendingDeliveryPieces.length === 0 ? (
+                    <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">
+                      Bekleyen parça bulunmuyor.
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {pendingDeliveryPieces.map((piece) => (
+                        <div key={`pending-${piece.parca_no}`} className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs text-slate-500">Parça No</p>
+                              <p className="text-sm font-semibold text-slate-900">{piece.parca_no}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8 rounded-lg px-2.5 text-xs font-semibold"
+                              onClick={() => openSinglePieceDeliveryModal(piece)}
+                            >
+                              <CheckCircle2 className="size-3.5" />
+                              Teslim Et
+                            </Button>
+                          </div>
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            <div>
+                              <p className="text-[11px] text-slate-500">Parça Tipi</p>
+                              <p className="text-sm font-medium text-slate-800">{piece.parca_tipi}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-slate-500">Son İşlem</p>
+                              <p className="text-sm font-medium text-slate-800">{piece.guncellenme_zamani || "-"}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-3">

@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, ChevronDown, ChevronUp, Eye, Filter, MoreHorizontal, PlusCircle } from "lucide-react"
+import { Ban, Building2, CalendarIcon, ChevronDown, ChevronUp, Eye, Filter, MoreHorizontal, PlusCircle } from "lucide-react"
 import { mockCanceledCargoList } from "../_mock/shipments-mock-data"
 
 type CanceledCargoRow = {
@@ -346,10 +347,16 @@ export default function IptalKargoListesiPage() {
       {
         label: "Toplam İptal Kargo",
         value: new Intl.NumberFormat("tr-TR").format(totalCanceled),
+        icon: Ban,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
       {
         label: "Toplam İptal Tutarı",
         value: new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(totalCanceledAmount),
+        icon: Building2,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
     ]
   }, [])
@@ -575,7 +582,14 @@ export default function IptalKargoListesiPage() {
         accessorKey: "takip_no",
         enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Takip No" />,
-        cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.original.takip_no}</span>,
+        cell: ({ row }) => (
+          <Link
+            href={`/arf/cargo/shipments/${row.original.id}`}
+            className="font-mono text-sm font-semibold text-secondary underline decoration-secondary/40 underline-offset-4 transition-all hover:text-primary hover:decoration-primary/60"
+          >
+            {row.original.takip_no}
+          </Link>
+        ),
       },
       {
         accessorKey: "gonderen_musteri",
@@ -641,14 +655,15 @@ export default function IptalKargoListesiPage() {
       },
       {
         id: "actions",
-        header: "İşlemler",
+        header: () => <span className="sr-only">İşlemler</span>,
         enableSorting: false,
         enableHiding: false,
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
-                <MoreHorizontal className="size-4" />
+              <Button variant="outline" size="sm" className="h-8 rounded-lg border-slate-200 bg-white px-2.5 text-xs font-medium">
+                İşlemler
+                <ChevronDown className="ml-1 size-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
@@ -691,7 +706,7 @@ export default function IptalKargoListesiPage() {
             onClick={() => setIsSummaryVisible((prev) => !prev)}
           >
             {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
-            {isSummaryVisible ? "Kartları Gizle" : "Kartları Göster"}
+            {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
           </Button>
         </div>
 
@@ -699,9 +714,16 @@ export default function IptalKargoListesiPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
             {summaryCards.map((card) => (
               <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
-                <CardContent className="p-4">
-                  <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
-                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
+                <CardContent className="p-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium tracking-wide text-slate-500">{card.label}</p>
+                      <p className={cn("mt-1 text-xl font-semibold tabular-nums leading-tight", card.valueClass)}>{card.value}</p>
+                    </div>
+                    <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl border", card.iconWrapClass)}>
+                      <card.icon className="size-4" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}

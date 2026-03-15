@@ -22,6 +22,8 @@ export function DashboardLayout({
   addBrandLabel,
   onAddBrand,
   quickActions,
+  userMenuLabels,
+  settingsModalConfig,
   user,
   navGroups,
   mainContentId = 'main-content',
@@ -34,6 +36,13 @@ export function DashboardLayout({
   commandDescription,
   searchEmptyMessage,
   notificationCount,
+  notifications,
+  notificationsMenuLabel,
+  notificationsEmptyMessage,
+  markAllAsReadLabel,
+  onMarkAllAsRead,
+  viewAllNotificationsLabel,
+  onViewAllNotifications,
   showFooter = false,
   footerProps,
   onLogout,
@@ -109,6 +118,8 @@ export function DashboardLayout({
         addBrandLabel={addBrandLabel}
         onAddBrand={onAddBrand}
         quickActions={quickActions}
+        userMenuLabels={userMenuLabels}
+        settingsModalConfig={settingsModalConfig}
         user={user}
         navGroups={navGroups}
         onLogout={onLogout}
@@ -122,6 +133,13 @@ export function DashboardLayout({
           commandDescription={commandDescription}
           searchEmptyMessage={searchEmptyMessage}
           notificationCount={notificationCount}
+          notifications={notifications}
+          notificationsMenuLabel={notificationsMenuLabel}
+          notificationsEmptyMessage={notificationsEmptyMessage}
+          markAllAsReadLabel={markAllAsReadLabel}
+          onMarkAllAsRead={onMarkAllAsRead}
+          viewAllNotificationsLabel={viewAllNotificationsLabel}
+          onViewAllNotifications={onViewAllNotifications}
           onSearchClick={onSearchClick}
           onNotificationClick={onNotificationClick}
         />

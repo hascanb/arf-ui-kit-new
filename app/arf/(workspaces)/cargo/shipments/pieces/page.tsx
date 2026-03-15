@@ -28,6 +28,7 @@ import { PieceDeliveryEntryModal } from "../_components/piece-delivery-entry-mod
 import { PieceReportInfoModal } from "../_components/piece-report-info-modal"
 import { PieceReportModal } from "../_components/piece-report-modal"
 import { usePieceActions } from "../_hooks/use-piece-actions"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -315,7 +316,11 @@ const queryPieces = ({
 
   for (const filter of columnFilters) {
     if (filter.id === "odeme_turu") {
-      const selected = Array.isArray(filter.value) ? (filter.value as string[]) : []
+      const selected = Array.isArray(filter.value)
+        ? (filter.value as string[])
+        : typeof filter.value === "string"
+          ? [filter.value]
+          : []
       if (selected.length > 0) {
         filtered = filtered.filter((row) => selected.includes(row.odeme_turu))
       }
@@ -323,9 +328,25 @@ const queryPieces = ({
     }
 
     if (filter.id === "kargo_durumu") {
-      const selected = Array.isArray(filter.value) ? (filter.value as string[]) : []
+      const selected = Array.isArray(filter.value)
+        ? (filter.value as string[])
+        : typeof filter.value === "string"
+          ? [filter.value]
+          : []
       if (selected.length > 0) {
         filtered = filtered.filter((row) => selected.includes(row.kargo_durumu))
+      }
+      continue
+    }
+
+    if (filter.id === "parca_durumu") {
+      const selected = Array.isArray(filter.value)
+        ? (filter.value as string[])
+        : typeof filter.value === "string"
+          ? [filter.value]
+          : []
+      if (selected.length > 0) {
+        filtered = filtered.filter((row) => selected.includes(row.parca_durumu ?? ""))
       }
       continue
     }
@@ -593,14 +614,23 @@ export default function ParcaListesiPage() {
       {
         label: "Toplam Parça",
         value: new Intl.NumberFormat("tr-TR").format(totalPieceCount),
+        icon: Package,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
       {
         label: "Toplam Fiyat",
         value: new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(totalPrice),
+        icon: Building2,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
       {
         label: "Teslim Edilen Parça",
         value: new Intl.NumberFormat("tr-TR").format(deliveredCount),
+        icon: CheckCircle2,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
     ]
   }, [])
@@ -908,6 +938,44 @@ export default function ParcaListesiPage() {
     return { from: toDate, to: undefined }
   }, [createdAtFrom, createdAtTo])
 
+  const activeCargoStatusFilterValues = useMemo(() => {
+    const statusFilter = columnFilters.find((item) => item.id === "kargo_durumu")
+    if (!statusFilter) {
+      return [] as string[]
+    }
+
+    if (Array.isArray(statusFilter.value)) {
+      return statusFilter.value as string[]
+    }
+
+    if (typeof statusFilter.value === "string") {
+      return [statusFilter.value]
+    }
+
+    return [] as string[]
+  }, [columnFilters])
+
+  const activePieceStatusFilterValues = useMemo(() => {
+    const pieceStatusFilter = columnFilters.find((item) => item.id === "parca_durumu")
+    if (!pieceStatusFilter) {
+      return [] as string[]
+    }
+
+    if (Array.isArray(pieceStatusFilter.value)) {
+      return pieceStatusFilter.value as string[]
+    }
+
+    if (typeof pieceStatusFilter.value === "string") {
+      return [pieceStatusFilter.value]
+    }
+
+    return [] as string[]
+  }, [columnFilters])
+
+  const isIptalParcaFilterActive = activePieceStatusFilterValues.includes("parca_iptal")
+  const isIhbarParcaFilterActive = activePieceStatusFilterValues.includes("ihbar_edildi")
+  const isTeslimParcaFilterActive = activeCargoStatusFilterValues.includes("teslim_edildi")
+
   const handleCreatedAtRangeInputChange = useCallback(
     (value: string) => {
       setCreatedAtRangeInput(value)
@@ -970,13 +1038,27 @@ export default function ParcaListesiPage() {
         accessorKey: "parca_no",
         enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Parça No" />,
-        cell: ({ row }) => <span className="font-mono text-sm font-semibold">{row.original.parca_no}</span>,
+        cell: ({ row }) => (
+          <Link
+            href={`/arf/cargo/shipments/pieces/${row.original.id}`}
+            className="font-mono text-sm font-semibold text-secondary underline decoration-secondary/40 underline-offset-4 transition-all hover:text-primary hover:decoration-primary/60"
+          >
+            {row.original.parca_no}
+          </Link>
+        ),
       },
       {
         accessorKey: "takip_no",
         enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Takip No" />,
-        cell: ({ row }) => <span className="font-mono text-sm">{row.original.takip_no}</span>,
+        cell: ({ row }) => (
+          <Link
+            href={`/arf/cargo/shipments/${row.original.kargo_id}`}
+            className="font-mono text-sm font-semibold text-secondary underline decoration-secondary/40 underline-offset-4 transition-all hover:text-primary hover:decoration-primary/60"
+          >
+            {row.original.takip_no}
+          </Link>
+        ),
       },
       {
         accessorKey: "odeme_turu",
@@ -1085,14 +1167,15 @@ export default function ParcaListesiPage() {
       },
       {
         id: "actions",
-        header: "İşlem",
+        header: () => <span className="sr-only">İşlemler</span>,
         enableSorting: false,
         enableHiding: false,
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
-                <MoreHorizontal className="size-4" />
+              <Button variant="outline" size="sm" className="h-8 rounded-lg border-slate-200 bg-white px-2.5 text-xs font-medium">
+                İşlemler
+                <ChevronDown className="ml-1 size-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -1197,24 +1280,99 @@ export default function ParcaListesiPage() {
       <div className="flex flex-1 flex-col gap-6 p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">Parça Listesi</h1>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSummaryVisible((prev) => !prev)}
-          >
-            {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
-            {isSummaryVisible ? "Kartları Gizle" : "Kartları Göster"}
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant={isIptalParcaFilterActive ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setColumnFilters((previous) => {
+                  const withoutQuickStatuses = previous.filter(
+                    (item) => item.id !== "kargo_durumu" && item.id !== "parca_durumu",
+                  )
+
+                  if (isIptalParcaFilterActive) {
+                    return withoutQuickStatuses
+                  }
+
+                  return [...withoutQuickStatuses, { id: "parca_durumu", value: ["parca_iptal"] }]
+                })
+                setPagination((previous) => ({ ...previous, pageIndex: 0 }))
+              }}
+            >
+              <Ban className="mr-2 size-4" />
+              İptal Parça Listesi
+            </Button>
+            <Button
+              type="button"
+              variant={isIhbarParcaFilterActive ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setColumnFilters((previous) => {
+                  const withoutQuickStatuses = previous.filter(
+                    (item) => item.id !== "kargo_durumu" && item.id !== "parca_durumu",
+                  )
+
+                  if (isIhbarParcaFilterActive) {
+                    return withoutQuickStatuses
+                  }
+
+                  return [...withoutQuickStatuses, { id: "parca_durumu", value: ["ihbar_edildi"] }]
+                })
+                setPagination((previous) => ({ ...previous, pageIndex: 0 }))
+              }}
+            >
+              <AlertTriangle className="mr-2 size-4" />
+              İhbar Parça Listesi
+            </Button>
+            <Button
+              type="button"
+              variant={isTeslimParcaFilterActive ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setColumnFilters((previous) => {
+                  const withoutQuickStatuses = previous.filter(
+                    (item) => item.id !== "kargo_durumu" && item.id !== "parca_durumu",
+                  )
+
+                  if (isTeslimParcaFilterActive) {
+                    return withoutQuickStatuses
+                  }
+
+                  return [...withoutQuickStatuses, { id: "kargo_durumu", value: ["teslim_edildi"] }]
+                })
+                setPagination((previous) => ({ ...previous, pageIndex: 0 }))
+              }}
+            >
+              <CheckCircle2 className="mr-2 size-4" />
+              Teslim Parça Listesi
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSummaryVisible((prev) => !prev)}
+            >
+              {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
+              {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
+            </Button>
+          </div>
         </div>
 
         {isSummaryVisible && (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {summaryCards.map((card) => (
               <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
-                <CardContent className="p-4">
-                  <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
-                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
+                <CardContent className="p-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium tracking-wide text-slate-500">{card.label}</p>
+                      <p className={cn("mt-1 text-xl font-semibold tabular-nums leading-tight", card.valueClass)}>{card.value}</p>
+                    </div>
+                    <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl border", card.iconWrapClass)}>
+                      <card.icon className="size-4" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}

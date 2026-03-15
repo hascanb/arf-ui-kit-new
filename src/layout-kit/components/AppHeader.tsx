@@ -8,6 +8,14 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -39,10 +47,26 @@ export function AppHeader({
   searchEmptyMessage = "No result found.",
   notificationCount = 0,
   notificationsLabel = "Notifications",
+  notifications = [],
+  notificationsMenuLabel = "Notifications",
+  notificationsEmptyMessage = "No notifications yet.",
+  markAllAsReadLabel = "Mark all as read",
+  onMarkAllAsRead,
+  viewAllNotificationsLabel = "View all notifications",
+  onViewAllNotifications,
   onSearchClick,
   onNotificationClick
 }: AppHeaderProps) {
   const [isCommandOpen, setIsCommandOpen] = React.useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false)
+
+  const resolvedNotificationCount = React.useMemo(() => {
+    if (typeof notificationCount === "number") {
+      return notificationCount
+    }
+
+    return notifications.filter((item) => !item.isRead).length
+  }, [notificationCount, notifications])
 
   const groupedCommands = React.useMemo(() => {
     const groups = new Map<string, typeof searchCommands>()
@@ -69,6 +93,24 @@ export function AppHeader({
   const handleCommandSelect = React.useCallback((onSelect?: () => void) => {
     onSelect?.()
     setIsCommandOpen(false)
+  }, [])
+
+  const handleNotificationItemSelect = React.useCallback((item: AppHeaderProps["notifications"][number]) => {
+    if (!item) {
+      return
+    }
+
+    if (item.onSelect) {
+      item.onSelect()
+      setIsNotificationsOpen(false)
+      return
+    }
+
+    if (typeof window !== "undefined" && item.href) {
+      window.location.href = item.href
+    }
+
+    setIsNotificationsOpen(false)
   }, [])
 
   React.useEffect(() => {
@@ -144,23 +186,107 @@ export function AppHeader({
         </Button>
 
         {/* Notifications */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onNotificationClick}
-          className="relative size-8"
+        <DropdownMenu
+          open={isNotificationsOpen}
+          onOpenChange={(open) => {
+            setIsNotificationsOpen(open)
+            if (open) {
+              onNotificationClick?.()
+            }
+          }}
         >
-          <Bell className="size-4" />
-          {notificationCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full p-0 text-[10px]"
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative size-8"
             >
-              {notificationCount > 99 ? '99+' : notificationCount}
-            </Badge>
-          )}
-          <span className="sr-only">{notificationsLabel}</span>
-        </Button>
+              <Bell className="size-4" />
+              {resolvedNotificationCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full p-0 text-[10px]"
+                >
+                  {resolvedNotificationCount > 99 ? "99+" : resolvedNotificationCount}
+                </Badge>
+              )}
+              <span className="sr-only">{notificationsLabel}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" sideOffset={10} className="w-[360px] rounded-xl p-0">
+            <DropdownMenuLabel className="flex items-center justify-between px-3 py-2.5">
+              <span className="text-sm font-semibold">{notificationsMenuLabel}</span>
+              {notifications.length > 0 && onMarkAllAsRead && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    onMarkAllAsRead()
+                  }}
+                  className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {markAllAsReadLabel}
+                </button>
+              )}
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            {notifications.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">{notificationsEmptyMessage}</div>
+            ) : (
+              <div className="max-h-[340px] overflow-y-auto p-1.5">
+                {notifications.map((item) => (
+                  <DropdownMenuItem
+                    key={item.id}
+                    onSelect={() => handleNotificationItemSelect(item)}
+                    className="items-start gap-3 rounded-lg px-2.5 py-2.5"
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {item.icon ? (
+                        <span className="text-muted-foreground">{item.icon}</span>
+                      ) : (
+                        <span
+                          className={[
+                            "mt-1 block size-2 rounded-full",
+                            item.isRead ? "bg-slate-300" : "bg-blue-500",
+                          ].join(" ")}
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                      {item.description && (
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
+                      )}
+                      {item.timeLabel && <p className="mt-1 text-[11px] text-muted-foreground">{item.timeLabel}</p>}
+                    </div>
+                    {!item.isRead && <span className="mt-1 size-2 shrink-0 rounded-full bg-blue-500" />}
+                  </DropdownMenuItem>
+                ))}
+              </div>
+            )}
+
+            {onViewAllNotifications && (
+              <>
+                <DropdownMenuSeparator />
+                <div className="p-2">
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-full justify-center text-sm"
+                    onClick={() => {
+                      onViewAllNotifications()
+                      setIsNotificationsOpen(false)
+                    }}
+                  >
+                    {viewAllNotificationsLabel}
+                  </Button>
+                </div>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       <CommandDialog

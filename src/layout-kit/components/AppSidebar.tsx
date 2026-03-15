@@ -3,7 +3,28 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, ChevronsUpDown, FileText, LogOut, Plus, User, Settings } from "lucide-react"
+import {
+  Accessibility,
+  Bell,
+  Check,
+  ChevronRight,
+  ChevronsUpDown,
+  FileText,
+  Globe,
+  Home,
+  Link2,
+  Lock,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Paintbrush,
+  Plus,
+  Settings,
+  Settings2,
+  User,
+  Video,
+  X,
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -41,9 +62,34 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import type { AppSidebarProps, BrandSwitcherItem, NavSubItem } from "../context/types"
+import type {
+  AppSidebarProps,
+  BrandSwitcherItem,
+  NavSubItem,
+  SidebarSettingsSection,
+} from "../context/types"
+
+const DEFAULT_SETTINGS_SECTIONS: SidebarSettingsSection[] = [
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "navigation", label: "Navigation", icon: Menu },
+  { id: "home", label: "Home", icon: Home },
+  { id: "appearance", label: "Appearance", icon: Paintbrush },
+  { id: "messages-media", label: "Messages & media", icon: MessageSquare },
+  { id: "language-region", label: "Language & region", icon: Globe },
+  { id: "accessibility", label: "Accessibility", icon: Accessibility },
+  { id: "mark-read", label: "Mark as read", icon: Check },
+  { id: "audio-video", label: "Audio & video", icon: Video },
+  { id: "connected-accounts", label: "Connected accounts", icon: Link2 },
+  { id: "privacy-visibility", label: "Privacy & visibility", icon: Lock },
+  { id: "advanced", label: "Advanced", icon: Settings2 },
+] as const
 
 export function AppSidebar({
   brand,
@@ -52,6 +98,8 @@ export function AppSidebar({
   addBrandLabel = "Add workspace",
   onAddBrand,
   quickActions = [],
+  userMenuLabels,
+  settingsModalConfig,
   user,
   navGroups,
   onLogout,
@@ -59,6 +107,49 @@ export function AppSidebar({
   const pathname = usePathname()
   const { state, isMobile } = useSidebar()
   const isCollapsed = state === "collapsed"
+
+  const profileLabel = userMenuLabels?.profile ?? "Profile"
+  const settingsLabel = userMenuLabels?.settings ?? "Settings"
+  const logoutLabel = userMenuLabels?.logout ?? "Log out"
+
+  const modalTitle = settingsModalConfig?.labels?.title ?? "Settings"
+  const modalRootBreadcrumb = settingsModalConfig?.labels?.rootBreadcrumb ?? "Settings"
+  const modalCloseSrText = settingsModalConfig?.labels?.closeSrText ?? "Close"
+
+  const resolvedSettingsSections = React.useMemo<SidebarSettingsSection[]>(() => {
+    if (settingsModalConfig?.sections && settingsModalConfig.sections.length > 0) {
+      return settingsModalConfig.sections
+    }
+
+    return DEFAULT_SETTINGS_SECTIONS
+  }, [settingsModalConfig?.sections])
+
+  const fallbackSectionId = resolvedSettingsSections[0]?.id ?? "default"
+  const profileSectionId = settingsModalConfig?.profileSectionId ?? resolvedSettingsSections.find((section) => section.id === "home")?.id ?? fallbackSectionId
+  const settingsSectionId = settingsModalConfig?.settingsSectionId ?? resolvedSettingsSections.find((section) => section.id === "messages-media")?.id ?? fallbackSectionId
+
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState(false)
+  const [activeSettingsSectionId, setActiveSettingsSectionId] = React.useState<string>(
+    settingsModalConfig?.defaultSectionId ?? settingsSectionId
+  )
+
+  React.useEffect(() => {
+    const desiredInitialId = settingsModalConfig?.defaultSectionId ?? settingsSectionId
+
+    if (!resolvedSettingsSections.some((section) => section.id === activeSettingsSectionId)) {
+      setActiveSettingsSectionId(desiredInitialId)
+    }
+  }, [activeSettingsSectionId, resolvedSettingsSections, settingsModalConfig?.defaultSectionId, settingsSectionId])
+
+  const activeSettingsSection = React.useMemo(
+    () => resolvedSettingsSections.find((section) => section.id === activeSettingsSectionId) ?? resolvedSettingsSections[0],
+    [activeSettingsSectionId, resolvedSettingsSections]
+  )
+
+  const openSettingsModal = React.useCallback((sectionId: string) => {
+    setActiveSettingsSectionId(sectionId)
+    setIsSettingsModalOpen(true)
+  }, [])
 
   const resolvedBrandOptions = React.useMemo<BrandSwitcherItem[]>(() => {
     if (brandOptions && brandOptions.length > 0) {
@@ -211,7 +302,8 @@ export function AppSidebar({
   }, [pathname])
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
+    <>
+      <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="border-b border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -247,7 +339,12 @@ export function AppSidebar({
                         className="gap-3 rounded-xl px-3 py-2.5"
                         onClick={() => handleBrandSelect(item)}
                       >
-                        <div className={cn("flex size-10 items-center justify-center rounded-xl border bg-background text-foreground", isActiveBrand && "border-foreground/15 bg-foreground text-background") }>
+                        <div
+                          className={cn(
+                            "flex size-10 items-center justify-center rounded-xl border bg-background text-foreground",
+                            isActiveBrand && "rounded-full border-transparent bg-lime-300 text-black"
+                          )}
+                        >
                           <Icon className="size-5" />
                         </div>
                         <div className="grid flex-1 text-left leading-tight">
@@ -422,22 +519,98 @@ export function AppSidebar({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem className="gap-2 rounded-lg">
-                    <User className="size-4" /> Profil
+                  <DropdownMenuItem className="gap-2 rounded-lg" onSelect={() => openSettingsModal(profileSectionId)}>
+                    <User className="size-4" /> {profileLabel}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 rounded-lg">
-                    <Settings className="size-4" /> Ayarlar
+                  <DropdownMenuItem className="gap-2 rounded-lg" onSelect={() => openSettingsModal(settingsSectionId)}>
+                    <Settings className="size-4" /> {settingsLabel}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onLogout} className="gap-2 rounded-lg text-red-600 focus:text-red-600">
-                  <LogOut className="size-4" /> Çıkış Yap
+                  <LogOut className="size-4" /> {logoutLabel}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-    </Sidebar>
+      </Sidebar>
+
+      <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="h-[min(88vh,680px)] max-w-[calc(100vw-2rem)] overflow-hidden p-0 sm:max-w-5xl"
+        >
+          <DialogTitle className="sr-only">{modalTitle}</DialogTitle>
+
+          <div className="grid h-full md:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="border-r bg-muted/25 p-3">
+              <div className="space-y-1">
+                {resolvedSettingsSections.map((section) => {
+                  const Icon = section.icon
+                  const isActive = section.id === activeSettingsSectionId
+
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => setActiveSettingsSectionId(section.id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[15px] transition-colors",
+                        isActive ? "bg-background font-medium text-foreground" : "text-foreground/90 hover:bg-background/70"
+                      )}
+                    >
+                      {Icon ? (
+                        <Icon className="size-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <Settings2 className="size-4 shrink-0 text-muted-foreground" />
+                      )}
+                      <span className="truncate">{section.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </aside>
+
+            <section className="flex min-h-0 flex-col">
+              <header className="flex items-center justify-between border-b px-6 py-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">{modalRootBreadcrumb}</span>
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{activeSettingsSection?.label}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-5" />
+                  <span className="sr-only">{modalCloseSrText}</span>
+                </button>
+              </header>
+
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+                {activeSettingsSection && settingsModalConfig?.renderContent ? (
+                  settingsModalConfig.renderContent(activeSettingsSection)
+                ) : (
+                  <>
+                    <div className="rounded-2xl border bg-muted/20 p-4">
+                      <div className="h-6 w-40 rounded-md bg-muted" />
+                      <div className="mt-3 h-36 rounded-xl bg-muted/80" />
+                    </div>
+
+                    <div className="rounded-2xl border bg-muted/20 p-4">
+                      <div className="h-6 w-48 rounded-md bg-muted" />
+                      <div className="mt-3 h-40 rounded-xl bg-muted/80" />
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -3,7 +3,7 @@
 import { type ChangeEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, DataTableColumnHeader } from '@hascanb/arf-ui-kit/datatable-kit'
-import { AppHeader } from '@hascanb/arf-ui-kit/layout-kit'
+import { AppHeader, type HeaderNotificationItem } from '@hascanb/arf-ui-kit/layout-kit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useSidebar } from '@/components/ui/sidebar'
+import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
@@ -90,6 +91,7 @@ interface PartyPanelProps {
   customerLabel: string
   addressLabel: string
   detailsLabel: string
+  pinLabel: string
   emptyHint: string
   customerOptions: ComboboxOption[]
   addressOptions: ComboboxOption[]
@@ -97,10 +99,10 @@ interface PartyPanelProps {
   selectedAddressId: string | null
   selectedCustomer?: CustomerRecord
   selectedAddress?: AddressRecord
-  detailsOpen: boolean
+  isPinned: boolean
+  onPinnedChange: (checked: boolean) => void
   onCustomerSelect: (value: string) => void
   onAddressSelect: (value: string) => void
-  onToggleDetails: () => void
   onCreateCustomer: () => void
   onCreateAddress: () => void
   onEditCustomer: () => void
@@ -139,6 +141,8 @@ interface ShipmentDraftSnapshot {
   senderAddressId: string | null
   receiverCustomerId: string | null
   receiverAddressId: string | null
+  senderPinned?: boolean
+  receiverPinned?: boolean
   senderDetailsOpen: boolean
   receiverDetailsOpen: boolean
   paymentMethod?: string
@@ -217,6 +221,30 @@ const initialPieceRows: PieceRow[] = [
     matrah: 115.75,
     kdv: 20,
     total: 138.9,
+  },
+]
+
+const initialHeaderNotifications: HeaderNotificationItem[] = [
+  {
+    id: 'notif-draft-1',
+    title: 'Taslak kaydı güncellendi',
+    description: 'Son düzenlemeler yeni kargo taslağına işlendi.',
+    timeLabel: 'Az önce',
+    isRead: false,
+  },
+  {
+    id: 'notif-piece-1',
+    title: 'Parça listesi hazır',
+    description: 'Kayda devam etmek için fiyatlandırma bölümüne geçebilirsiniz.',
+    timeLabel: '2 dk önce',
+    isRead: false,
+  },
+  {
+    id: 'notif-info-1',
+    title: 'Hızlı işlem ipucu',
+    description: 'Cmd/Ctrl + K ile hızlı komut penceresini açabilirsiniz.',
+    timeLabel: '10 dk önce',
+    isRead: true,
   },
 ]
 
@@ -435,6 +463,8 @@ export default function YeniKargoPage() {
   const [senderAddressId, setSenderAddressId] = useState<string | null>(null)
   const [receiverCustomerId, setReceiverCustomerId] = useState<string | null>(null)
   const [receiverAddressId, setReceiverAddressId] = useState<string | null>(null)
+  const [senderPinned, setSenderPinned] = useState(false)
+  const [receiverPinned, setReceiverPinned] = useState(false)
   const [senderDetailsOpen, setSenderDetailsOpen] = useState(true)
   const [receiverDetailsOpen, setReceiverDetailsOpen] = useState(true)
   const [paymentMethod, setPaymentMethod] = useState<string | undefined>(undefined)
@@ -455,11 +485,26 @@ export default function YeniKargoPage() {
   const [pieceRows, setPieceRows] = useState<PieceRow[]>(() => clonePieceRows(initialPieceRows))
   const [customerForm, setCustomerForm] = useState<CustomerFormState>(() => ({ ...initialCustomerFormState }))
   const [addressForm, setAddressForm] = useState<AddressFormState>(() => ({ ...initialAddressFormState }))
+  const [headerNotifications, setHeaderNotifications] = useState<HeaderNotificationItem[]>(
+    () => initialHeaderNotifications.map((item) => ({ ...item })),
+  )
 
   const senderCustomer = customers.find((item) => item.id === senderCustomerId)
   const receiverCustomer = customers.find((item) => item.id === receiverCustomerId)
   const senderAddress = addresses.find((item) => item.id === senderAddressId)
   const receiverAddress = addresses.find((item) => item.id === receiverAddressId)
+
+  useEffect(() => {
+    if (!(senderCustomerId && senderAddressId) && senderPinned) {
+      setSenderPinned(false)
+    }
+  }, [senderCustomerId, senderAddressId, senderPinned])
+
+  useEffect(() => {
+    if (!(receiverCustomerId && receiverAddressId) && receiverPinned) {
+      setReceiverPinned(false)
+    }
+  }, [receiverCustomerId, receiverAddressId, receiverPinned])
 
   const customerOptions = customers.map((item) => ({
     id: item.id,
@@ -488,6 +533,25 @@ export default function YeniKargoPage() {
     }))
 
   const draftStorageKey = resolveDraftStorageKey(currentUserId)
+
+  const unreadNotificationCount = headerNotifications.filter((item) => !item.isRead).length
+
+  const markAllNotificationsAsRead = () => {
+    setHeaderNotifications((current) => current.map((item) => ({ ...item, isRead: true })))
+  }
+
+  const notificationMenuItems = useMemo(
+    () =>
+      headerNotifications.map((item) => ({
+        ...item,
+        onSelect: () => {
+          setHeaderNotifications((current) =>
+            current.map((row) => (row.id === item.id ? { ...row, isRead: true } : row)),
+          )
+        },
+      })),
+    [headerNotifications],
+  )
 
   useEffect(() => {
     setCurrentUserId(resolveCurrentUserId())
@@ -535,6 +599,8 @@ export default function YeniKargoPage() {
     senderAddressId,
     receiverCustomerId,
     receiverAddressId,
+    senderPinned,
+    receiverPinned,
     senderDetailsOpen,
     receiverDetailsOpen,
     paymentMethod,
@@ -662,6 +728,8 @@ export default function YeniKargoPage() {
     setSenderAddressId(snapshot.senderAddressId)
     setReceiverCustomerId(snapshot.receiverCustomerId)
     setReceiverAddressId(snapshot.receiverAddressId)
+    setSenderPinned(Boolean(snapshot.senderPinned))
+    setReceiverPinned(Boolean(snapshot.receiverPinned))
     setSenderDetailsOpen(snapshot.senderDetailsOpen)
     setReceiverDetailsOpen(snapshot.receiverDetailsOpen)
     setPaymentMethod(snapshot.paymentMethod)
@@ -932,6 +1000,106 @@ export default function YeniKargoPage() {
 
   const primaryButtonLabel = activeSection === 'pricing' ? 'Kaydet' : 'Devam Et'
   const primaryButtonDisabled = activeSection === 'pricing' ? !isReadyForSave : false
+
+  const headerSearchCommands = useMemo(
+    () => [
+      {
+        id: 'quick-open-drafts',
+        label: 'Taslakları Aç',
+        group: 'Hızlı İşlemler',
+        keywords: ['taslak', 'kayıt', 'devam et'],
+        shortcut: 'T',
+        onSelect: () => setIsDraftSheetOpen(true),
+      },
+      {
+        id: 'quick-save-draft',
+        label: 'Taslak Olarak Kaydet',
+        group: 'Hızlı İşlemler',
+        keywords: ['taslak kaydet', 'kargo taslak'],
+        shortcut: 'K',
+        onSelect: saveCurrentAsDraft,
+      },
+      {
+        id: 'quick-go-piece-list',
+        label: 'Parça Listesine Git',
+        group: 'Gezinme',
+        keywords: ['parça', 'liste', 'ürün', 'adet'],
+        onSelect: scrollToPieceList,
+      },
+      {
+        id: 'quick-go-pricing',
+        label: 'Fiyatlandırmaya Git',
+        group: 'Gezinme',
+        keywords: ['fiyat', 'kdv', 'toplam', 'ücret'],
+        onSelect: scrollToPricing,
+      },
+      {
+        id: 'quick-add-sender-customer',
+        label: 'Gönderici Müşteri Ekle',
+        group: 'Gönderici / Alıcı',
+        keywords: ['gönderici', 'müşteri', 'yeni'],
+        onSelect: () => openCreateModal('sender', 'customer'),
+      },
+      {
+        id: 'quick-add-receiver-customer',
+        label: 'Alıcı Müşteri Ekle',
+        group: 'Gönderici / Alıcı',
+        keywords: ['alıcı', 'müşteri', 'yeni'],
+        onSelect: () => openCreateModal('receiver', 'customer'),
+      },
+      {
+        id: 'quick-toggle-sender-pin',
+        label: senderPinned ? 'Gönderici Sabitlemeyi Kaldır' : 'Göndericiyi Sabitle',
+        group: 'Gönderici / Alıcı',
+        keywords: ['gönderici', 'sabitle', 'pin'],
+        onSelect: () => {
+          if (senderCustomerId && senderAddressId) {
+            setSenderPinned((current) => !current)
+          }
+        },
+      },
+      {
+        id: 'quick-toggle-receiver-pin',
+        label: receiverPinned ? 'Alıcı Sabitlemeyi Kaldır' : 'Alıcıyı Sabitle',
+        group: 'Gönderici / Alıcı',
+        keywords: ['alıcı', 'sabitle', 'pin'],
+        onSelect: () => {
+          if (receiverCustomerId && receiverAddressId) {
+            setReceiverPinned((current) => !current)
+          }
+        },
+      },
+      {
+        id: 'quick-clear-piece-rows',
+        label: 'Parça Satırlarını Temizle',
+        group: 'Temizleme',
+        keywords: ['parça temizle', 'satır sil'],
+        onSelect: () => setPieceRows([]),
+      },
+      {
+        id: 'quick-reset-pricing-fields',
+        label: 'Fiyat ve Not Alanını Sıfırla',
+        group: 'Temizleme',
+        keywords: ['fiyat sıfırla', 'not temizle', 'kdv'],
+        onSelect: () => {
+          setShippingPrice('0')
+          setCargoNote('')
+        },
+      },
+    ],
+    [
+      openCreateModal,
+      receiverAddressId,
+      receiverCustomerId,
+      receiverPinned,
+      saveCurrentAsDraft,
+      scrollToPieceList,
+      scrollToPricing,
+      senderAddressId,
+      senderCustomerId,
+      senderPinned,
+    ],
+  )
 
   const numericCellClass = 'text-right tabular-nums'
   const numericHeadClass = 'text-right'
@@ -1341,7 +1509,18 @@ export default function YeniKargoPage() {
           { label: 'Ana Sayfa', href: '/' },
           { label: 'Kargolar', href: '/kargolar' },
           { label: 'Yeni Kargo' },
-        ]}
+          ]}
+        searchPlaceholder="Hızlı işlem ara..."
+        commandTitle="Hızlı İşlemler"
+        commandDescription="Yeni kargo ekranındaki işlemleri hızlıca başlatın."
+        searchEmptyMessage="Uygun hızlı işlem bulunamadı."
+        searchCommands={headerSearchCommands}
+        notificationCount={unreadNotificationCount}
+        notifications={notificationMenuItems}
+        notificationsMenuLabel="Bildirimler"
+        notificationsEmptyMessage="Yeni bildiriminiz yok."
+        markAllAsReadLabel="Tümünü okundu yap"
+        onMarkAllAsRead={markAllNotificationsAsRead}
       />
 
       <div className="flex min-w-0 flex-1 flex-col gap-3 bg-slate-50 p-4 pb-24 pt-3 lg:px-4 lg:pb-24 lg:pt-3">
@@ -1351,7 +1530,8 @@ export default function YeniKargoPage() {
             title="Gönderici"
             customerLabel="Gönderici Müşteri"
             addressLabel="Gönderici Adres"
-            detailsLabel="Gönderici Adres Bilgileri"
+            detailsLabel="Gönderici Özeti"
+            pinLabel="Göndericiyi Sabitle"
             emptyHint=""
             customerOptions={customerOptions}
             addressOptions={senderAddressOptions}
@@ -1359,17 +1539,18 @@ export default function YeniKargoPage() {
             selectedAddressId={senderAddressId}
             selectedCustomer={senderCustomer}
             selectedAddress={senderAddress}
-            detailsOpen={senderDetailsOpen}
+            isPinned={senderPinned}
+            onPinnedChange={setSenderPinned}
             onCustomerSelect={(value) => {
               setSenderCustomerId(value)
               setSenderAddressId(null)
+              setSenderPinned(false)
               setSenderDetailsOpen(false)
             }}
             onAddressSelect={(value) => {
               setSenderAddressId(value)
               setSenderDetailsOpen(true)
             }}
-            onToggleDetails={() => setSenderDetailsOpen((current) => !current)}
             onCreateCustomer={() => openCreateModal('sender', 'customer')}
             onCreateAddress={() => openCreateModal('sender', 'address')}
             onEditCustomer={() => openEditModal('sender', 'customer')}
@@ -1380,7 +1561,8 @@ export default function YeniKargoPage() {
             title="Alıcı"
             customerLabel="Alıcı Müşteri"
             addressLabel="Alıcı Adres"
-            detailsLabel="Alıcı Adres Bilgileri"
+            detailsLabel="Alıcı Özeti"
+            pinLabel="Alıcıyı Sabitle"
             emptyHint=""
             customerOptions={customerOptions}
             addressOptions={receiverAddressOptions}
@@ -1388,17 +1570,18 @@ export default function YeniKargoPage() {
             selectedAddressId={receiverAddressId}
             selectedCustomer={receiverCustomer}
             selectedAddress={receiverAddress}
-            detailsOpen={receiverDetailsOpen}
+            isPinned={receiverPinned}
+            onPinnedChange={setReceiverPinned}
             onCustomerSelect={(value) => {
               setReceiverCustomerId(value)
               setReceiverAddressId(null)
+              setReceiverPinned(false)
               setReceiverDetailsOpen(false)
             }}
             onAddressSelect={(value) => {
               setReceiverAddressId(value)
               setReceiverDetailsOpen(true)
             }}
-            onToggleDetails={() => setReceiverDetailsOpen((current) => !current)}
             onCreateCustomer={() => openCreateModal('receiver', 'customer')}
             onCreateAddress={() => openCreateModal('receiver', 'address')}
             onEditCustomer={() => openEditModal('receiver', 'customer')}
@@ -1696,6 +1879,7 @@ function PartyPanel({
   customerLabel,
   addressLabel,
   detailsLabel,
+  pinLabel,
   emptyHint,
   customerOptions,
   addressOptions,
@@ -1703,22 +1887,29 @@ function PartyPanel({
   selectedAddressId,
   selectedCustomer,
   selectedAddress,
-  detailsOpen,
+  isPinned,
+  onPinnedChange,
   onCustomerSelect,
   onAddressSelect,
-  onToggleDetails,
   onCreateCustomer,
   onCreateAddress,
   onEditCustomer,
   onEditAddress,
 }: PartyPanelProps) {
   const canChooseAddress = Boolean(selectedCustomerId)
+  const canPin = Boolean(selectedCustomerId && selectedAddressId)
   const canShowDetails = Boolean(selectedCustomer && selectedAddress)
 
   return (
     <Card className="h-full rounded-[24px] border-slate-200 bg-white shadow-sm">
       <CardHeader className="pb-2.5">
-        <CardTitle className={STANDARD_SECTION_TITLE_CLASS}>{title}</CardTitle>
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className={STANDARD_SECTION_TITLE_CLASS}>{title}</CardTitle>
+          <label className="mt-1 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+            <Switch checked={isPinned} disabled={!canPin} onCheckedChange={onPinnedChange} aria-label={pinLabel} />
+            <span className={cn(!canPin && 'text-slate-400')}>{pinLabel}</span>
+          </label>
+        </div>
       </CardHeader>
       <CardContent className="space-y-2.5">
         <SearchableCombobox
@@ -1761,22 +1952,12 @@ function PartyPanel({
             canShowDetails ? 'max-h-[1200px] overflow-visible opacity-100' : 'max-h-0 overflow-hidden opacity-0',
           )}
         >
-          <button
-            type="button"
-            onClick={onToggleDetails}
-            className="mt-0.5 flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2 text-center text-sm font-medium text-slate-600 transition hover:bg-white/60"
-          >
-            <span>{detailsLabel}</span>
-            <ChevronDown className={cn('size-4 transition-transform duration-200', detailsOpen && 'rotate-180')} />
-          </button>
+          <div className="mt-2.5 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5">
+            <div className="mb-3 border-b border-slate-200/90 pb-2.5">
+              <p className="text-sm font-semibold tracking-tight text-slate-700">{detailsLabel}</p>
+            </div>
 
-          <div
-            className={cn(
-              'grid gap-4 transition-all duration-300 ease-out',
-              detailsOpen ? 'mt-2.5 max-h-[1000px] overflow-visible opacity-100' : 'max-h-0 overflow-hidden opacity-0',
-            )}
-          >
-            <div className="grid gap-3 pt-2 md:grid-cols-2">
+            <div className="grid gap-x-5 gap-y-2.5 md:grid-cols-2">
               <FloatingLabelDisplay label="VKN / TCKN" value={selectedCustomer?.taxNumber} />
               <FloatingLabelDisplay label="Telefon Numarası" value={selectedAddress?.phone} />
               <FloatingLabelDisplay label="Şube" value={selectedAddress?.branch || selectedCustomer?.branch} />
@@ -1784,7 +1965,7 @@ function PartyPanel({
               <FloatingLabelDisplay label="İlçe" value={selectedAddress?.district} />
               <FloatingLabelDisplay label="Mahalle" value={selectedAddress?.neighborhood} />
               <div className="md:col-span-2">
-                <FloatingLabelDisplay label="Açık Adres" value={selectedAddress?.line1} />
+                <FloatingLabelDisplay label="Açık Adres" value={selectedAddress?.line1} multiline />
               </div>
             </div>
           </div>
@@ -1887,17 +2068,32 @@ function SearchableCombobox({
   )
 }
 
-function FloatingLabelDisplay({ label, value }: { label: string; value?: string }) {
+function FloatingLabelDisplay({
+  label,
+  value,
+  multiline,
+}: {
+  label: string
+  value?: string
+  multiline?: boolean
+}) {
   return (
-    <div className="relative">
-      <div className="rounded-2xl border border-slate-300 bg-white px-4 py-3 shadow-sm">
-        <div className="absolute left-3 top-0 inline-flex -translate-y-1/2 items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] leading-none font-semibold whitespace-nowrap tracking-tight text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-          {label}
-        </div>
-        <p className={cn('min-h-6 text-[15px] font-medium text-slate-900', !value && 'text-slate-400')}>
-          {value || 'Henüz seçilmedi'}
-        </p>
-      </div>
+    <div
+      className={cn(
+        'cursor-default border-b border-slate-200/85 px-1 pt-1',
+        multiline ? 'pb-3.5' : 'pb-2.5',
+      )}
+    >
+      <p className="text-[11px] font-semibold tracking-[0.04em] text-slate-500 uppercase">{label}</p>
+      <p
+        className={cn(
+          'mt-1 font-semibold text-slate-900',
+          multiline ? 'min-h-12 whitespace-normal wrap-break-word text-[16px] leading-7' : 'min-h-6 text-[15px] leading-6',
+          !value && 'text-slate-400',
+        )}
+      >
+        {value || 'Henüz seçilmedi'}
+      </p>
     </div>
   )
 }

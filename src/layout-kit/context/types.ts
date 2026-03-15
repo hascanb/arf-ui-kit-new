@@ -30,6 +30,20 @@ export interface HeaderCommandItem {
 }
 
 /**
+ * AppHeader bildirim menüsü öğesi
+ */
+export interface HeaderNotificationItem {
+  id: string
+  title: string
+  description?: string
+  timeLabel?: string
+  isRead?: boolean
+  icon?: React.ReactNode
+  href?: string
+  onSelect?: () => void
+}
+
+/**
  * AppHeader bileşeni props'ları
  */
 export interface AppHeaderProps {
@@ -41,6 +55,13 @@ export interface AppHeaderProps {
   commandDescription?: string
   searchEmptyMessage?: string
   notificationCount?: number
+  notifications?: HeaderNotificationItem[]
+  notificationsMenuLabel?: string
+  notificationsEmptyMessage?: string
+  markAllAsReadLabel?: string
+  onMarkAllAsRead?: () => void
+  viewAllNotificationsLabel?: string
+  onViewAllNotifications?: () => void
   notificationsLabel?: string
   onSearchClick?: () => void
   onNotificationClick?: () => void
@@ -119,6 +140,45 @@ export interface SidebarQuickActionItem {
 }
 
 /**
+ * Kullanıcı açılır menüsü etiketleri
+ */
+export interface SidebarUserMenuLabels {
+  profile?: string
+  settings?: string
+  logout?: string
+}
+
+/**
+ * Ayarlar modalı etiketleri
+ */
+export interface SidebarSettingsModalLabels {
+  title?: string
+  rootBreadcrumb?: string
+  closeSrText?: string
+}
+
+/**
+ * Ayarlar modalı bölüm tanımı
+ */
+export interface SidebarSettingsSection {
+  id: string
+  label: string
+  icon?: React.ElementType
+}
+
+/**
+ * Ayarlar modalı konfigürasyonu
+ */
+export interface SidebarSettingsModalConfig {
+  sections?: SidebarSettingsSection[]
+  defaultSectionId?: string
+  profileSectionId?: string
+  settingsSectionId?: string
+  labels?: SidebarSettingsModalLabels
+  renderContent?: (activeSection: SidebarSettingsSection) => React.ReactNode
+}
+
+/**
  * AppSidebar bileşeni props'ları
  */
 export interface AppSidebarProps {
@@ -128,6 +188,8 @@ export interface AppSidebarProps {
   addBrandLabel?: string
   onAddBrand?: () => void
   quickActions?: SidebarQuickActionItem[]
+  userMenuLabels?: SidebarUserMenuLabels
+  settingsModalConfig?: SidebarSettingsModalConfig
   user: UserData
   navGroups: NavGroup[]
   onLogout?: () => void
@@ -185,6 +247,8 @@ export interface DashboardLayoutProps {
   addBrandLabel?: string
   onAddBrand?: () => void
   quickActions?: SidebarQuickActionItem[]
+  userMenuLabels?: SidebarUserMenuLabels
+  settingsModalConfig?: SidebarSettingsModalConfig
   user: UserData
   navGroups: NavGroup[]
   mainContentId?: string
@@ -197,6 +261,13 @@ export interface DashboardLayoutProps {
   commandDescription?: string
   searchEmptyMessage?: string
   notificationCount?: number
+  notifications?: HeaderNotificationItem[]
+  notificationsMenuLabel?: string
+  notificationsEmptyMessage?: string
+  markAllAsReadLabel?: string
+  onMarkAllAsRead?: () => void
+  viewAllNotificationsLabel?: string
+  onViewAllNotifications?: () => void
   showFooter?: boolean
   footerProps?: Omit<AppFooterProps, 'className'>
   onLogout?: () => void

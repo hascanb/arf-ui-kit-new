@@ -17,6 +17,7 @@ export type {
   // AppHeader
   BreadcrumbData,
   AppHeaderProps,
+  HeaderNotificationItem,
   
   // AppSidebar
   NavSubItem,
@@ -26,6 +27,10 @@ export type {
   BrandData,
   BrandSwitcherItem,
   SidebarQuickActionItem,
+  SidebarUserMenuLabels,
+  SidebarSettingsModalLabels,
+  SidebarSettingsSection,
+  SidebarSettingsModalConfig,
   AppSidebarProps,
   
   // AppFooter

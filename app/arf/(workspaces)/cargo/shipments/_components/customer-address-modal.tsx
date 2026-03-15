@@ -1,9 +1,18 @@
 'use client'
 
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import { type ChangeEvent, type Dispatch, type SetStateAction, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -13,7 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { X } from 'lucide-react'
+import { Check, ChevronDown, X } from 'lucide-react'
 
 export type PartySide = 'sender' | 'receiver'
 export type ModalEntity = 'customer' | 'address'
@@ -72,6 +81,14 @@ interface CustomerAddressModalProps {
 const cityOptions = ['Adana', 'Ankara', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Mersin']
 const districtOptions = ['Seyhan', 'Çankaya', 'Başakşehir', 'Bornova', 'Onikişubat', 'Akdeniz']
 const neighborhoodOptions = ['Alidede', 'Afşar', 'İkitelli OSB', 'Merkez Mahallesi', 'Yeniköy']
+const addressTitleOptions = [
+  'Gönderici Merkez Adres',
+  'Alıcı Fabrika Adres',
+  'Merkez Depo',
+  'Şube Depo',
+  'Operasyon Merkezi',
+  'Sevkiyat Noktası',
+]
 
 const customerCreateSteps = [
   { id: 'type' as CustomerCreateStep, label: 'Tip Seçimi' },
@@ -110,6 +127,16 @@ export function CustomerAddressModal({
   const contactSurnameLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Soyadı' : 'Soyad'
   const contactEmailLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Email' : 'Email'
   const contactPhoneLabel = customerForm.customerType === 'corporate' ? 'Şirket Yetkili Telefonu' : 'Telefon Numarası'
+  const availableAddressTitleOptions = useMemo(() => {
+    const optionSet = new Set(addressTitleOptions)
+    const currentLabel = addressForm.label.trim()
+
+    if (currentLabel) {
+      optionSet.add(currentLabel)
+    }
+
+    return Array.from(optionSet)
+  }, [addressForm.label])
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/45 p-4 pt-16 backdrop-blur-[2px]">
@@ -336,10 +363,10 @@ export function CustomerAddressModal({
             <div className="space-y-5">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
                 <div>
-                  <FloatingLabelField
-                    label="Adres Başlığı"
+                  <Label className="mb-2 block text-sm font-medium text-slate-500">Adres Başlığı</Label>
+                  <AddressTitleSelect
                     value={addressForm.label}
-                    placeholder="Örn: Merkez Depo"
+                    options={availableAddressTitleOptions}
                     onChange={(value) => setAddressForm((current) => ({ ...current, label: value }))}
                   />
                 </div>
@@ -433,6 +460,60 @@ export function CustomerAddressModal({
         </div>
       </div>
     </div>
+  )
+}
+
+function AddressTitleSelect({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: string[]
+  onChange: (value: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          className="flex h-12 w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 text-left shadow-sm outline-none"
+        >
+          <span className={cn('truncate text-sm', value ? 'text-slate-900' : 'text-slate-400')}>
+            {value || 'Adres Başlığı Seçin'}
+          </span>
+          <ChevronDown className="size-4 shrink-0 text-slate-400" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-(--radix-popover-trigger-width) rounded-2xl border-slate-200 p-0 shadow-xl">
+        <Command>
+          <CommandInput placeholder="Adres başlığı ara..." />
+          <CommandList>
+            <CommandEmpty>Adres başlığı bulunamadı.</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => (
+                <CommandItem
+                  key={option}
+                  value={option}
+                  onSelect={() => {
+                    onChange(option)
+                    setOpen(false)
+                  }}
+                  className="flex items-center gap-2 px-3 py-2.5"
+                >
+                  <Check className={cn('size-4 text-slate-700', value === option ? 'opacity-100' : 'opacity-0')} />
+                  <span className="truncate">{option}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }
 

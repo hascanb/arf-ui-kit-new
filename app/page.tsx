@@ -29,7 +29,7 @@ export default function EntrySelectionPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-900">
                   <Truck className="size-5 text-emerald-600" />
-                  Cargo Workspace
+                  V1.0
                 </CardTitle>
                 <CardDescription>
                   Operasyonel akışlar: kargo, şube, müşteri, rapor ve finans yönetimi.

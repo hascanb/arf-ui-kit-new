@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
 import { ShipmentCancelModal } from "./_components/shipment-cancel-modal"
 import { ShipmentHandoverModal } from "./_components/shipment-handover-modal"
 import { usePieceActions } from "./_hooks/use-piece-actions"
@@ -405,6 +406,12 @@ export default function KargolarPage() {
     }
   })
 
+  const isDevirFilterActive = useMemo(() => {
+    const statusFilter = columnFilters.find((item) => item.id === "kargo_durumu")
+    const selected = Array.isArray(statusFilter?.value) ? (statusFilter.value as string[]) : []
+    return selected.includes("devredildi")
+  }, [columnFilters])
+
   useEffect(() => {
     try {
       localStorage.setItem(SUMMARY_VISIBILITY_STORAGE_KEY, isSummaryVisible ? "1" : "0")
@@ -641,18 +648,30 @@ export default function KargolarPage() {
       {
         label: "Toplam Kargo",
         value: new Intl.NumberFormat("tr-TR").format(totalCargo),
+        icon: Package,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
       {
         label: "Toplam Tutar",
         value: new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(totalAmount),
+        icon: Building2,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
       {
         label: "Teslim Edildi",
         value: new Intl.NumberFormat("tr-TR").format(deliveredCount),
+        icon: CheckCircle2,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
       {
         label: "Beklemede",
         value: new Intl.NumberFormat("tr-TR").format(waitingCount),
+        icon: Clock,
+        iconWrapClass: "bg-primary/12 text-secondary border-secondary/25",
+        valueClass: "text-foreground",
       },
     ]
   }, [])
@@ -788,7 +807,14 @@ export default function KargolarPage() {
         accessorKey: "takip_no",
         enableHiding: false,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Takip No" />,
-        cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.original.takip_no}</span>,
+        cell: ({ row }) => (
+          <Link
+            href={`/arf/cargo/shipments/${row.original.id}`}
+            className="font-mono text-sm font-semibold text-secondary underline decoration-secondary/40 underline-offset-4 transition-all hover:text-primary hover:decoration-primary/60"
+          >
+            {row.original.takip_no}
+          </Link>
+        ),
       },
       {
         accessorKey: "gonderen_musteri",
@@ -965,12 +991,12 @@ export default function KargolarPage() {
       },
       {
         id: "actions",
-        header: () => <div className="w-full text-center">İşlemler</div>,
+        header: () => <span className="sr-only">İşlemler</span>,
         enableSorting: false,
         enableHiding: false,
-        size: 100,
-        minSize: 88,
-        maxSize: 110,
+        size: 136,
+        minSize: 120,
+        maxSize: 152,
         cell: ({ row }) => {
           const backendTrackingLink =
             (row.original as CargoRow & { takip_linki?: string; tracking_link?: string }).takip_linki ??
@@ -980,8 +1006,9 @@ export default function KargolarPage() {
             <div className="flex justify-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-8">
-                    <MoreHorizontal className="size-4" />
+                  <Button variant="outline" size="sm" className="h-8 rounded-lg border-slate-200 bg-white px-2.5 text-xs font-medium">
+                    İşlemler
+                    <ChevronDown className="ml-1 size-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
@@ -1057,7 +1084,33 @@ export default function KargolarPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Kargo Listesi</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <Link href="/arf/cargo/shipments/canceled">
+                <Ban className="mr-2 size-4" />
+                İptal Kargo Listesi
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant={isDevirFilterActive ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setColumnFilters((previous) => {
+                  const withoutStatus = previous.filter((item) => item.id !== "kargo_durumu")
+
+                  if (isDevirFilterActive) {
+                    return withoutStatus
+                  }
+
+                  return [...withoutStatus, { id: "kargo_durumu", value: ["devredildi"] }]
+                })
+                setPagination((previous) => ({ ...previous, pageIndex: 0 }))
+              }}
+            >
+              <ArrowRightLeft className="mr-2 size-4" />
+              Devir Kargo Listesi
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -1065,7 +1118,7 @@ export default function KargolarPage() {
               onClick={() => setIsSummaryVisible((prev) => !prev)}
             >
               {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
-              {isSummaryVisible ? "Kartları Gizle" : "Kartları Göster"}
+              {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
             </Button>
             <Button size="sm" asChild>
               <Link href="/arf/cargo/shipments/new">
@@ -1080,9 +1133,16 @@ export default function KargolarPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {summaryCards.map((card) => (
               <Card key={card.label} className="rounded-2xl border-slate-200/80 bg-white shadow-none">
-                <CardContent className="p-4">
-                  <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
-                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">{card.value}</p>
+                <CardContent className="p-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium tracking-wide text-slate-500">{card.label}</p>
+                      <p className={cn("mt-1 text-xl font-semibold tabular-nums leading-tight", card.valueClass)}>{card.value}</p>
+                    </div>
+                    <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl border", card.iconWrapClass)}>
+                      <card.icon className="size-4" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
