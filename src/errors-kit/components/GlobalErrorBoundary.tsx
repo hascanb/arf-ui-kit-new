@@ -1,12 +1,16 @@
 'use client'
 
 import React, { type ErrorInfo, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
 export interface GlobalErrorBoundaryProps {
   children: ReactNode
   homePath?: string
+  title?: string
   genericMessage?: string
+  retryLabel?: string
+  goHomeLabel?: string
   showErrorDetails?: boolean
   onError?: (error: Error, errorInfo: ErrorInfo) => void
   onReset?: () => void
@@ -23,7 +27,11 @@ interface GlobalErrorBoundaryState {
   error: Error | null
 }
 
-export class GlobalErrorBoundary extends React.Component<GlobalErrorBoundaryProps, GlobalErrorBoundaryState> {
+interface GlobalErrorBoundaryInnerProps extends GlobalErrorBoundaryProps {
+  navigateHome: (path: string) => void
+}
+
+class GlobalErrorBoundaryInner extends React.Component<GlobalErrorBoundaryInnerProps, GlobalErrorBoundaryState> {
   state: GlobalErrorBoundaryState = {
     hasError: false,
     error: null,
@@ -51,9 +59,7 @@ export class GlobalErrorBoundary extends React.Component<GlobalErrorBoundaryProp
       return
     }
 
-    if (typeof window !== 'undefined') {
-      window.location.href = this.props.homePath || '/'
-    }
+    this.props.navigateHome(this.props.homePath || '/')
   }
 
   render(): ReactNode {
@@ -78,10 +84,10 @@ export class GlobalErrorBoundary extends React.Component<GlobalErrorBoundaryProp
     return (
       <div className="flex min-h-[320px] items-center justify-center p-6">
         <div className="w-full max-w-md space-y-4 rounded-lg border bg-card p-6 text-center">
-          <h2 className="text-xl font-semibold">Uygulama hatasi olustu</h2>
+          <h2 className="text-xl font-semibold">{this.props.title || 'Application error'}</h2>
           <p className="text-sm text-muted-foreground">
             {this.props.genericMessage ||
-              'Beklenmeyen bir hata yakalandi. Sayfayi sifirlayabilir veya ana sayfaya donebilirsiniz.'}
+              'An unexpected error occurred. You can reset the view or go back to the home page.'}
           </p>
 
           {shouldShowDetails && !!errorDetails && (
@@ -91,13 +97,24 @@ export class GlobalErrorBoundary extends React.Component<GlobalErrorBoundaryProp
           )}
 
           <div className="flex items-center justify-center gap-2">
-            <Button onClick={this.reset}>Tekrar Dene</Button>
+            <Button onClick={this.reset}>{this.props.retryLabel || 'Retry'}</Button>
             <Button variant="outline" onClick={this.goHome}>
-              Ana Sayfaya Don
+              {this.props.goHomeLabel || 'Go Home'}
             </Button>
           </div>
         </div>
       </div>
     )
   }
+}
+
+export function GlobalErrorBoundary(props: GlobalErrorBoundaryProps) {
+  const router = useRouter()
+
+  return (
+    <GlobalErrorBoundaryInner
+      {...props}
+      navigateHome={(path) => router.push(path)}
+    />
+  )
 }

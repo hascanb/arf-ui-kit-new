@@ -1,21 +1,27 @@
 "use client"
 
-import type { ChangeEvent } from "react"
+import { useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X } from "lucide-react"
+
+const pieceDeliveryEntrySchema = z.object({
+  firstName: z.string().trim().min(1, "Ad zorunludur."),
+  lastName: z.string().trim().min(1, "Soyad zorunludur."),
+  phone: z.string().trim().min(10, "Telefon numarası en az 10 karakter olmalıdır."),
+})
+
+type PieceDeliveryEntryValues = z.infer<typeof pieceDeliveryEntrySchema>
 
 type PieceDeliveryEntryModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   pieceNos: string[]
-  firstName: string
-  onFirstNameChange: (value: string) => void
-  lastName: string
-  onLastNameChange: (value: string) => void
-  phone: string
-  onPhoneChange: (value: string) => void
-  onConfirm: () => void
+  initialValues?: Partial<PieceDeliveryEntryValues>
+  onConfirm: (values: PieceDeliveryEntryValues) => void
   confirmLabel?: string
 }
 
@@ -37,15 +43,31 @@ export function PieceDeliveryEntryModal({
   open,
   onOpenChange,
   pieceNos,
-  firstName,
-  onFirstNameChange,
-  lastName,
-  onLastNameChange,
-  phone,
-  onPhoneChange,
+  initialValues,
   onConfirm,
   confirmLabel = "Kaydet",
 }: PieceDeliveryEntryModalProps) {
+  const form = useForm<PieceDeliveryEntryValues>({
+    resolver: zodResolver(pieceDeliveryEntrySchema),
+    defaultValues: {
+      firstName: initialValues?.firstName ?? "",
+      lastName: initialValues?.lastName ?? "",
+      phone: initialValues?.phone ?? "",
+    },
+  })
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    form.reset({
+      firstName: initialValues?.firstName ?? "",
+      lastName: initialValues?.lastName ?? "",
+      phone: initialValues?.phone ?? "",
+    })
+  }, [form, initialValues?.firstName, initialValues?.lastName, initialValues?.phone, open])
+
   if (!open) {
     return null
   }
@@ -60,7 +82,7 @@ export function PieceDeliveryEntryModal({
           </Button>
         </div>
 
-        <div className="space-y-4 p-5">
+        <form className="space-y-4 p-5" onSubmit={form.handleSubmit(onConfirm)}>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
             <p className="text-xs text-slate-500">Seçili Parça Adedi</p>
             <p className="mt-1 text-sm font-semibold text-slate-900">{pieceNos.length || 0}</p>
@@ -74,30 +96,24 @@ export function PieceDeliveryEntryModal({
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <p className="text-xs text-slate-500">Ad</p>
-              <Input
-                value={firstName}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => onFirstNameChange(event.target.value)}
-                placeholder="Ad"
-                className="h-9"
-              />
+              <Input {...form.register("firstName")} placeholder="Ad" className="h-9" />
+              {form.formState.errors.firstName?.message ? (
+                <p className="text-xs text-rose-600">{form.formState.errors.firstName.message}</p>
+              ) : null}
             </div>
             <div className="space-y-1">
               <p className="text-xs text-slate-500">Soyad</p>
-              <Input
-                value={lastName}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => onLastNameChange(event.target.value)}
-                placeholder="Soyad"
-                className="h-9"
-              />
+              <Input {...form.register("lastName")} placeholder="Soyad" className="h-9" />
+              {form.formState.errors.lastName?.message ? (
+                <p className="text-xs text-rose-600">{form.formState.errors.lastName.message}</p>
+              ) : null}
             </div>
             <div className="space-y-1 md:col-span-2">
               <p className="text-xs text-slate-500">Telefon Numarası</p>
-              <Input
-                value={phone}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => onPhoneChange(event.target.value)}
-                placeholder="05xx xxx xx xx"
-                className="h-9"
-              />
+              <Input {...form.register("phone")} placeholder="05xx xxx xx xx" className="h-9" />
+              {form.formState.errors.phone?.message ? (
+                <p className="text-xs text-rose-600">{form.formState.errors.phone.message}</p>
+              ) : null}
             </div>
           </div>
 
@@ -114,11 +130,9 @@ export function PieceDeliveryEntryModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Vazgeç
             </Button>
-            <Button type="button" onClick={onConfirm}>
-              {confirmLabel}
-            </Button>
+            <Button type="submit">{confirmLabel}</Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   )

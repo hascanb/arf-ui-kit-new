@@ -1,20 +1,28 @@
 "use client"
 
+import { useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowRightLeft, X } from "lucide-react"
+import { Controller, useForm } from "react-hook-form"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+
+const shipmentHandoverSchema = z.object({
+  reason: z.enum(["musteri_adreste_degil", "musteriye_ulasilamiyor", "diger_sebep"]),
+  note: z.string().trim().optional().default(""),
+})
+
+type ShipmentHandoverValues = z.infer<typeof shipmentHandoverSchema>
 
 type ShipmentHandoverModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   trackingNo: string
   receiverBranch: string
-  reason: string
-  onReasonChange: (value: string) => void
-  note: string
-  onNoteChange: (value: string) => void
-  onConfirm: () => void
+  initialValues?: Partial<ShipmentHandoverValues>
+  onConfirm: (values: ShipmentHandoverValues) => void
 }
 
 export function ShipmentHandoverModal({
@@ -22,12 +30,28 @@ export function ShipmentHandoverModal({
   onOpenChange,
   trackingNo,
   receiverBranch,
-  reason,
-  onReasonChange,
-  note,
-  onNoteChange,
+  initialValues,
   onConfirm,
 }: ShipmentHandoverModalProps) {
+  const form = useForm<ShipmentHandoverValues>({
+    resolver: zodResolver(shipmentHandoverSchema),
+    defaultValues: {
+      reason: initialValues?.reason ?? "musteri_adreste_degil",
+      note: initialValues?.note ?? "",
+    },
+  })
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    form.reset({
+      reason: initialValues?.reason ?? "musteri_adreste_degil",
+      note: initialValues?.note ?? "",
+    })
+  }, [form, initialValues?.note, initialValues?.reason, open])
+
   if (!open) {
     return null
   }
@@ -42,7 +66,7 @@ export function ShipmentHandoverModal({
           </Button>
         </div>
 
-        <div className="space-y-4 p-5">
+        <form className="space-y-4 p-5" onSubmit={form.handleSubmit(onConfirm)}>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
             <p className="text-xs text-slate-500">Takip No</p>
             <p className="mt-1 text-sm font-semibold text-slate-900">{trackingNo || "-"}</p>
@@ -56,23 +80,28 @@ export function ShipmentHandoverModal({
 
           <div className="space-y-1">
             <p className="text-xs text-slate-500">Devir Nedeni</p>
-            <Select value={reason} onValueChange={onReasonChange}>
-              <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
-                <SelectValue placeholder="Sebep seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="musteri_adreste_degil">Müşteri adreste değil</SelectItem>
-                <SelectItem value="musteriye_ulasilamiyor">Müşteriye ulaşılamıyor</SelectItem>
-                <SelectItem value="diger_sebep">Diğer sebep</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                    <SelectValue placeholder="Sebep seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="musteri_adreste_degil">Müşteri adreste değil</SelectItem>
+                    <SelectItem value="musteriye_ulasilamiyor">Müşteriye ulaşılamıyor</SelectItem>
+                    <SelectItem value="diger_sebep">Diğer sebep</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           <div className="space-y-1">
             <p className="text-xs text-slate-500">Açıklama (Opsiyonel)</p>
             <Textarea
-              value={note}
-              onChange={(event) => onNoteChange(event.target.value)}
+              {...form.register("note")}
               placeholder="Devretme ile ilgili kısa not ekleyin..."
               className="min-h-24 rounded-xl border-slate-200 bg-white text-sm"
             />
@@ -82,12 +111,12 @@ export function ShipmentHandoverModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Vazgeç
             </Button>
-            <Button type="button" onClick={onConfirm}>
+            <Button type="submit">
               <ArrowRightLeft className="size-4" />
               Devret
             </Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   )

@@ -201,7 +201,7 @@ function SelectField({ config, control, showDescription, showRequired }: FieldRe
                 fieldConfig.className
               )}
             >
-              <SelectValue placeholder={fieldConfig.placeholder || 'Seçiniz...'} />
+              <SelectValue placeholder={fieldConfig.placeholder || 'Select...'} />
             </SelectTrigger>
             <SelectContent>
               {fieldConfig.options.map((option) => (
@@ -264,7 +264,7 @@ function ComboboxField({ config, control, showDescription, showRequired }: Field
                       {selectedOption.label}
                     </>
                   ) : (
-                    fieldConfig.placeholder || "Seçiniz..."
+                    fieldConfig.placeholder || "Select..."
                   )}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -272,10 +272,10 @@ function ComboboxField({ config, control, showDescription, showRequired }: Field
               <PopoverContent className="w-full p-0" align="start">
                 <Command>
                   <CommandInput 
-                    placeholder={fieldConfig.searchPlaceholder || "Ara..."} 
+                    placeholder={fieldConfig.searchPlaceholder || "Search..."} 
                   />
                   <CommandList>
-                    <CommandEmpty>{fieldConfig.emptyText || "Sonuç bulunamadı."}</CommandEmpty>
+                    <CommandEmpty>{fieldConfig.emptyText || "No results found."}</CommandEmpty>
                     <CommandGroup>
                       {fieldConfig.options.map((option) => (
                         <CommandItem
@@ -441,7 +441,7 @@ function DateField({ config, control, showDescription, showRequired }: FieldRend
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {field.value ? formatDate(field.value as Date) : <span>Tarih seçin</span>}
+                {field.value ? formatDate(field.value as Date) : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -530,8 +530,8 @@ function ArrayField({ config, control, showDescription, showRequired, watchValue
     name: fieldConfig.name,
   })
 
-  const addLabel = fieldConfig.addButtonLabel || 'Yeni Ekle'
-  const removeLabel = fieldConfig.removeButtonLabel || 'Sil'
+  const addLabel = fieldConfig.addButtonLabel || 'Add new'
+  const removeLabel = fieldConfig.removeButtonLabel || 'Remove'
   const canAdd = !fieldConfig.maxItems || fields.length < fieldConfig.maxItems
 
   return (
@@ -559,7 +559,7 @@ function ArrayField({ config, control, showDescription, showRequired, watchValue
       </div>
 
       {fields.length === 0 && (
-        <p className="text-sm text-muted-foreground">Henüz öğe eklenmedi.</p>
+        <p className="text-sm text-muted-foreground">No items added yet.</p>
       )}
 
       <div className="space-y-4">
@@ -567,7 +567,7 @@ function ArrayField({ config, control, showDescription, showRequired, watchValue
           <div key={item.id} className="space-y-3 rounded-md border bg-muted/20 p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">
-                {(fieldConfig.itemLabel || 'Öğe')} #{index + 1}
+                {(fieldConfig.itemLabel || 'Item')} #{index + 1}
               </p>
               <Button
                 type="button"

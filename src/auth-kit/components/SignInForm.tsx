@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthKit } from '../context/useAuthKit'
 import type { SignInFormProps, SignInCredentials } from '../context/types'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ export function SignInForm({
   onError, 
   className 
 }: SignInFormProps = {}) {
+  const router = useRouter()
   const { config, t, setLastUsername } = useAuthKit()
   const tOr = (key: string, fallback: string) => {
     const value = t(key)
@@ -92,20 +94,20 @@ export function SignInForm({
         
         // OTP gerekiyorsa OTP sayfasına yönlendir
         if (response.requiresOtp && config.routes.afterOtp) {
-          window.location.href = config.routes.afterOtp
+          router.push(config.routes.afterOtp)
         } else {
           // Normal giriş - dashboard'a yönlendir
-          window.location.href = config.routes.afterSignIn
+          router.push(config.routes.afterSignIn)
         }
       } else {
-        const errorMsg = sanitizeError(response.error, tOr('errors.generic', 'Bir hata olustu'))
+        const errorMsg = sanitizeError(response.error, tOr('errors.generic', 'An error occurred'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
         const errorMsg = sanitizeError(
           err instanceof Error ? err.message : err,
-          tOr('errors.networkError', 'Baglanti hatasi olustu')
+          tOr('errors.networkError', 'A network error occurred')
         )
       setError(errorMsg)
       onError?.(errorMsg)
@@ -123,16 +125,16 @@ export function SignInForm({
       if (response?.success) {
         setLastUsername(response.data?.user?.username || 'google-user')
         onSuccess?.(response)
-        window.location.href = config.routes.afterSignIn
+        router.push(config.routes.afterSignIn)
       } else {
-        const errorMsg = sanitizeError(response?.error, tOr('errors.generic', 'Bir hata olustu'))
+        const errorMsg = sanitizeError(response?.error, tOr('errors.generic', 'An error occurred'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
       const errorMsg = sanitizeError(
         err instanceof Error ? err.message : err,
-        tOr('errors.networkError', 'Baglanti hatasi olustu')
+        tOr('errors.networkError', 'A network error occurred')
       )
       setError(errorMsg)
       onError?.(errorMsg)
@@ -149,16 +151,16 @@ export function SignInForm({
       if (response?.success) {
         setLastUsername(response.data?.user?.username || 'apple-user')
         onSuccess?.(response)
-        window.location.href = config.routes.afterSignIn
+        router.push(config.routes.afterSignIn)
       } else {
-        const errorMsg = sanitizeError(response?.error, tOr('errors.generic', 'Bir hata olustu'))
+        const errorMsg = sanitizeError(response?.error, tOr('errors.generic', 'An error occurred'))
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err) {
       const errorMsg = sanitizeError(
         err instanceof Error ? err.message : err,
-        tOr('errors.networkError', 'Baglanti hatasi olustu')
+        tOr('errors.networkError', 'A network error occurred')
       )
       setError(errorMsg)
       onError?.(errorMsg)
@@ -179,13 +181,13 @@ export function SignInForm({
         
         {/* Username Field */}
         <div className="space-y-2">
-          <Label htmlFor="username">{tOr('signIn.username', 'Kullanici Adi')}</Label>
+          <Label htmlFor="username">{tOr('signIn.username', 'Username')}</Label>
           <Input
             id="username"
             type="text"
             value={username}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-            placeholder={tOr('signIn.username', 'Kullanici Adi')}
+            placeholder={tOr('signIn.username', 'Username')}
             disabled={isLoading}
             autoComplete="username"
             autoFocus
@@ -194,13 +196,13 @@ export function SignInForm({
         
         {/* Password Field */}
         <div className="space-y-2">
-          <Label htmlFor="password">{tOr('signIn.password', 'Sifre')}</Label>
+          <Label htmlFor="password">{tOr('signIn.password', 'Password')}</Label>
           <Input
             id="password"
             type="password"
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            placeholder={tOr('signIn.password', 'Sifre')}
+            placeholder={tOr('signIn.password', 'Password')}
             disabled={isLoading}
             autoComplete="current-password"
           />
@@ -217,7 +219,7 @@ export function SignInForm({
                 disabled={isLoading}
               />
               <Label htmlFor="rememberMe" className="text-sm cursor-pointer">
-                {tOr('signIn.rememberMe', 'Beni Hatirla')}
+                {tOr('signIn.rememberMe', 'Remember me')}
               </Label>
             </div>
           )}
@@ -227,7 +229,7 @@ export function SignInForm({
               href={config.routes.forgotPassword}
               className="text-sm text-primary hover:underline"
             >
-              {tOr('signIn.forgotPassword', 'Sifremi Unuttum')}
+              {tOr('signIn.forgotPassword', 'Forgot password?')}
             </a>
           )}
         </div>
@@ -238,7 +240,7 @@ export function SignInForm({
           className="w-full h-11 font-semibold"
           disabled={isLoading || socialLoading !== null}
         >
-          {isLoading ? '...' : tOr('signIn.submit', 'Giris Yap')}
+          {isLoading ? '...' : tOr('signIn.submit', 'Sign In')}
         </Button>
         
         {/* Social Login Divider */}
@@ -250,7 +252,7 @@ export function SignInForm({
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-background text-muted-foreground">
-                  {tOr('signIn.orContinueWith', 'veya')}
+                  {tOr('signIn.orContinueWith', 'or continue with')}
                 </span>
               </div>
             </div>

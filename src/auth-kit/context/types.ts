@@ -79,6 +79,7 @@ export interface ResetPasswordResponse {
 export interface AuthKitTranslations {
   signIn: {
     title: string
+    welcome: string
     subtitle: string
     username: string
     password: string
@@ -96,8 +97,18 @@ export interface AuthKitTranslations {
     code: string
     submit: string
     resend: string
+    resentSuccess: string
     backToSignIn: string
     didntReceive: string
+  }
+  signIn2: {
+    description: string
+    secureConnectionTitle: string
+    secureConnectionDescription: string
+    fastVerificationTitle: string
+    fastVerificationDescription: string
+    socialSignInTitle: string
+    socialSignInDescription: string
   }
   forgotPassword: {
     title: string
@@ -122,6 +133,8 @@ export interface AuthKitTranslations {
     passwordTooShort: string
     passwordsDontMatch: string
     invalidOtp: string
+    passwordStrengthLabels: string[]
+    invalidStrength: string
   }
   errors: {
     generic: string

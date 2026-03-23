@@ -81,16 +81,16 @@ declare module '@/components/ui/field' {
 declare module '@/components/ui/select' {
   import * as React from 'react'
   
-  export const Select: React.FC<any>
-  export const SelectGroup: React.FC<any>
-  export const SelectValue: React.FC<any>
-  export const SelectTrigger: React.ForwardRefExoticComponent<any>
-  export const SelectContent: React.ForwardRefExoticComponent<any>
-  export const SelectLabel: React.ForwardRefExoticComponent<any>
-  export const SelectItem: React.ForwardRefExoticComponent<any>
-  export const SelectSeparator: React.ForwardRefExoticComponent<any>
-  export const SelectScrollUpButton: React.ForwardRefExoticComponent<any>
-  export const SelectScrollDownButton: React.ForwardRefExoticComponent<any>
+  export const Select: React.FC<Record<string, unknown>>
+  export const SelectGroup: React.FC<Record<string, unknown>>
+  export const SelectValue: React.FC<Record<string, unknown>>
+  export const SelectTrigger: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const SelectContent: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const SelectLabel: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const SelectItem: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const SelectSeparator: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const SelectScrollUpButton: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const SelectScrollDownButton: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/textarea' {
@@ -101,12 +101,13 @@ declare module '@/components/ui/textarea' {
 
 declare module '@/components/ui/radio-group' {
   import * as React from 'react'
-  export const RadioGroup: React.ForwardRefExoticComponent<any>
-  export const RadioGroupItem: React.ForwardRefExoticComponent<any>
+  export const RadioGroup: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const RadioGroupItem: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/switch' {
-  export * from '@/components/ui/switch'
+  import * as React from 'react'
+  export const Switch: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/slider' {
@@ -115,37 +116,37 @@ declare module '@/components/ui/slider' {
 
 declare module '@/components/ui/calendar' {
   import React from 'react'
-  export type CalendarProps = any
+  export type CalendarProps = Record<string, unknown>
   export const Calendar: React.ForwardRefExoticComponent<CalendarProps>
 }
 
 declare module '@/components/ui/popover' {
   import * as React from 'react'
   
-  export const Popover: React.FC<any>
-  export const PopoverTrigger: React.ForwardRefExoticComponent<any>
-  export const PopoverContent: React.ForwardRefExoticComponent<any>
-  export const PopoverAnchor: React.ForwardRefExoticComponent<any>
+  export const Popover: React.FC<Record<string, unknown>>
+  export const PopoverTrigger: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const PopoverContent: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const PopoverAnchor: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/command' {
   import * as React from 'react'
   
-  export const Command: React.ForwardRefExoticComponent<any>
-  export const CommandDialog: React.FC<any>
-  export const CommandInput: React.ForwardRefExoticComponent<any>
-  export const CommandList: React.ForwardRefExoticComponent<any>
-  export const CommandEmpty: React.ForwardRefExoticComponent<any>
-  export const CommandGroup: React.ForwardRefExoticComponent<any>
-  export const CommandItem: React.ForwardRefExoticComponent<any>
-  export const CommandShortcut: React.FC<any>
-  export const CommandSeparator: React.ForwardRefExoticComponent<any>
+  export const Command: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const CommandDialog: React.FC<Record<string, unknown>>
+  export const CommandInput: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const CommandList: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const CommandEmpty: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const CommandGroup: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const CommandItem: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const CommandShortcut: React.FC<Record<string, unknown>>
+  export const CommandSeparator: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/separator' {
   import * as React from 'react'
   
-  export const Separator: React.ForwardRefExoticComponent<any>
+  export const Separator: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/popover' {
@@ -169,36 +170,36 @@ declare module '@/components/ui/table' {
 declare module '@/components/ui/scroll-area' {
   import * as React from 'react'
   
-  export const ScrollArea: React.ForwardRefExoticComponent<any>
-  export const ScrollBar: React.ForwardRefExoticComponent<any>
+  export const ScrollArea: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const ScrollBar: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/dropdown-menu' {
   import * as React from 'react'
   
-  export const DropdownMenu: React.FC<any>
-  export const DropdownMenuTrigger: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuContent: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuGroup: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuPortal: React.FC<any>
-  export const DropdownMenuSub: React.FC<any>
-  export const DropdownMenuSubContent: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuSubTrigger: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuLabel: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuItem: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuCheckboxItem: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuRadioGroup: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuRadioItem: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuSeparator: React.ForwardRefExoticComponent<any>
-  export const DropdownMenuShortcut: React.FC<any>
+  export const DropdownMenu: React.FC<Record<string, unknown>>
+  export const DropdownMenuTrigger: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuContent: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuGroup: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuPortal: React.FC<Record<string, unknown>>
+  export const DropdownMenuSub: React.FC<Record<string, unknown>>
+  export const DropdownMenuSubContent: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuSubTrigger: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuLabel: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuItem: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuCheckboxItem: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuRadioGroup: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuRadioItem: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuSeparator: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const DropdownMenuShortcut: React.FC<Record<string, unknown>>
 }
 
 declare module '@/components/ui/hover-card' {
   import * as React from 'react'
 
-  export const HoverCard: React.FC<any>
-  export const HoverCardTrigger: React.ForwardRefExoticComponent<any>
-  export const HoverCardContent: React.ForwardRefExoticComponent<any>
+  export const HoverCard: React.FC<Record<string, unknown>>
+  export const HoverCardTrigger: React.ForwardRefExoticComponent<Record<string, unknown>>
+  export const HoverCardContent: React.ForwardRefExoticComponent<Record<string, unknown>>
 }
 
 declare module '@/components/ui/pagination' {

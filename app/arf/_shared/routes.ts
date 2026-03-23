@@ -27,8 +27,13 @@ export const ARF_ROUTES = {
     support: `${CARGO_BASE}/support`,
 
     dashboard: {
-      operasyon: CARGO_BASE,
+      /** Ana kargo dashboard'ı (mevcut ana sayfa) */
+      kargo: CARGO_BASE,
+      /** Operasyon dashboard'ı */
+      operasyon: `${CARGO_BASE}/dashboard/operations`,
+      /** Finans dashboard'ı */
       finans: `${CARGO_BASE}/finance`,
+      /** Harita dashboard'ı */
       harita: `${CARGO_BASE}/map`,
     },
 

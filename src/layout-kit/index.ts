@@ -11,6 +11,7 @@ export { AppSidebar } from './components/AppSidebar'
 export { AppFooter } from './components/AppFooter'
 export { DashboardLayout } from './components/DashboardLayout'
 export { ThemeProvider } from './components/ThemeProvider'
+export { AppHeaderDefaultsProvider, useAppHeaderDefaults } from './context/app-header-defaults-context'
 
 // ========== Types ==========
 export type {
@@ -48,12 +49,21 @@ export type {
 
 // ========== Utils ==========
 export {
+  createExampleBrandData,
   exampleBrandData,
+  createExampleBrandOptions,
   exampleBrandOptions,
+  createExampleUserData,
   exampleUserData,
+  createBasicNavGroups,
   basicNavGroups,
+  createTestNavGroups,
   testNavGroups,
+  createEcommerceNavGroups,
   ecommerceNavGroups,
+  createCargoNavGroups,
   cargoNavGroups,
+  createNestedNavGroups,
   nestedNavGroups,
 } from './utils'
+export type { LayoutKitExampleLocale } from './utils'

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Accessibility,
   Bell,
@@ -105,6 +105,7 @@ export function AppSidebar({
   onLogout,
 }: AppSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const { state, isMobile } = useSidebar()
   const isCollapsed = state === "collapsed"
 
@@ -173,10 +174,10 @@ export function AppSidebar({
       return
     }
 
-    if (typeof window !== "undefined" && item.url) {
-      window.location.href = item.url
+    if (item.url) {
+      router.push(item.url)
     }
-  }, [])
+  }, [router])
 
   const handleQuickActionSelect = React.useCallback((url?: string, onSelect?: () => void) => {
     if (onSelect) {
@@ -184,10 +185,10 @@ export function AppSidebar({
       return
     }
 
-    if (typeof window !== "undefined" && url) {
-      window.location.href = url
+    if (url) {
+      router.push(url)
     }
-  }, [])
+  }, [router])
 
   const collapsedIconButtonClass = "group-data-[collapsible=icon]:relative group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:text-sidebar-foreground group-data-[collapsible=icon]:transition-all group-data-[collapsible=icon]:duration-200 group-data-[collapsible=icon]:before:absolute group-data-[collapsible=icon]:before:left-0 group-data-[collapsible=icon]:before:top-2 group-data-[collapsible=icon]:before:h-[calc(100%-1rem)] group-data-[collapsible=icon]:before:w-1 group-data-[collapsible=icon]:before:rounded-full group-data-[collapsible=icon]:before:bg-sidebar-primary group-data-[collapsible=icon]:before:opacity-0 group-data-[collapsible=icon]:before:transition-opacity group-data-[collapsible=icon]:hover:border-sidebar-border group-data-[collapsible=icon]:hover:bg-sidebar-accent group-data-[collapsible=icon]:hover:text-sidebar-foreground group-data-[collapsible=icon]:hover:shadow-sm group-data-[collapsible=icon]:hover:before:opacity-100 group-data-[collapsible=icon]:data-[active=true]:border-sidebar-primary group-data-[collapsible=icon]:data-[active=true]:bg-sidebar-primary group-data-[collapsible=icon]:data-[active=true]:text-sidebar-primary-foreground group-data-[collapsible=icon]:data-[active=true]:shadow-sm group-data-[collapsible=icon]:data-[active=true]:before:opacity-0 group-data-[collapsible=icon]:[&>svg]:text-current"
 

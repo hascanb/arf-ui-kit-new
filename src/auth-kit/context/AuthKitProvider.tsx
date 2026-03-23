@@ -13,6 +13,7 @@
  */
 
 import React, { createContext, useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import type { AuthKitConfig, AuthKitContextValue } from './types'
 import { useTranslation } from '../i18n/use-translation'
 import { clearAuth } from '../utils'
@@ -28,6 +29,7 @@ interface AuthKitProviderProps {
 }
 
 export function AuthKitProvider({ config, children }: AuthKitProviderProps) {
+  const router = useRouter()
   // ========== State Management ==========
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,10 +61,8 @@ export function AuthKitProvider({ config, children }: AuthKitProviderProps) {
       return
     }
 
-    if (typeof window !== 'undefined') {
-      window.location.href = config.routes.signIn
-    }
-  }, [config, t])
+    router.push(config.routes.signIn)
+  }, [config, router, t])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

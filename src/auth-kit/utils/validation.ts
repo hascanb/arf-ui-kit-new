@@ -31,9 +31,23 @@ export const getPasswordStrength = (password: string): number => {
 /**
  * Şifre gücü metni
  */
-export const getPasswordStrengthText = (strength: number): string => {
-  const texts = ['Çok Zayıf', 'Zayıf', 'Orta', 'Güçlü', 'Çok Güçlü']
-  return texts[strength] || 'Geçersiz'
+export interface PasswordStrengthTextConfig {
+  labels?: string[]
+  invalidLabel?: string
+}
+
+export const DEFAULT_PASSWORD_STRENGTH_TEXT_CONFIG: Required<PasswordStrengthTextConfig> = {
+  labels: ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'],
+  invalidLabel: 'Invalid',
+}
+
+export const getPasswordStrengthText = (
+  strength: number,
+  config: PasswordStrengthTextConfig = {}
+): string => {
+  const labels = config.labels || DEFAULT_PASSWORD_STRENGTH_TEXT_CONFIG.labels
+  const invalidLabel = config.invalidLabel || DEFAULT_PASSWORD_STRENGTH_TEXT_CONFIG.invalidLabel
+  return labels[strength] || invalidLabel
 }
 
 /**

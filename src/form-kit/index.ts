@@ -43,6 +43,8 @@ export type { UseSchemaFormOptions } from './hooks/useSchemaForm'
 // ============================================================================
 
 export { buildSchema, buildField, addRefinements } from './utils/buildSchema'
+export type { FormKitSchemaMessages } from './utils/buildSchema'
+export { DEFAULT_FORM_KIT_SCHEMA_MESSAGES } from './utils/buildSchema'
 export {
   createPasswordConfirmRefine,
   createPasswordStrengthRefine,
@@ -54,7 +56,9 @@ export {
 export type {
   RefinementConfig,
   PasswordStrengthConfig,
+  FormKitRefinementMessages,
 } from './utils/create-refine'
+export { DEFAULT_FORM_KIT_REFINEMENT_MESSAGES } from './utils/create-refine'
 
 // ============================================================================
 // Types

@@ -8,6 +8,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { AppHeader } from "./AppHeader"
@@ -49,6 +50,8 @@ export function DashboardLayout({
   onSearchClick,
   onNotificationClick,
 }: DashboardLayoutProps) {
+  const router = useRouter()
+
   const resolvedSearchCommands = React.useMemo(() => {
     if (searchCommands && searchCommands.length > 0) {
       return searchCommands
@@ -73,9 +76,7 @@ export function DashboardLayout({
             group: groupLabel,
             keywords: [item.title, item.url],
             onSelect: () => {
-              if (typeof window !== "undefined") {
-                window.location.href = item.url as string
-              }
+              router.push(item.url as string)
             },
           })
         }
@@ -88,9 +89,7 @@ export function DashboardLayout({
               group: groupLabel,
               keywords: [item.title, subItem.title, subItem.url],
               onSelect: () => {
-                if (typeof window !== "undefined") {
-                  window.location.href = subItem.url
-                }
+                router.push(subItem.url)
               },
             })
           })
@@ -99,7 +98,7 @@ export function DashboardLayout({
         return commands
       })
     })
-  }, [navGroups, searchCommands])
+  }, [navGroups, router, searchCommands])
 
   return (
     <SidebarProvider>

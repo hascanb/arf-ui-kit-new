@@ -11,6 +11,7 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
   tr: {
     signIn: {
       title: 'Giriş Yap',
+      welcome: 'Hoş Geldiniz',
       subtitle: 'Hesabınıza giriş yapın',
       username: 'Kullanıcı Adı',
       password: 'Şifre',
@@ -28,8 +29,18 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
       code: 'Doğrulama Kodu',
       submit: 'Doğrula',
       resend: 'Kodu Tekrar Gönder',
+      resentSuccess: 'Kod tekrar gönderildi',
       backToSignIn: 'Giriş sayfasına dön',
       didntReceive: 'Kod almadınız mı?',
+    },
+    signIn2: {
+      description: 'ARF platformuna giriş yaparak işlemlerinizi güvenli şekilde yönetebilirsiniz.',
+      secureConnectionTitle: 'Güvenli ve şifreli bağlantı',
+      secureConnectionDescription: 'Tüm oturum hareketleri şifrelenmiş altyapı üzerinden iletilir.',
+      fastVerificationTitle: 'Hızlı kimlik doğrulama',
+      fastVerificationDescription: 'Kullanıcı doğrulama süreci sade ve performans odaklıdır.',
+      socialSignInTitle: 'Sosyal hesaplarla devam',
+      socialSignInDescription: 'Google ve Apple ile hızlı ve güvenilir şekilde oturum açın.',
     },
     forgotPassword: {
       title: 'Şifremi Unuttum',
@@ -54,6 +65,8 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
       passwordTooShort: 'Şifre en az 8 karakter olmalıdır',
       passwordsDontMatch: 'Şifreler eşleşmiyor',
       invalidOtp: 'Doğrulama kodu 6 haneli olmalıdır',
+      passwordStrengthLabels: ['Çok Zayıf', 'Zayıf', 'Orta', 'Güçlü', 'Çok Güçlü'],
+      invalidStrength: 'Geçersiz',
     },
     errors: {
       generic: 'Bir hata oluştu. Lütfen tekrar deneyin.',
@@ -65,6 +78,7 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
   en: {
     signIn: {
       title: 'Sign In',
+      welcome: 'Welcome back',
       subtitle: 'Sign in to your account',
       username: 'Username',
       password: 'Password',
@@ -82,8 +96,18 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
       code: 'Verification Code',
       submit: 'Verify',
       resend: 'Resend Code',
+      resentSuccess: 'Code resent successfully',
       backToSignIn: 'Back to sign in',
       didntReceive: "Didn't receive the code?",
+    },
+    signIn2: {
+      description: 'Sign in to your ARF workspace and manage your operations securely.',
+      secureConnectionTitle: 'Secure encrypted connection',
+      secureConnectionDescription: 'Every session action is transmitted through encrypted infrastructure.',
+      fastVerificationTitle: 'Fast identity verification',
+      fastVerificationDescription: 'The verification flow is streamlined and performance-focused.',
+      socialSignInTitle: 'Continue with social accounts',
+      socialSignInDescription: 'Use Google or Apple for a fast and trusted sign-in experience.',
     },
     forgotPassword: {
       title: 'Forgot Password',
@@ -108,6 +132,8 @@ export const defaultTranslations: Record<string, AuthKitTranslations> = {
       passwordTooShort: 'Password must be at least 8 characters',
       passwordsDontMatch: "Passwords don't match",
       invalidOtp: 'Verification code must be 6 digits',
+      passwordStrengthLabels: ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'],
+      invalidStrength: 'Invalid',
     },
     errors: {
       generic: 'An error occurred. Please try again.',

@@ -163,16 +163,18 @@ export interface HandlerConfig {
 
   // Message Extraction
   getMessageFromError?: (error: unknown) => string
+  messagesByLevel?: Partial<Record<ErrorLevel, string>>
+  reloadConfirmationMessage?: (message: string) => string
 }
 
 /**
  * Default error messages by level
  */
 export const DEFAULT_ERROR_MESSAGES: Record<ErrorLevel, string> = {
-  low: 'Bir sorun oluştu',
-  medium: 'İşlem başarısız oldu',
-  high: 'Erişim hatası',
-  critical: 'Sistem hatası oluştu',
+  low: 'Something went wrong',
+  medium: 'The request could not be completed',
+  high: 'Access error',
+  critical: 'A system error occurred',
 }
 
 // ============================================================================

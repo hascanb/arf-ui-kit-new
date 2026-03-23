@@ -69,7 +69,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     variant="secondary"
                     className="rounded-sm px-1 font-normal"
                   >
-                    {selectedValues.size} seçildi
+                    {selectedValues.size} selected
                   </Badge>
                 ) : (
                   options
@@ -143,7 +143,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     onSelect={() => column?.setFilterValue(undefined)}
                     className="justify-center text-center"
                   >
-                    Filtreleri temizle
+                    Clear filters
                   </CommandItem>
                 </CommandGroup>
               </>

@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthKit } from '../context/useAuthKit'
 import type { OtpFormProps, OtpData } from '../context/types'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,12 @@ export function OtpForm({
   onError, 
   className 
 }: OtpFormProps = {}) {
+  const router = useRouter()
   const { config, t, lastUsername } = useAuthKit()
+  const tOr = (key: string, fallback: string) => {
+    const value = t(key)
+    return value === key ? fallback : value
+  }
   const exposeErrorDetails = config.debug || config.maskSensitiveErrors === false
   const sanitizeError = (rawMessage: unknown, fallback: string) =>
     sanitizeAuthErrorMessage(rawMessage, {
@@ -82,7 +88,7 @@ export function OtpForm({
         
         // Redirect
         const redirectUrl = config.routes.afterOtp || config.routes.afterSignIn
-        window.location.href = redirectUrl
+        router.push(redirectUrl)
       } else {
         const errorMsg = sanitizeError(response.error, t('errors.generic'))
         setError(errorMsg)
@@ -112,7 +118,7 @@ export function OtpForm({
       const response = await config.onResendOtp(activeUsername)
       
       if (response.success) {
-        setSuccessMsg('Kod tekrar gönderildi')
+        setSuccessMsg(tOr('otp.resentSuccess', 'Code resent successfully'))
         setCode('') // Reset code
       } else {
         setError(sanitizeError(response.error, t('errors.generic')))

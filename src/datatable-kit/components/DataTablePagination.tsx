@@ -43,13 +43,13 @@ export function DataTablePagination({
       <div className="flex items-center space-x-6">
         {showPageInfo && (
           <div className="flex-1 text-sm text-muted-foreground">
-            {startRow} - {endRow} arası, toplam {resolvedTotalRows} kayıt
+            {startRow} - {endRow} / {resolvedTotalRows} satır
           </div>
         )}
         
         {showPageSizeSelector && (
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Sayfa başına</p>
+            <p className="text-sm font-medium">Sayfa başına satır</p>
             <Select
               value={`${pageSize}`}
               onValueChange={(value: string) => {

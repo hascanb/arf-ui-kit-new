@@ -13,7 +13,7 @@ import { UseSchemaFormReturn } from '../context/types'
 /**
  * Options for useSchemaForm hook
  */
-export interface UseSchemaFormOptions<TSchema extends z.ZodType<any, any, any>> {
+export interface UseSchemaFormOptions<TSchema extends z.ZodType<unknown, z.ZodTypeDef, unknown>> {
   /** Zod validation schema */
   schema: TSchema
   /** Default form values */
@@ -21,7 +21,7 @@ export interface UseSchemaFormOptions<TSchema extends z.ZodType<any, any, any>> 
   /** Form submit handler */
   onSubmit: (data: z.infer<TSchema>) => void | Promise<void>
   /** Form error handler */
-  onError?: (errors: any) => void
+  onError?: (errors: unknown) => void
   /** Whether to reset form after successful submission */
   resetOnSubmit?: boolean
   /** Form mode (when to validate) */
@@ -62,7 +62,7 @@ export interface UseSchemaFormOptions<TSchema extends z.ZodType<any, any, any>> 
  * }
  * ```
  */
-export function useSchemaForm<TSchema extends z.ZodType<any, any, any>>(
+export function useSchemaForm<TSchema extends z.ZodType<unknown, z.ZodTypeDef, unknown>>(
   options: UseSchemaFormOptions<TSchema>
 ): UseSchemaFormReturn<z.infer<TSchema>> {
   const {
@@ -77,7 +77,7 @@ export function useSchemaForm<TSchema extends z.ZodType<any, any, any>>(
   // Initialize react-hook-form with Zod resolver
   const form = useForm<z.infer<TSchema>>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues as any,
+    defaultValues,
     mode,
   })
 
@@ -124,19 +124,19 @@ export function useSchemaForm<TSchema extends z.ZodType<any, any, any>>(
 
   // Reset form to default values
   const reset = useCallback(() => {
-    form.reset(defaultValues as any)
+    form.reset(defaultValues)
   }, [form, defaultValues])
 
   // Set field error
   const setError = useCallback(
     (name: string, error: { type: string; message: string }) => {
-      form.setError(name as any, error)
+      form.setError(name as never, error)
     },
     [form]
   )
 
   return {
-    form: form as UseFormReturn<any>,
+    form: form as UseFormReturn<z.infer<TSchema>>,
     isSubmitting,
     isValid: form.formState.isValid,
     handleSubmit,

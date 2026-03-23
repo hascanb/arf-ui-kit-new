@@ -136,6 +136,12 @@ export interface DataTableToolbarProps<TData = unknown> {
   searchPlaceholder?: string
   className?: string
   children?: React.ReactNode
+  /** Reset button label (default: 'Reset') */
+  resetLabel?: string
+  /** View/column-selector button label passed to DataTableViewOptions */
+  viewLabel?: string
+  /** Column section heading inside the view popover */
+  columnsLabel?: string
 }
 
 /**
@@ -144,6 +150,10 @@ export interface DataTableToolbarProps<TData = unknown> {
 export interface DataTableViewOptionsProps<TData = unknown> {
   table: TanStackTable<TData>
   variant?: 'dropdown' | 'popover'
+  /** Button label (default: 'View') */
+  label?: string
+  /** Columns section heading (default: 'Columns') */
+  columnsLabel?: string
 }
 
 /**

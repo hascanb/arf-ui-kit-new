@@ -78,6 +78,63 @@ interface CustomerAddressModalProps {
   onSave: () => void
 }
 
+const cityBranchMap: Record<string, string> = {
+  Adana: 'Adana Şube',
+  Ankara: 'Ankara Şube',
+  İstanbul: 'İstanbul Şube',
+  İzmir: 'İzmir Şube',
+  Kahramanmaraş: 'Kahramanmaraş Şube',
+  Mersin: 'Mersin Şube',
+}
+
+type BranchResolutionRule = {
+  city: string
+  district?: string
+  neighborhood?: string
+  branch: string
+}
+
+const branchResolutionRules: BranchResolutionRule[] = [
+  { city: 'Adana', district: 'Seyhan', neighborhood: 'Alidede', branch: 'Adana Şube' },
+  { city: 'Kahramanmaraş', district: 'Onikişubat', neighborhood: 'Afşar', branch: 'Kahramanmaraş Şube' },
+  { city: 'İstanbul', district: 'Başakşehir', neighborhood: 'İkitelli OSB', branch: 'İstanbul Şube' },
+  { city: 'İzmir', district: 'Bornova', branch: 'İzmir Şube' },
+  { city: 'Ankara', district: 'Çankaya', branch: 'Ankara Şube' },
+  { city: 'Mersin', district: 'Akdeniz', branch: 'Mersin Şube' },
+]
+
+function normalizeLocationValue(value: string) {
+  return value.trim().toLocaleLowerCase('tr-TR')
+}
+
+export function resolveAddressBranch(city: string, district: string, neighborhood: string) {
+  const normalizedCity = normalizeLocationValue(city)
+  const normalizedDistrict = normalizeLocationValue(district)
+  const normalizedNeighborhood = normalizeLocationValue(neighborhood)
+
+  const matchedRule = branchResolutionRules.find((rule) => {
+    if (normalizeLocationValue(rule.city) !== normalizedCity) {
+      return false
+    }
+
+    if (rule.district && normalizeLocationValue(rule.district) !== normalizedDistrict) {
+      return false
+    }
+
+    if (rule.neighborhood && normalizeLocationValue(rule.neighborhood) !== normalizedNeighborhood) {
+      return false
+    }
+
+    return true
+  })
+
+  if (matchedRule) {
+    return matchedRule.branch
+  }
+
+  return cityBranchMap[city.trim()] || ''
+}
+
 const cityOptions = ['Adana', 'Ankara', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Mersin']
 const districtOptions = ['Seyhan', 'Çankaya', 'Başakşehir', 'Bornova', 'Onikişubat', 'Akdeniz']
 const neighborhoodOptions = ['Alidede', 'Afşar', 'İkitelli OSB', 'Merkez Mahallesi', 'Yeniköy']
@@ -114,6 +171,8 @@ export function CustomerAddressModal({
 
   const isCustomerCreateFlow = modalState.entity === 'customer' && modalState.mode === 'create'
   const isAddressStepInCreateFlow = isCustomerCreateFlow && customerCreateStep === 'address'
+  const isAddressCreateMode = modalState.entity === 'address' && modalState.mode === 'create'
+  const isAddressEditMode = modalState.entity === 'address' && modalState.mode === 'edit'
   const showCustomerStepIndicator = modalState.entity === 'customer' && isCustomerCreateFlow
   const activeCustomerStepIndex = customerCreateSteps.findIndex((step) => step.id === customerCreateStep)
 
@@ -138,24 +197,49 @@ export function CustomerAddressModal({
     return Array.from(optionSet)
   }, [addressForm.label])
 
+  const resolvedAddressBranch = useMemo(
+    () => resolveAddressBranch(addressForm.city, addressForm.district, addressForm.neighborhood),
+    [addressForm.city, addressForm.district, addressForm.neighborhood],
+  )
+
+  const modalTitle = useMemo(() => {
+    if (modalState.entity === 'address') {
+      return modalState.mode === 'edit' ? 'Adresi Düzenle' : 'Yeni Adres Ekle'
+    }
+
+    return `${modalState.mode === 'edit' ? 'Düzenle' : 'Yeni'} ${modalState.side === 'sender' ? 'Gönderici' : 'Alıcı'} Müşteri ${modalState.mode === 'edit' ? '' : 'Ekle'}`
+  }, [modalState.entity, modalState.mode, modalState.side])
+
+  const modalDescription = useMemo(() => {
+    if (isAddressStepInCreateFlow) {
+      return 'Müşteri kaydı tamamlandı. Şimdi adres bilgisini ekleyip seçimi tamamlayabilirsiniz.'
+    }
+
+    if (modalState.entity === 'address' && modalState.mode === 'edit') {
+      return 'Kayıtlı adres üzerinde gerekli güncellemeleri yapabilirsiniz.'
+    }
+
+    if (modalState.entity === 'address') {
+      return 'Adres bilgisini oluşturun. Şube alanı konuma göre sistem tarafından otomatik atanır.'
+    }
+
+    if (modalState.mode === 'edit') {
+      return 'Kayıt bilgilerini güncelleyip kaydedin.'
+    }
+
+    return 'Önce müşteri tipini seçin, ardından formu doldurup adrese geçin.'
+  }, [isAddressStepInCreateFlow, modalState.entity, modalState.mode])
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/45 p-4 pt-16 backdrop-blur-[2px]">
       <div className="max-h-[calc(100vh-5rem)] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-slate-200 bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold text-slate-900">
-              {isAddressStepInCreateFlow
-                ? `${modalState.side === 'sender' ? 'Gönderici' : 'Alıcı'} Adresi Ekle`
-                : `${modalState.mode === 'edit' ? 'Düzenle' : 'Yeni'} ${modalState.side === 'sender' ? 'Gönderici' : 'Alıcı'} ${modalState.entity === 'customer' ? 'Müşteri' : 'Adres'} ${modalState.mode === 'edit' ? '' : 'Ekle'}`}
+              {modalTitle}
             </h2>
             <p className="text-sm text-slate-500">
-              {isAddressStepInCreateFlow
-                ? 'Müşteri kaydı tamamlandı. Şimdi adres bilgisini ekleyip seçimi tamamlayabilirsiniz.'
-                : modalState.mode === 'edit'
-                ? 'Kayıt bilgilerini güncelleyip kaydedin.'
-                : modalState.entity === 'customer'
-                ? 'Önce müşteri tipini seçin, ardından formu doldurup adrese geçin.'
-                : 'Adres bilgisini oluşturun, seçili müşterinin altında anında kullanılabilir olsun.'}
+              {modalDescription}
             </p>
           </div>
           <Button variant="ghost" size="icon" className="rounded-2xl" onClick={onClose}>
@@ -374,7 +458,17 @@ export function CustomerAddressModal({
                 <div className="mt-4 grid gap-4 lg:grid-cols-3">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-slate-500">Şehir</Label>
-                    <Select value={addressForm.city} onValueChange={(value: string) => setAddressForm((current) => ({ ...current, city: value }))}>
+                    <Select
+                      value={addressForm.city}
+                      onValueChange={(value: string) =>
+                        setAddressForm((current) => {
+                          const next = { ...current, city: value }
+                          return isAddressCreateMode
+                            ? { ...next, branch: resolveAddressBranch(next.city, next.district, next.neighborhood) }
+                            : next
+                        })
+                      }
+                    >
                       <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white px-4 shadow-sm">
                         <SelectValue placeholder="Şehir Seçin" />
                       </SelectTrigger>
@@ -390,7 +484,17 @@ export function CustomerAddressModal({
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-slate-500">İlçe</Label>
-                    <Select value={addressForm.district} onValueChange={(value: string) => setAddressForm((current) => ({ ...current, district: value }))}>
+                    <Select
+                      value={addressForm.district}
+                      onValueChange={(value: string) =>
+                        setAddressForm((current) => {
+                          const next = { ...current, district: value }
+                          return isAddressCreateMode
+                            ? { ...next, branch: resolveAddressBranch(next.city, next.district, next.neighborhood) }
+                            : next
+                        })
+                      }
+                    >
                       <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white px-4 shadow-sm">
                         <SelectValue placeholder="İlçe Seçin" />
                       </SelectTrigger>
@@ -408,7 +512,14 @@ export function CustomerAddressModal({
                     <Label className="text-sm font-medium text-slate-500">Mahalle</Label>
                     <Select
                       value={addressForm.neighborhood}
-                      onValueChange={(value: string) => setAddressForm((current) => ({ ...current, neighborhood: value }))}
+                      onValueChange={(value: string) =>
+                        setAddressForm((current) => {
+                          const next = { ...current, neighborhood: value }
+                          return isAddressCreateMode
+                            ? { ...next, branch: resolveAddressBranch(next.city, next.district, next.neighborhood) }
+                            : next
+                        })
+                      }
                     >
                       <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white px-4 shadow-sm">
                         <SelectValue placeholder="Mahalle Seçin" />
@@ -422,6 +533,30 @@ export function CustomerAddressModal({
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <FloatingLabelField
+                    label="Telefon Numarası"
+                    value={addressForm.phone}
+                    placeholder="Boş bırakırsanız varsayılan kullanılır."
+                    onChange={(value) => setAddressForm((current) => ({ ...current, phone: value }))}
+                  />
+                  {isAddressEditMode ? (
+                    <FloatingLabelField
+                      label="Şube"
+                      value={addressForm.branch}
+                      placeholder="Bağlı şube"
+                      onChange={(value) => setAddressForm((current) => ({ ...current, branch: value }))}
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-slate-500">Bağlı Şube</Label>
+                      <div className="flex h-12 items-center rounded-2xl border border-slate-200 bg-slate-100 px-4 text-sm font-medium text-slate-700 shadow-sm">
+                        {resolvedAddressBranch || 'Konuma göre otomatik atanacak'}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4">

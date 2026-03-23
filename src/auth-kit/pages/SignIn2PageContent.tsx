@@ -81,29 +81,29 @@ export function SignIn2PageContent() {
           )}
 
           <h2 className="max-w-xl text-[42px] font-semibold leading-[1.08] tracking-tight">
-            {config.ui?.signIn2?.title || tOr('signIn.welcome', 'Hos Geldiniz')}
+            {config.ui?.signIn2?.title || tOr('signIn.welcome', 'Welcome back')}
           </h2>
 
           <p className="mt-4 max-w-lg text-base leading-relaxed text-white/88">
-            {config.ui?.signIn2?.description || `${config.ui?.brandName || 'ARF'} platformuna giris yaparak islemlerinizi guvenli sekilde yonetebilirsiniz.`}
+            {config.ui?.signIn2?.description || tOr('signIn2.description', `${config.ui?.brandName || 'ARF'} workspace access with a secure sign-in flow.`)}
           </p>
 
           <div className="mt-8 grid max-w-xl grid-cols-1 gap-3">
             {[
               {
                 icon: ShieldCheck,
-                title: 'Guvenli ve sifreli baglanti',
-                description: 'Tum oturum hareketleri sifrelenmis altyapi uzerinden iletilir.',
+                title: tOr('signIn2.secureConnectionTitle', 'Secure encrypted connection'),
+                description: tOr('signIn2.secureConnectionDescription', 'Every session action is transmitted through encrypted infrastructure.'),
               },
               {
                 icon: Sparkles,
-                title: 'Hizli kimlik dogrulama',
-                description: 'Kullanici dogrulama sureci sade ve performans odaklidir.',
+                title: tOr('signIn2.fastVerificationTitle', 'Fast identity verification'),
+                description: tOr('signIn2.fastVerificationDescription', 'The verification flow is streamlined and performance-focused.'),
               },
               {
                 icon: Globe,
-                title: 'Sosyal hesaplarla devam',
-                description: 'Google ve Apple ile hizli ve guvenilir sekilde oturum acin.',
+                title: tOr('signIn2.socialSignInTitle', 'Continue with social accounts'),
+                description: tOr('signIn2.socialSignInDescription', 'Use Google or Apple for a fast and trusted sign-in experience.'),
               },
             ].map((item) => {
               const IconComponent = item.icon

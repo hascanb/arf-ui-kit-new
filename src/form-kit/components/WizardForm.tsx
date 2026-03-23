@@ -10,8 +10,8 @@ import type { WizardFormProps, WizardStepConfig } from '../context/types'
 
 function mapStepErrorsToForm(
   step: WizardStepConfig,
-  values: Record<string, any>,
-  setError: (name: any, error: { type: string; message: string }) => void
+  values: Record<string, unknown>,
+  setError: (name: string, error: { type: string; message: string }) => void
 ): boolean {
   const result = step.schema.safeParse(values)
   if (result.success) {
@@ -21,13 +21,13 @@ function mapStepErrorsToForm(
   for (const issue of result.error.issues) {
     const path = issue.path.join('.')
     if (!path) continue
-    setError(path as any, { type: 'manual', message: issue.message })
+    setError(path, { type: 'manual', message: issue.message })
   }
 
   return false
 }
 
-export function WizardForm<TValues extends Record<string, any> = Record<string, any>>({
+export function WizardForm<TValues extends Record<string, unknown> = Record<string, unknown>>({
   config,
   showDescriptions = true,
   showRequired = true,
@@ -51,7 +51,7 @@ export function WizardForm<TValues extends Record<string, any> = Record<string, 
     mode: 'onChange',
   })
 
-  const watchedValues = useWatch({ control: form.control }) as Record<string, any>
+  const watchedValues = useWatch({ control: form.control }) as Record<string, unknown>
   const currentStep = steps[stepIndex]
   const canGoBack = stepIndex > 0
   const isLastStep = stepIndex === steps.length - 1
@@ -64,7 +64,11 @@ export function WizardForm<TValues extends Record<string, any> = Record<string, 
 
   const handleNext = async () => {
     form.clearErrors()
-    const valid = mapStepErrorsToForm(currentStep, form.getValues() as Record<string, any>, form.setError)
+    const valid = mapStepErrorsToForm(
+      currentStep,
+      form.getValues() as Record<string, unknown>,
+      (name, error) => form.setError(name as never, error),
+    )
     if (!valid) return
     if (!isLastStep) {
       goToStep(stepIndex + 1)
@@ -78,7 +82,11 @@ export function WizardForm<TValues extends Record<string, any> = Record<string, 
 
   const handleFinalSubmit = async () => {
     form.clearErrors()
-    const valid = mapStepErrorsToForm(currentStep, form.getValues() as Record<string, any>, form.setError)
+    const valid = mapStepErrorsToForm(
+      currentStep,
+      form.getValues() as Record<string, unknown>,
+      (name, error) => form.setError(name as never, error),
+    )
     if (!valid) return
 
     try {

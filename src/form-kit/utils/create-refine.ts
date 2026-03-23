@@ -8,9 +8,33 @@
  * Refinement configuration for cross-field validation
  */
 export interface RefinementConfig {
-  validate: (data: any) => boolean
+  validate: (data: Record<string, unknown>) => boolean
   message: string
   path?: string[]
+}
+
+export interface FormKitRefinementMessages {
+  passwordsDontMatch: string
+  endDateMustBeAfterStart: string
+  fieldRequired: (field: string) => string
+  passwordMustContain: (requirements: string[]) => string
+  passwordRequirementMinLength: (count: number) => string
+  passwordRequirementUppercase: string
+  passwordRequirementLowercase: string
+  passwordRequirementNumber: string
+  passwordRequirementSpecialCharacter: string
+}
+
+export const DEFAULT_FORM_KIT_REFINEMENT_MESSAGES: FormKitRefinementMessages = {
+  passwordsDontMatch: "Passwords don't match",
+  endDateMustBeAfterStart: 'End date must be after start date',
+  fieldRequired: (field) => `${field} is required`,
+  passwordMustContain: (requirements) => `Password must include ${requirements.join(', ')}`,
+  passwordRequirementMinLength: (count) => `at least ${count} characters`,
+  passwordRequirementUppercase: 'at least one uppercase letter',
+  passwordRequirementLowercase: 'at least one lowercase letter',
+  passwordRequirementNumber: 'at least one number',
+  passwordRequirementSpecialCharacter: 'at least one special character',
 }
 
 /**
@@ -33,12 +57,13 @@ export interface RefinementConfig {
 export function createPasswordConfirmRefine(
   passwordField: string = 'password',
   confirmField: string = 'confirmPassword',
-  message: string = 'Şifreler eşleşmiyor'
+  message: string = DEFAULT_FORM_KIT_REFINEMENT_MESSAGES.passwordsDontMatch
 ): RefinementConfig {
   return {
     validate: (data) => {
-      if (!data[confirmField]) return true // Skip if confirm field is empty
-      return data[passwordField] === data[confirmField]
+      const confirmValue = data[confirmField]
+      if (!confirmValue) return true // Skip if confirm field is empty
+      return data[passwordField] === confirmValue
     },
     message,
     path: [confirmField],
@@ -86,7 +111,8 @@ export interface PasswordStrengthConfig {
  */
 export function createPasswordStrengthRefine(
   config: PasswordStrengthConfig = {},
-  passwordField: string = 'password'
+  passwordField: string = 'password',
+  messages: FormKitRefinementMessages = DEFAULT_FORM_KIT_REFINEMENT_MESSAGES
 ): RefinementConfig {
   const {
     minLength = 8,
@@ -101,7 +127,9 @@ export function createPasswordStrengthRefine(
   return {
     validate: (data) => {
       const password = data[passwordField]
-      if (!password) return true // Skip if password is empty (handled by required validation)
+      if (typeof password !== 'string' || password.length === 0) {
+        return true // Skip if password is empty (handled by required validation)
+      }
 
       // Min length
       if (password.length < minLength) return false
@@ -131,7 +159,7 @@ export function createPasswordStrengthRefine(
         requireLowercase,
         requireNumber,
         requireSpecialChar,
-      }),
+      }, messages),
     path: [passwordField],
   }
 }
@@ -139,26 +167,29 @@ export function createPasswordStrengthRefine(
 /**
  * Build a user-friendly password strength message
  */
-function buildPasswordStrengthMessage(config: PasswordStrengthConfig): string {
+function buildPasswordStrengthMessage(
+  config: PasswordStrengthConfig,
+  messages: FormKitRefinementMessages
+): string {
   const requirements: string[] = []
 
   if (config.minLength) {
-    requirements.push(`en az ${config.minLength} karakter`)
+    requirements.push(messages.passwordRequirementMinLength(config.minLength))
   }
   if (config.requireUppercase) {
-    requirements.push('en az bir büyük harf')
+    requirements.push(messages.passwordRequirementUppercase)
   }
   if (config.requireLowercase) {
-    requirements.push('en az bir küçük harf')
+    requirements.push(messages.passwordRequirementLowercase)
   }
   if (config.requireNumber) {
-    requirements.push('en az bir rakam')
+    requirements.push(messages.passwordRequirementNumber)
   }
   if (config.requireSpecialChar) {
-    requirements.push('en az bir özel karakter')
+    requirements.push(messages.passwordRequirementSpecialCharacter)
   }
 
-  return `Şifre ${requirements.join(', ')} içermelidir`
+  return messages.passwordMustContain(requirements)
 }
 
 /**
@@ -179,7 +210,7 @@ function buildPasswordStrengthMessage(config: PasswordStrengthConfig): string {
 export function createDateRangeRefine(
   startField: string,
   endField: string,
-  message: string = 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır'
+  message: string = DEFAULT_FORM_KIT_REFINEMENT_MESSAGES.endDateMustBeAfterStart
 ): RefinementConfig {
   return {
     validate: (data) => {
@@ -220,8 +251,8 @@ export function createDateRangeRefine(
  */
 export function createConditionalRequiredRefine(
   field: string,
-  condition: (data: any) => boolean,
-  message: string = `${field} zorunludur`
+  condition: (data: Record<string, unknown>) => boolean,
+  message: string = DEFAULT_FORM_KIT_REFINEMENT_MESSAGES.fieldRequired(field)
 ): RefinementConfig {
   return {
     validate: (data) => {
@@ -267,7 +298,7 @@ export function createConditionalRequiredRefine(
 export function createFieldComparisonRefine(
   field1: string,
   field2: string,
-  comparison: (value1: any, value2: any) => boolean,
+  comparison: (value1: unknown, value2: unknown) => boolean,
   message: string,
   errorPath: string = field2
 ): RefinementConfig {

@@ -1,50 +1,45 @@
+"use client"
+
+import { useState } from "react"
 import { AppHeader } from '@hascanb/arf-ui-kit/layout-kit'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Filter } from "lucide-react"
+import { CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Package, Plus, ShieldCheck, Users } from "lucide-react"
+import { customerDetails, customerListRows } from "./_data/customers"
+import { CustomersTableSection } from "./_components/customers-table-section"
 
-// Mock data
-const mockCustomers = [
-  {
-    id: "1",
-    ad: "Ahmet Yılmaz",
-    tip: "bireysel",
-    telefon: "0532 123 45 67",
-    email: "ahmet@email.com",
-    il: "İstanbul",
-    kargo_sayisi: 24,
-  },
-  {
-    id: "2",
-    ad: "ABC Ticaret Ltd.",
-    tip: "kurumsal",
-    telefon: "0212 456 78 90",
-    email: "info@abcticaret.com",
-    il: "Ankara",
-    kargo_sayisi: 156,
-  },
-  {
-    id: "3",
-    ad: "Fatma Kaya",
-    tip: "bireysel",
-    telefon: "0533 987 65 43",
-    email: "fatma@email.com",
-    il: "İzmir",
-    kargo_sayisi: 8,
-  },
-]
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+  }).format(value)
 
 export default function MusterilerPage() {
+  const [isSummaryVisible, setIsSummaryVisible] = useState(true)
+
+  const totalCustomerCount = customerListRows.length
+  const activeCustomerCount = customerListRows.filter((row) => row.durum === "active").length
+  const deliveredShipmentCount = customerListRows.reduce((acc, row) => acc + row.teslim_edilen_sayisi, 0)
+  const totalShipmentAmount = customerDetails.reduce(
+    (acc, customer) => acc + customer.shipments.reduce((shipmentAcc, shipment) => shipmentAcc + shipment.amount, 0),
+    0,
+  )
+  const totalOpenBalance = customerDetails.reduce(
+    (acc, customer) => acc + (customer.financialMovements[customer.financialMovements.length - 1]?.balance ?? 0),
+    0,
+  )
+  const totalActiveContractCount = customerListRows.reduce((acc, row) => acc + row.aktif_sozlesme_sayisi, 0)
+
+  const summaryCards = [
+    { label: "Toplam Müşteri", value: String(totalCustomerCount), icon: Users },
+    { label: "Aktif Müşteri", value: String(activeCustomerCount), icon: CheckCircle2 },
+    { label: "Teslim Edilen Kargo", value: String(deliveredShipmentCount), icon: Package },
+    { label: "Toplam Ciro", value: formatCurrency(totalShipmentAmount), icon: CircleDollarSign },
+    { label: "Açık Bakiye", value: formatCurrency(totalOpenBalance), icon: CircleDollarSign },
+    { label: "Aktif Sözleşme", value: String(totalActiveContractCount), icon: ShieldCheck },
+  ]
+
   return (
     <>
       <AppHeader
@@ -53,68 +48,50 @@ export default function MusterilerPage() {
           { label: "Müşteriler" },
         ]}
       />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex items-center justify-between">
+
+      <div className="flex flex-1 flex-col gap-6 bg-slate-50 p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Müşteriler</h1>
-            <p className="text-muted-foreground">
-              Müşteri kayıtlarını görüntüleyin ve yönetin
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Müşteriler</h1>
           </div>
-          <Button>
-            <Plus className="mr-2 size-4" />
-            Yeni Müşteri
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSummaryVisible((prev) => !prev)}
+            >
+              {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
+              {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
+            </Button>
+            <Button className="shrink-0">
+              <Plus className="mr-2 size-4" />
+              Yeni Müşteri
+            </Button>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Müşteri Listesi</CardTitle>
-            <CardDescription>Sistemdeki tüm müşterilerin listesi</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Filters */}
-            <div className="mb-4 flex items-center gap-2">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <Input placeholder="Müşteri ara..." className="pl-8" />
-              </div>
-              <Button variant="outline" size="icon">
-                <Filter className="size-4" />
-              </Button>
-            </div>
+        {isSummaryVisible && (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            {summaryCards.map((card) => (
+              <Card key={card.label} className="rounded-2xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium tracking-wide text-slate-500">{card.label}</p>
+                    <span className="inline-flex size-7 items-center justify-center rounded-lg border border-secondary/30 bg-primary/12 text-secondary">
+                      <card.icon className="size-4" />
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xl font-semibold tracking-tight text-slate-900">{card.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-            {/* Table */}
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Ad / Firma</TableHead>
-                    <TableHead>Tip</TableHead>
-                    <TableHead>Telefon</TableHead>
-                    <TableHead>E-posta</TableHead>
-                    <TableHead>İl</TableHead>
-                    <TableHead className="text-right">Kargo Sayısı</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
-                      <TableCell className="font-medium">{customer.ad}</TableCell>
-                      <TableCell>
-                        <Badge variant={customer.tip === "kurumsal" ? "default" : "secondary"}>
-                          {customer.tip === "kurumsal" ? "Kurumsal" : "Bireysel"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{customer.telefon}</TableCell>
-                      <TableCell>{customer.email}</TableCell>
-                      <TableCell>{customer.il}</TableCell>
-                      <TableCell className="text-right">{customer.kargo_sayisi}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+          <CardContent>
+            <CustomersTableSection data={customerListRows} />
           </CardContent>
         </Card>
       </div>

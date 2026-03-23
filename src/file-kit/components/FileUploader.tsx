@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import { z } from 'zod'
 import { UploadCloud, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -48,7 +49,7 @@ function FileImagePreview({ file }: { file: File }) {
     )
   }
 
-  return <img src={previewUrl} alt={file.name} className="h-12 w-12 rounded object-cover" />
+  return <Image src={previewUrl} alt={file.name} width={48} height={48} className="h-12 w-12 rounded object-cover" unoptimized />
 }
 
 export function FileUploader({
@@ -77,7 +78,7 @@ export function FileUploader({
     () =>
       z
         .instanceof(File)
-        .refine((file) => file.size <= maxSizeBytes, `Maksimum dosya boyutu ${maxSizeMb}MB olmalidir`)
+        .refine((file) => file.size <= maxSizeBytes, `File size must not exceed ${maxSizeMb}MB`)
         .refine((file) => {
           if (!accept) return true
           const accepted = accept
@@ -93,7 +94,7 @@ export function FileUploader({
             if (rule.endsWith('/*')) return file.type.startsWith(rule.replace('/*', '/'))
             return file.type === rule
           })
-        }, 'Dosya tipi desteklenmiyor'),
+        }, 'File type not supported'),
     [accept, maxSizeBytes, maxSizeMb]
   )
 
@@ -107,7 +108,7 @@ export function FileUploader({
     for (const file of dedupedSelection) {
       const parsed = validator.safeParse(file)
       if (!parsed.success) {
-        toast.error(parsed.error.issues[0]?.message || 'Dosya dogrulanamadi', {
+        toast.error(parsed.error.issues[0]?.message || 'Invalid file', {
           description: file.name,
         })
         continue
@@ -132,7 +133,7 @@ export function FileUploader({
         setProgressMap((prev) => ({ ...prev, [key]: 100 }))
       } catch {
         setStatusMap((prev) => ({ ...prev, [key]: 'error' }))
-        toast.error('Yukleme basarisiz', { description: file.name })
+        toast.error('Upload failed', { description: file.name })
       }
     }
 
@@ -210,11 +211,11 @@ export function FileUploader({
         }}
       >
         <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 text-sm font-medium">Dosyalari surukleyip birakin veya secin</p>
-        <p className="mt-1 text-xs text-muted-foreground">Maksimum {maxFiles} dosya, dosya basi {maxSizeMb}MB</p>
-
+        <p className="mt-2 text-sm font-medium">Drag & drop files or click to browse</p>
+        <p className="mt-1 text-xs text-muted-foreground">Up to {maxFiles} files, {maxSizeMb}MB each</p>
+        
         <Button type="button" variant="outline" size="sm" className="mt-4" disabled={disabled} onClick={() => inputRef.current?.click()}>
-          Dosya Sec
+          Browse files
         </Button>
 
         <input
@@ -250,14 +251,14 @@ export function FileUploader({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{file.name}</p>
                     <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                    {status && <p className="text-xs text-muted-foreground">Durum: {status}</p>}
+                    {status && <p className="text-xs text-muted-foreground">Status: {status}</p>}
                     {typeof progress === 'number' && <Progress value={progress} className="mt-2" />}
                   </div>
 
                   <div className="flex items-center gap-1">
                     {status === 'error' && (
                       <Button type="button" variant="outline" size="sm" onClick={() => void retryFile(file)} disabled={disabled}>
-                        Tekrar Dene
+                        Retry
                       </Button>
                     )}
 

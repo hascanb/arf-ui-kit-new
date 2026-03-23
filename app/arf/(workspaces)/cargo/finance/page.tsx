@@ -1,77 +1,35 @@
 import { AppHeader } from '@hascanb/arf-ui-kit/layout-kit'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Wallet, TrendingUp, TrendingDown, CreditCard, FileText, Plus } from "lucide-react"
+import { mockInvoices } from "./_mock/finance-mock-data"
+import { FinanceInvoicesSection } from "./_components/finance-invoices-section"
 
-// Mock data
-const mockInvoices = [
+const stats = [
   {
-    id: "1",
-    fatura_no: "FTR-2024-0001",
-    musteri: "ABC Ticaret Ltd.",
-    tutar: 2450.00,
-    durum: "odendi",
-    tarih: "2024-01-15",
+    title: "Toplam Gelir",
+    value: "124.500 TL",
+    change: "+12%",
+    trend: "up" as const,
+    icon: Wallet,
   },
   {
-    id: "2",
-    fatura_no: "FTR-2024-0002",
-    musteri: "XYZ Lojistik",
-    tutar: 1820.50,
-    durum: "beklemede",
-    tarih: "2024-01-14",
+    title: "Bekleyen Ödemeler",
+    value: "18.320 TL",
+    change: "-5%",
+    trend: "down" as const,
+    icon: CreditCard,
   },
   {
-    id: "3",
-    fatura_no: "FTR-2024-0003",
-    musteri: "Ahmet Yılmaz",
-    tutar: 145.00,
-    durum: "gecikti",
-    tarih: "2024-01-10",
+    title: "Bu Ay Faturalar",
+    value: "86",
+    change: "+8%",
+    trend: "up" as const,
+    icon: FileText,
   },
 ]
 
-const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  beklemede: { label: "Beklemede", variant: "outline" },
-  odendi: { label: "Ödendi", variant: "default" },
-  gecikti: { label: "Gecikti", variant: "destructive" },
-  iptal: { label: "İptal", variant: "secondary" },
-}
-
 export default function FinansPage() {
-  const stats = [
-    {
-      title: "Toplam Gelir",
-      value: "124,500 TL",
-      change: "+12%",
-      trend: "up",
-      icon: Wallet,
-    },
-    {
-      title: "Bekleyen Ödemeler",
-      value: "18,320 TL",
-      change: "-5%",
-      trend: "down",
-      icon: CreditCard,
-    },
-    {
-      title: "Bu Ay Faturalar",
-      value: "86",
-      change: "+8%",
-      trend: "up",
-      icon: FileText,
-    },
-  ]
-
   return (
     <>
       <AppHeader
@@ -120,45 +78,14 @@ export default function FinansPage() {
           ))}
         </div>
 
-        {/* Recent Invoices */}
+        {/* Invoices */}
         <Card>
           <CardHeader>
             <CardTitle>Son Faturalar</CardTitle>
             <CardDescription>Sistemdeki son fatura kayıtları</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fatura No</TableHead>
-                    <TableHead>Müşteri</TableHead>
-                    <TableHead>Tutar</TableHead>
-                    <TableHead>Durum</TableHead>
-                    <TableHead>Tarih</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-mono font-medium">
-                        {invoice.fatura_no}
-                      </TableCell>
-                      <TableCell>{invoice.musteri}</TableCell>
-                      <TableCell className="font-medium">
-                        {invoice.tutar.toFixed(2)} TL
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusMap[invoice.durum]?.variant || "default"}>
-                          {statusMap[invoice.durum]?.label || invoice.durum}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{invoice.tarih}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <FinanceInvoicesSection data={mockInvoices} />
           </CardContent>
         </Card>
       </div>

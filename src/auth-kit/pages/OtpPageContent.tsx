@@ -7,6 +7,7 @@
  */
 
 import React from 'react'
+import Image from 'next/image'
 import { useAuthKit } from '../context/useAuthKit'
 import { OtpForm } from '../components/OtpForm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,10 +21,13 @@ export function OtpPageContent() {
         {/* Logo */}
         {config.ui?.logoUrl && (
           <div className="flex justify-center mb-8">
-            <img 
-              src={config.ui.logoUrl} 
+            <Image
+              src={config.ui.logoUrl}
               alt={config.ui.brandName || 'Logo'}
+              width={192}
+              height={48}
               className="h-12 w-auto"
+              unoptimized
             />
           </div>
         )}

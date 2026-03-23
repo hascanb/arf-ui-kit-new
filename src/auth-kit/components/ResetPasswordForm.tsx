@@ -7,6 +7,7 @@
  */
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthKit } from '../context/useAuthKit'
 import type { ResetPasswordFormProps, ResetPasswordData } from '../context/types'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ export function ResetPasswordForm({
   onError, 
   className 
 }: ResetPasswordFormProps) {
+  const router = useRouter()
   const { config, t } = useAuthKit()
   const exposeErrorDetails = config.debug || config.maskSensitiveErrors === false
   const sanitizeError = (rawMessage: unknown, fallback: string) =>
@@ -91,7 +93,7 @@ export function ResetPasswordForm({
         
         // Redirect to sign in after 2 seconds
         setTimeout(() => {
-          window.location.href = config.routes.signIn
+          router.push(config.routes.signIn)
         }, 2000)
       } else {
         const errorMsg = sanitizeError(response.error, t('errors.generic'))

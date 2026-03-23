@@ -1,9 +1,7 @@
 'use client'
 
 /**
- * DataTableViewOptions - Column Visibility Toggle
- * 
- * Kolon görünürlüğü seçici
+ * DataTableViewOptions - Column visibility toggle
  */
 
 import React from 'react'
@@ -17,29 +15,29 @@ import {
 import type { DataTableViewOptionsProps } from '../types'
 
 const COLUMN_LABEL_OVERRIDES: Record<string, string> = {
-  takip_no: 'Takip No',
-  gonderen_musteri: 'Gönderen Müşteri',
-  gonderen_sube: 'Gönderen Şube',
-  alici_sube: 'Alıcı Şube',
-  alici_musteri: 'Alıcı Müşteri',
-  alici_telefon: 'Alıcı Telefon',
-  odeme_turu: 'Ödeme Türü',
-  fatura_turu: 'Fatura Türü',
-  matrah: 'Matrah',
-  kdv: 'KDV',
-  toplam: 'Toplam',
-  t_adet: 'T. Adet',
-  t_desi: 'T. Desi',
-  parca_listesi: 'Parça Listesi',
-  irsaliye_no: 'İrsaliye No',
+  takip_no: 'Tracking No',
+  gonderen_musteri: 'Sender Customer',
+  gonderen_sube: 'Sender Branch',
+  alici_sube: 'Receiver Branch',
+  alici_musteri: 'Receiver Customer',
+  alici_telefon: 'Receiver Phone',
+  odeme_turu: 'Payment Type',
+  fatura_turu: 'Invoice Type',
+  matrah: 'Base Amount',
+  kdv: 'VAT',
+  toplam: 'Total',
+  t_adet: 'Qty',
+  t_desi: 'Volumetric Weight',
+  parca_listesi: 'Piece List',
+  irsaliye_no: 'Dispatch Note No',
   atf_no: 'ATF No',
-  olusturulma_zamani: 'Oluşturulma Zamanı',
-  varis_zamani: 'Varış Zamanı',
-  teslimat_zamani: 'Teslimat Zamanı',
-  kargo_durumu: 'Kargo Durumu',
-  fatura_durumu: 'Fatura Durumu',
-  tahsilat_durumu: 'Tahsilat Durumu',
-  olusturan: 'Oluşturan',
+  olusturulma_zamani: 'Created At',
+  varis_zamani: 'Arrival Time',
+  teslimat_zamani: 'Delivery Time',
+  kargo_durumu: 'Shipment Status',
+  fatura_durumu: 'Invoice Status',
+  tahsilat_durumu: 'Collection Status',
+  olusturan: 'Created By',
 }
 
 function prettifyColumnId(columnId: string) {
@@ -75,7 +73,7 @@ function resolveColumnLabel(columnId: string, header: unknown) {
   return prettifyColumnId(columnId)
 }
 
-export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps<TData>) {
+export function DataTableViewOptions<TData>({ table, label = 'View', columnsLabel = 'Columns' }: DataTableViewOptionsProps<TData>) {
   const [localVisibility, setLocalVisibility] = React.useState<Record<string, boolean>>({})
 
   React.useEffect(() => {
@@ -95,11 +93,11 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex">
           <SlidersHorizontal className="mr-2 h-4 w-4" />
-          Görünüm
+          {label}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[220px] p-2">
-        <p className="px-2 py-1 text-sm font-medium">Sütunlar</p>
+        <p className="px-2 py-1 text-sm font-medium">{columnsLabel}</p>
         <div className="mt-1 max-h-80 space-y-1 overflow-y-auto pr-1 pb-1">
         {toggleableColumns.map((column) => {
             const isVisible = localVisibility[column.id] ?? column.getIsVisible()

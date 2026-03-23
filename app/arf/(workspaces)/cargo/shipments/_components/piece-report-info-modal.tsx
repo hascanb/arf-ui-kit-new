@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -62,7 +63,14 @@ export function PieceReportInfoModal({
             <p className="text-xs text-slate-500">Kanıt Görseli</p>
             <div className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white">
               {evidenceImageUrl ? (
-                <img src={evidenceImageUrl} alt="İhbar kanıt görseli" className="h-56 w-full object-cover" />
+                <Image
+                  src={evidenceImageUrl}
+                  alt="İhbar kanıt görseli"
+                  width={960}
+                  height={560}
+                  unoptimized
+                  className="h-56 w-full object-cover"
+                />
               ) : (
                 <div className="flex h-40 items-center justify-center text-sm text-slate-500">-</div>
               )}

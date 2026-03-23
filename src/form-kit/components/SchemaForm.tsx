@@ -94,7 +94,7 @@ function getGapClass(gap?: 'none' | 'sm' | 'default' | 'lg'): string {
  * }
  * ```
  */
-export function SchemaForm<TSchema extends z.ZodType<any, any, any>>({
+export function SchemaForm<TSchema extends z.ZodType<unknown, z.ZodTypeDef, unknown>>({
   config,
   showDescriptions = true,
   showRequired = true,
@@ -117,7 +117,7 @@ export function SchemaForm<TSchema extends z.ZodType<any, any, any>>({
     onError,
   })
 
-  const watchedValues = useWatch({ control: form.control }) as Record<string, any>
+  const watchedValues = useWatch({ control: form.control }) as Record<string, unknown>
   const visibleFields = fields.filter((field) => !field.condition || field.condition(watchedValues || {}))
 
   const {
@@ -127,8 +127,8 @@ export function SchemaForm<TSchema extends z.ZodType<any, any, any>>({
   } = layout
 
   const {
-    label = 'Gönder',
-    loadingText = 'Gönderiliyor...',
+    label = 'Submit',
+    loadingText = 'Submitting...',
     size = 'default',
     variant = 'default',
     fullWidth = false,

@@ -46,12 +46,12 @@ export function DataTableExcelActions<TData>({
   exportSelected = false,
   enableImport = false,
   onImport,
-  exportLabel = 'Dışa Aktar',
-  importLabel = 'İçe Aktar',
+  exportLabel = 'Export',
+  importLabel = 'Import',
   excelSecurity,
   requireTrustedSourceConfirmation = true,
   trustedSourceConfirmationMessage =
-    'Bu dosyayi sadece guvenilir bir kaynaktan aldiginizdan eminseniz ice aktariniz. Devam etmek istiyor musunuz?',
+    'Only import this file if you trust its source. Do you want to continue?',
 }: DataTableExcelActionsProps<TData>) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const allowedExtensions = React.useMemo(() => {

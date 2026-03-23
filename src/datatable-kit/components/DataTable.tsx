@@ -139,7 +139,7 @@ export function DataTable<TData>({
       ...(columns as ColumnDef<TData, unknown>[]),
       {
         id: '__inline_actions__',
-        header: 'İşlemler',
+        header: 'Actions',
         cell: ({ row }) => renderRowActions(row.original),
       },
     ]

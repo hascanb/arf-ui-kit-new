@@ -10,10 +10,12 @@ export {
   isValidOtp,
   getPasswordStrength,
   getPasswordStrengthText,
+  DEFAULT_PASSWORD_STRENGTH_TEXT_CONFIG,
   passwordsMatch,
   meetsMinPasswordLength,
   calculatePasswordSimilarity,
 } from './validation'
+export type { PasswordStrengthTextConfig } from './validation'
 
 // Token management utilities
 export {

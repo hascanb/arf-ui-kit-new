@@ -48,7 +48,14 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
     on401,
     onCritical,
     getMessageFromError,
+    messagesByLevel,
+    reloadConfirmationMessage,
   } = config
+
+  const resolvedMessagesByLevel = {
+    ...DEFAULT_ERROR_MESSAGES,
+    ...messagesByLevel,
+  }
 
   /**
    * Normalize error to consistent structure
@@ -161,7 +168,7 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
 
     // Use default message based on level
     const level = getLevel(error)
-    return DEFAULT_ERROR_MESSAGES[level]
+    return resolvedMessagesByLevel[level]
   }
 
   /**
@@ -178,8 +185,10 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
         // Redirect to login path
         if (onRedirect) {
           onRedirect(on401)
-        } else if (typeof window !== 'undefined') {
-          window.location.href = on401
+        } else if (onToast) {
+          onToast(getMessage(error), level)
+        } else {
+          console.warn('[ErrorHandler] Received a string on401 redirect target without an onRedirect handler.')
         }
       } else {
         // Call custom handler
@@ -220,7 +229,9 @@ export function createErrorHandler(config: HandlerConfig = {}): ErrorHandler {
         if (typeof window !== 'undefined') {
           const message = getMessage(error)
           const shouldReload = window.confirm(
-            `${message}\n\nSayfayı yenilemek ister misiniz?`
+            reloadConfirmationMessage
+              ? reloadConfirmationMessage(message)
+              : `${message}\n\nWould you like to reload the page?`
           )
           if (shouldReload) {
             window.location.reload()

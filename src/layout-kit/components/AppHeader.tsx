@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Bell, Search } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -34,44 +35,91 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import type { AppHeaderProps } from "../context/types"
+import { useAppHeaderDefaults } from "../context/app-header-defaults-context"
 
 const DEFAULT_COMMAND_GROUP = "Commands"
+export function AppHeader(props: AppHeaderProps) {
+  const headerDefaults = useAppHeaderDefaults()
+  const router = useRouter()
 
-export function AppHeader({ 
-  breadcrumbs = [],
-  searchPlaceholder = "Search...",
-  searchShortcut,
-  searchCommands = [],
-  commandTitle = "Search commands",
-  commandDescription = "Search for an action to run.",
-  searchEmptyMessage = "No result found.",
-  notificationCount = 0,
-  notificationsLabel = "Notifications",
-  notifications = [],
-  notificationsMenuLabel = "Notifications",
-  notificationsEmptyMessage = "No notifications yet.",
-  markAllAsReadLabel = "Mark all as read",
-  onMarkAllAsRead,
-  viewAllNotificationsLabel = "View all notifications",
-  onViewAllNotifications,
-  onSearchClick,
-  onNotificationClick
-}: AppHeaderProps) {
+  const {
+    breadcrumbs,
+    searchPlaceholder,
+    searchShortcut,
+    searchCommands,
+    commandTitle,
+    commandDescription,
+    searchEmptyMessage,
+    notificationCount,
+    notificationsLabel,
+    notifications,
+    notificationsMenuLabel,
+    notificationsEmptyMessage,
+    markAllAsReadLabel,
+    onMarkAllAsRead,
+    viewAllNotificationsLabel,
+    onViewAllNotifications,
+    onSearchClick,
+    onNotificationClick,
+  } = props
+
+  const resolvedBreadcrumbs = breadcrumbs ?? headerDefaults.breadcrumbs ?? []
+  const resolvedSearchPlaceholder = searchPlaceholder ?? headerDefaults.searchPlaceholder ?? "Search..."
+  const resolvedSearchShortcut = searchShortcut ?? headerDefaults.searchShortcut
+  const resolvedCommandTitle = commandTitle ?? headerDefaults.commandTitle ?? "Search commands"
+  const resolvedCommandDescription =
+    commandDescription ?? headerDefaults.commandDescription ?? "Search for an action to run."
+  const resolvedSearchEmptyMessage =
+    searchEmptyMessage ?? headerDefaults.searchEmptyMessage ?? "No result found."
+  const resolvedNotificationsLabel = notificationsLabel ?? headerDefaults.notificationsLabel ?? "Notifications"
+  const resolvedNotificationsMenuLabel =
+    notificationsMenuLabel ?? headerDefaults.notificationsMenuLabel ?? "Notifications"
+  const resolvedNotificationsEmptyMessage =
+    notificationsEmptyMessage ?? headerDefaults.notificationsEmptyMessage ?? "No notifications yet."
+  const resolvedMarkAllAsReadLabel =
+    markAllAsReadLabel ?? headerDefaults.markAllAsReadLabel ?? "Mark all as read"
+  const resolvedViewAllNotificationsLabel =
+    viewAllNotificationsLabel ?? headerDefaults.viewAllNotificationsLabel ?? "View all notifications"
+  const resolvedOnSearchClick = onSearchClick ?? headerDefaults.onSearchClick
+  const resolvedOnNotificationClick = onNotificationClick ?? headerDefaults.onNotificationClick
+  const resolvedOnMarkAllAsRead = onMarkAllAsRead ?? headerDefaults.onMarkAllAsRead
+  const resolvedOnViewAllNotifications = onViewAllNotifications ?? headerDefaults.onViewAllNotifications
+
   const [isCommandOpen, setIsCommandOpen] = React.useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false)
+
+  const resolvedSearchCommands = React.useMemo(() => {
+    if (searchCommands && searchCommands.length > 0) {
+      return searchCommands
+    }
+
+    return headerDefaults.searchCommands ?? []
+  }, [headerDefaults.searchCommands, searchCommands])
+
+  const resolvedNotifications = React.useMemo(() => {
+    if (notifications && notifications.length > 0) {
+      return notifications
+    }
+
+    return headerDefaults.notifications ?? []
+  }, [headerDefaults.notifications, notifications])
 
   const resolvedNotificationCount = React.useMemo(() => {
     if (typeof notificationCount === "number") {
       return notificationCount
     }
 
-    return notifications.filter((item) => !item.isRead).length
-  }, [notificationCount, notifications])
+    if (typeof headerDefaults.notificationCount === "number") {
+      return headerDefaults.notificationCount
+    }
+
+    return resolvedNotifications.filter((item) => !item.isRead).length
+  }, [headerDefaults.notificationCount, notificationCount, resolvedNotifications])
 
   const groupedCommands = React.useMemo(() => {
-    const groups = new Map<string, typeof searchCommands>()
+    const groups = new Map<string, typeof resolvedSearchCommands>()
 
-    searchCommands.forEach((item) => {
+    resolvedSearchCommands.forEach((item) => {
       const groupKey = item.group?.trim() || DEFAULT_COMMAND_GROUP
       const existingGroup = groups.get(groupKey)
 
@@ -83,12 +131,12 @@ export function AppHeader({
     })
 
     return Array.from(groups.entries()).map(([group, items]) => ({ group, items }))
-  }, [searchCommands])
+  }, [resolvedSearchCommands])
 
   const openCommand = React.useCallback(() => {
-    onSearchClick?.()
+    resolvedOnSearchClick?.()
     setIsCommandOpen(true)
-  }, [onSearchClick])
+  }, [resolvedOnSearchClick])
 
   const handleCommandSelect = React.useCallback((onSelect?: () => void) => {
     onSelect?.()
@@ -106,12 +154,12 @@ export function AppHeader({
       return
     }
 
-    if (typeof window !== "undefined" && item.href) {
-      window.location.href = item.href
+    if (item.href) {
+      router.push(item.href)
     }
 
     setIsNotificationsOpen(false)
-  }, [])
+  }, [router])
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -132,13 +180,13 @@ export function AppHeader({
         <Separator orientation="vertical" className="h-4" />
 
         {/* Breadcrumbs */}
-        {breadcrumbs.length > 0 && (
+        {resolvedBreadcrumbs.length > 0 && (
           <Breadcrumb className="hidden md:flex">
             <BreadcrumbList>
-              {breadcrumbs.map((crumb, index) => (
+              {resolvedBreadcrumbs.map((crumb, index) => (
                 <React.Fragment key={index}>
                   <BreadcrumbItem>
-                    {index < breadcrumbs.length - 1 ? (
+                    {index < resolvedBreadcrumbs.length - 1 ? (
                       <BreadcrumbLink 
                         href={crumb.href || "#"}
                         className="text-muted-foreground transition-colors hover:text-foreground"
@@ -149,7 +197,7 @@ export function AppHeader({
                       <BreadcrumbPage className="font-medium">{crumb.label}</BreadcrumbPage>
                     )}
                   </BreadcrumbItem>
-                  {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                  {index < resolvedBreadcrumbs.length - 1 && <BreadcrumbSeparator />}
                 </React.Fragment>
               ))}
             </BreadcrumbList>
@@ -166,10 +214,10 @@ export function AppHeader({
           className="hidden h-9 w-64 justify-start gap-2 px-3 text-sm text-muted-foreground md:flex"
         >
           <Search className="size-4" />
-          <span className="flex-1 text-left">{searchPlaceholder}</span>
-          {searchShortcut && (
+          <span className="flex-1 text-left">{resolvedSearchPlaceholder}</span>
+          {resolvedSearchShortcut && (
             <kbd className="pointer-events-none flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-              {searchShortcut}
+              {resolvedSearchShortcut}
             </kbd>
           )}
         </Button>
@@ -182,7 +230,7 @@ export function AppHeader({
           className="size-8 md:hidden"
         >
           <Search className="size-4" />
-          <span className="sr-only">{searchPlaceholder}</span>
+          <span className="sr-only">{resolvedSearchPlaceholder}</span>
         </Button>
 
         {/* Notifications */}
@@ -191,7 +239,7 @@ export function AppHeader({
           onOpenChange={(open) => {
             setIsNotificationsOpen(open)
             if (open) {
-              onNotificationClick?.()
+              resolvedOnNotificationClick?.()
             }
           }}
         >
@@ -210,34 +258,34 @@ export function AppHeader({
                   {resolvedNotificationCount > 99 ? "99+" : resolvedNotificationCount}
                 </Badge>
               )}
-              <span className="sr-only">{notificationsLabel}</span>
+              <span className="sr-only">{resolvedNotificationsLabel}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" sideOffset={10} className="w-[360px] rounded-xl p-0">
             <DropdownMenuLabel className="flex items-center justify-between px-3 py-2.5">
-              <span className="text-sm font-semibold">{notificationsMenuLabel}</span>
-              {notifications.length > 0 && onMarkAllAsRead && (
+              <span className="text-sm font-semibold">{resolvedNotificationsMenuLabel}</span>
+              {resolvedNotifications.length > 0 && resolvedOnMarkAllAsRead && (
                 <button
                   type="button"
                   onClick={(event) => {
                     event.preventDefault()
                     event.stopPropagation()
-                    onMarkAllAsRead()
+                    resolvedOnMarkAllAsRead?.()
                   }}
                   className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {markAllAsReadLabel}
+                  {resolvedMarkAllAsReadLabel}
                 </button>
               )}
             </DropdownMenuLabel>
 
             <DropdownMenuSeparator />
 
-            {notifications.length === 0 ? (
-              <div className="px-3 py-6 text-center text-sm text-muted-foreground">{notificationsEmptyMessage}</div>
+            {resolvedNotifications.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">{resolvedNotificationsEmptyMessage}</div>
             ) : (
               <div className="max-h-[340px] overflow-y-auto p-1.5">
-                {notifications.map((item) => (
+                {resolvedNotifications.map((item) => (
                   <DropdownMenuItem
                     key={item.id}
                     onSelect={() => handleNotificationItemSelect(item)}
@@ -268,7 +316,7 @@ export function AppHeader({
               </div>
             )}
 
-            {onViewAllNotifications && (
+            {resolvedOnViewAllNotifications && (
               <>
                 <DropdownMenuSeparator />
                 <div className="p-2">
@@ -276,11 +324,11 @@ export function AppHeader({
                     variant="ghost"
                     className="h-9 w-full justify-center text-sm"
                     onClick={() => {
-                      onViewAllNotifications()
+                      resolvedOnViewAllNotifications()
                       setIsNotificationsOpen(false)
                     }}
                   >
-                    {viewAllNotificationsLabel}
+                    {resolvedViewAllNotificationsLabel}
                   </Button>
                 </div>
               </>
@@ -292,12 +340,12 @@ export function AppHeader({
       <CommandDialog
         open={isCommandOpen}
         onOpenChange={setIsCommandOpen}
-        title={commandTitle}
-        description={commandDescription}
+        title={resolvedCommandTitle}
+        description={resolvedCommandDescription}
       >
-        <CommandInput placeholder={searchPlaceholder} />
+        <CommandInput placeholder={resolvedSearchPlaceholder} />
         <CommandList>
-          <CommandEmpty>{searchEmptyMessage}</CommandEmpty>
+          <CommandEmpty>{resolvedSearchEmptyMessage}</CommandEmpty>
 
           {groupedCommands.map(({ group, items }, groupIndex) => (
             <React.Fragment key={group}>

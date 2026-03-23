@@ -80,9 +80,9 @@ export interface BaseFieldConfig {
   /** Field dependencies used for reactive UI updates */
   dependencies?: string[]
   /** Declarative visibility condition based on watched values */
-  condition?: (values: Record<string, any>) => boolean
+  condition?: (values: Record<string, unknown>) => boolean
   /** Dynamic required state based on watched values */
-  requiredWhen?: (values: Record<string, any>) => boolean
+  requiredWhen?: (values: Record<string, unknown>) => boolean
 }
 
 /**
@@ -210,7 +210,7 @@ export interface ArrayFieldConfig extends BaseFieldConfig {
   /** Child field configuration for each array item */
   fields: FieldConfig[]
   /** Default object used for new items */
-  defaultItem?: Record<string, any>
+  defaultItem?: Record<string, unknown>
   /** Button label for appending new item */
   addButtonLabel?: string
   /** Button label for removing an item */
@@ -239,12 +239,12 @@ export interface CustomFieldRenderProps {
   /** Field name */
   name: string
   /** Field value */
-  value: any
+  value: unknown
   /** Change handler */
-  onChange: (value: any) => void
+  onChange: (value: unknown) => void
   /** Blur handler */
   onBlur: () => void
-  /** Field error message (if any) */
+  /** Field error message (if present) */
   error?: string
   /** Whether the field is disabled */
   disabled?: boolean
@@ -303,7 +303,7 @@ export interface SubmitButtonConfig {
 /**
  * Complete form configuration
  */
-export interface FormConfig<TSchema extends z.ZodType<any, any, any>> {
+export interface FormConfig<TSchema extends z.ZodType<unknown, z.ZodTypeDef, unknown>> {
   /** Zod validation schema */
   schema: TSchema
   /** Field configurations */
@@ -317,7 +317,7 @@ export interface FormConfig<TSchema extends z.ZodType<any, any, any>> {
   /** Form submit handler */
   onSubmit: (data: z.infer<TSchema>) => void | Promise<void>
   /** Form error handler */
-  onError?: (errors: any) => void
+  onError?: (errors: unknown) => void
   /** Custom form class name */
   className?: string
 }
@@ -357,7 +357,7 @@ export interface FormKitConfig {
 /**
  * Props for SchemaForm component
  */
-export interface SchemaFormProps<TSchema extends z.ZodType<any, any, any>> {
+export interface SchemaFormProps<TSchema extends z.ZodType<unknown, z.ZodTypeDef, unknown>> {
   /** Form configuration */
   config: FormConfig<TSchema>
   /** Whether to show field descriptions */
@@ -373,9 +373,9 @@ export interface FieldRendererProps {
   /** Field configuration */
   config: FieldConfig
   /** react-hook-form control */
-  control: any
+  control: UseFormReturn<FieldValues>['control']
   /** Latest watched form values for conditional rendering */
-  watchValues?: Record<string, any>
+  watchValues?: Record<string, unknown>
   /** Whether to show field description */
   showDescription?: boolean
   /** Whether to show required indicator */
@@ -389,7 +389,7 @@ export interface WizardStepConfig {
   id: string
   title: string
   description?: string
-  schema: z.ZodType<any, any, any>
+  schema: z.ZodType<unknown, z.ZodTypeDef, unknown>
   fields: FieldConfig[]
 }
 
