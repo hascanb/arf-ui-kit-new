@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchInterlands } from "./_api/interland-list-api"
@@ -23,7 +24,9 @@ export default async function InterlandsPage() {
             <CardDescription>Ayarlar kapsamındaki tüm interland kayıtlarını yönetin.</CardDescription>
           </CardHeader>
           <CardContent>
-            <InterlandsTableSection data={interlands} />
+            <Suspense fallback={<div className="py-6 text-sm text-slate-500">İnterlandlar yükleniyor...</div>}>
+              <InterlandsTableSection data={interlands} />
+            </Suspense>
           </CardContent>
         </Card>
       </div>
