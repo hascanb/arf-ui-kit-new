@@ -1,0 +1,12 @@
+export type InterlandNoteCategory = "genel" | "operasyon" | "teknik" | "diger"
+export type InterlandNoteVisibility = "internal" | "public"
+
+export interface InterlandNote {
+  id: string
+  content: string
+  category: InterlandNoteCategory
+  visibility: InterlandNoteVisibility
+  createdAt: string
+  createdBy: string
+  createdByName: string
+}

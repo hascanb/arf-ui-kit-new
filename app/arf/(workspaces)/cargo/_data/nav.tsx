@@ -381,6 +381,7 @@ export const navGroups = [
         title: 'Ayarlar',
         icon: Settings,
         items: [
+          { title: 'Rol Listesi', url: R.settings.roles, icon: ShieldCheck },
           { title: 'Transfer Merkezleri', url: R.settings.system.transferCenters, icon: Landmark },
           { title: 'Şubeler', url: R.settings.system.branches, icon: Building2 },
           { title: 'İnterlandlar', url: R.settings.system.interlands, icon: MapPinned },
@@ -389,7 +390,7 @@ export const navGroups = [
           { title: 'Sistem Fiyat Tanımı', url: R.settings.system.systemPricing, icon: SlidersHorizontal },
           { title: 'Hatlar', url: R.settings.system.lines, icon: Route },
           { title: 'Mahalle', url: R.settings.system.neighborhoods, icon: Map },
-          { title: 'Mesafeler', url: R.settings.system.distances, icon: Ruler },
+          { title: 'Mesafe Tanımları', url: R.settings.system.distances, icon: Ruler },
           { title: 'Kullanıcılar', url: R.settings.system.users, icon: UsersRound },
           { title: 'Yetkiler', url: R.settings.system.permissions, icon: ShieldCheck },
           { title: 'Entegrasyonlar', url: R.settings.integrations, icon: PlugZap },

@@ -16,6 +16,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-03-24
+
+### Added
+
+#### Cargo — Ayarlar / Entegrasyonlar Modülü
+- `app/arf/(workspaces)/cargo/settings/integrations/`: Entegrasyon yönetimi modülü tamamlandı.
+  - Marketplace ekranı: kategori ve durum filtrelemeleri (URL state), entegrasyon kartları, sayfalama.
+  - 3-adımlı entegrasyon oluşturma wizard'ı (Platform seçimi → Kimlik bilgileri → Bağlantı testi); RHF + Zod.
+  - Özel Webhook akışı: checkbox ile `custom-webhook` platformuna geçiş, bağlantı geri yükleme.
+  - Entegrasyon detay sayfası: Senkronizasyon, Parametre Eşleştirme ve Log sekmeleri.
+  - Senkronizasyon seksi: 4-stat özet kart (bağlantı durumu, son senkronizasyon, hata sayısı, toplam işlem) + Drawer kural editörü.
+  - Parametre Eşleştirme seksi: dropdown Select'ler, taslak (draft) state, İptal/Kaydet.
+  - Log filtreleri URL state ile (`status`, `action`, `from`, `to`, `q`); DataTable + pagination.
+  - Log detay modalı: HTTP durum kodu ve tam hata açıklaması.
+  - Kart sağlık özeti: "N işlem başarılı" ve "Son Hata: X" hesaplanan log verisiyle.
+  - Oluşturma sonrası yeşil başarı banner'ı.
+  - `_mock/`, `_api/`, `_types/`, `_columns/`, `_components/` klasör mimarisi.
+
+#### Cargo — Ayarlar / Diğer Modüller
+- `settings/roles/`: Rol ve izin yönetimi sayfaları.
+- `settings/users/`: Kullanıcı listesi ve atama sayfaları.
+- `settings/system/bank-accounts/`: Banka hesapları yönetimi.
+- `settings/system/blocked-interlands/`: Bloke iç hat tanımları.
+- `settings/system/branches/`: Şube yönetimi listeleme sayfası.
+- `settings/system/distance-definitions/`: Mesafe tanımları.
+- `settings/system/distances/`: Mesafe matrisi yönetimi.
+- `settings/system/interlands/`: İç hat tanımları.
+- `settings/system/system-pricing/`: Sistem fiyatlandırma kuralları.
+
+### Changed
+
+#### Navigasyon
+- `app/arf/(workspaces)/cargo/_data/nav.tsx`: Yeni ayarlar modülleri için navigasyon bağlantıları eklendi.
+- `app/arf/_shared/routes.ts`: Yeni rotalar tanımlandı.
+
+#### Release
+- Bumped package version from `1.4.5` to `1.5.0` (`package.json`).
+
+### Removed
+- `app/arf/(workspaces)/cargo/branches/`: Geçici branches sayfası kaldırıldı; yerine `settings/system/branches/` kullanılıyor.
+
+---
+
 ## [1.4.1] - 2026-03-13
 
 ### Fixed

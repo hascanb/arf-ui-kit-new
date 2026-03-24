@@ -115,7 +115,7 @@ export function getBranchesColumns(
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem asChild>
-              <Link href={`/arf/cargo/branches?search=${encodeURIComponent(row.original.branchCode)}`}>
+                  <Link href={`/arf/cargo/settings/system/branches?search=${encodeURIComponent(row.original.branchCode)}`}>
                 <Eye className="mr-2 size-4" />
                 Detay Görüntüle
               </Link>

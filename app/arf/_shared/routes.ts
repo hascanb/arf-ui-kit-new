@@ -87,6 +87,7 @@ export const ARF_ROUTES = {
 
     settings: {
       root: `${CARGO_BASE}/settings`,
+      roles: `${CARGO_BASE}/settings/roles`,
       integrations: `${CARGO_BASE}/settings/integrations`,
       system: {
         root: `${CARGO_BASE}/settings/system`,
@@ -98,7 +99,7 @@ export const ARF_ROUTES = {
         systemPricing: `${CARGO_BASE}/settings/system/system-pricing`,
         lines: `${CARGO_BASE}/settings/system/lines`,
         neighborhoods: `${CARGO_BASE}/settings/system/neighborhoods`,
-        distances: `${CARGO_BASE}/settings/system/distances`,
+        distances: `${CARGO_BASE}/settings/system/distance-definitions`,
         users: `${CARGO_BASE}/settings/system/users`,
         permissions: `${CARGO_BASE}/settings/system/permissions`,
       },
