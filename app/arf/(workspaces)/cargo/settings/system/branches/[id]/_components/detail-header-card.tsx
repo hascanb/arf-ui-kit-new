@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { ArrowLeft, MapPin, Phone, Power, PowerOff, Share2, User } from "lucide-react"
+import { ArrowLeft, MapPin, Pencil, Phone, Power, PowerOff, Share2, User } from "lucide-react"
 import type { BranchDetail, BranchStatus } from "../_types"
 
 const statusConfig: Record<BranchStatus, { label: string; className: string }> = {
@@ -17,9 +17,10 @@ interface Props {
   branch: BranchDetail
   status: BranchStatus
   onToggleStatus: () => void
+  onEdit: () => void
 }
 
-export function DetailHeaderCard({ branch, status, onToggleStatus }: Props) {
+export function DetailHeaderCard({ branch, status, onToggleStatus, onEdit }: Props) {
   const statusCfg = statusConfig[status]
 
   const handleShare = () => {
@@ -93,6 +94,10 @@ export function DetailHeaderCard({ branch, status, onToggleStatus }: Props) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="h-9" onClick={onEdit}>
+              <Pencil className="mr-1.5 size-4" />
+              Düzenle
+            </Button>
             <Button variant="outline" size="sm" className="h-9" onClick={handleShare}>
               <Share2 className="mr-1.5 size-4" />
               Paylaş

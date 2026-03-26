@@ -1,6 +1,6 @@
 // TODO: Remove when API is ready
 import type {
-  BlockedInterlandPayload,
+  BlockedInterlandRecord,
   InterlandAuditLog,
   InterlandDetail,
   InterlandNote,
@@ -35,17 +35,21 @@ const notes: Record<string, InterlandNote[]> = {
       createdAt: "2026-03-21T14:12:00",
       createdBy: "u-1",
       createdByName: "Derya Aydın",
+      createdByRole: "Operatör",
+      sourceName: "Bursa Şube",
     },
   ],
   "int-2": [
     {
       id: "n-2",
       content: "Akşam vardiyası için ek dağıtım planlaması gerekiyor.",
-      category: "genel",
+      category: "finans",
       visibility: "internal",
       createdAt: "2026-03-18T11:45:00",
       createdBy: "u-2",
       createdByName: "Serkan Demir",
+      createdByRole: "Genel Merkez Finans",
+      sourceName: "Genel Merkez",
     },
   ],
   "int-3": [],
@@ -128,25 +132,87 @@ export const mockBranches = [
   { id: "3", name: "İzmir Merkez Şube", transferCenterId: "tc-3", transferCenterName: "İzmir Transfer Merkezi", managerName: "Emre Kaya", managerPhone: "0532 999 88 77" },
 ]
 
-export const blockedInterlandStore: BlockedInterlandPayload[] = []
+export const blockedInterlandStore: BlockedInterlandRecord[] = [
+  {
+    id: "blocked-1",
+    name: "İstanbul Esenyurt / Saadetdere",
+    branchId: "1",
+    branchName: "Bursa Şube",
+  },
+  {
+    id: "blocked-2",
+    name: "Ankara Mamak / Abidinpaşa",
+    branchId: "2",
+    branchName: "Ankara Merkez Şube",
+  },
+]
 
 export function getInterlandDetailById(id: string): InterlandDetail | undefined {
   const base = mockInterlands.find((item) => item.id === id)
-  if (!base) {
+  if (base) {
+    const branch = mockBranches.find((item) => item.id === base.branchId)
+
+    return {
+      ...base,
+      branchManagerName: branch?.managerName,
+      branchManagerPhone: branch?.managerPhone,
+      transferCenterId: branch?.transferCenterId,
+      transferCenterName: branch?.transferCenterName,
+      scopeRows: scopeRows[id] ?? [],
+      notes: notes[id] ?? [],
+      auditLogs: audits[id] ?? [],
+    }
+  }
+
+  if (!id.startsWith("blocked-")) {
     return undefined
   }
 
-  const branch = mockBranches.find((item) => item.id === base.branchId)
+  const blocked = blockedInterlandStore.find((item) => item.id === id)
+  if (!blocked) {
+    return undefined
+  }
+
+  const branch = mockBranches.find((item) => item.id === blocked.branchId)
+  const [locationPart, neighborhoodPart] = blocked.name.split("/").map((part) => part.trim())
+  const [city = blocked.name, ...districtParts] = (locationPart ?? blocked.name).split(" ")
+  const district = districtParts.join(" ") || "Merkez"
+  const neighborhood = neighborhoodPart || "Genel"
 
   return {
-    ...base,
+    id,
+    name: blocked.name,
+    branchId: blocked.branchId,
+    branchName: blocked.branchName,
+    status: "passive",
+    cityCount: 1,
+    districtCount: 1,
+    neighborhoodCount: 1,
+    updatedAt: new Date().toISOString(),
     branchManagerName: branch?.managerName,
     branchManagerPhone: branch?.managerPhone,
     transferCenterId: branch?.transferCenterId,
     transferCenterName: branch?.transferCenterName,
-    scopeRows: scopeRows[id] ?? [],
-    notes: notes[id] ?? [],
-    auditLogs: audits[id] ?? [],
+    scopeRows: [
+      {
+        id: `${id}-scope-1`,
+        city,
+        district,
+        neighborhood,
+      },
+    ],
+    notes: [],
+    auditLogs: [
+      {
+        id: `${id}-audit-1`,
+        createdAt: new Date().toISOString(),
+        actionType: "scope_add",
+        oldValue: "-",
+        newValue: blocked.name,
+        actorId: "current-user",
+        actorName: "Mevcut Kullanıcı",
+      },
+    ],
   }
 }
 

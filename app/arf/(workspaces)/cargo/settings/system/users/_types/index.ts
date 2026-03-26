@@ -2,8 +2,8 @@ import type { UserRecord } from "./user"
 import type { UserAsset } from "./user-asset"
 import type { AuditLogEntry } from "./audit-log"
 
-export type { UserRole, UserStatus, UserRecord } from "./user"
-export type { UserAsset } from "./user-asset"
+export type { UserRole, UserStatus, UserRecord, UserDocument, UserDocumentType, UserAssetDraft } from "./user"
+export type { UserAsset, UserAssetAllocation, UserAssetEntry, UserAssetKind } from "./user-asset"
 export type { AuditAction, AuditLogEntry } from "./audit-log"
 
 export interface LocationOption {
@@ -22,7 +22,7 @@ export const USER_ROLE_LABELS: Record<import("./user").UserRole, string> = {
   superadmin: "Süper Admin",
   hq_manager: "Genel Merkez",
   tm_manager: "TM Yöneticisi",
-  branch_manager: "Şube Yöneticisi",
+  branch_manager: "Şube Yöneticisisi",
   courier: "Kurye",
   operator: "Operatör",
 }

@@ -56,7 +56,6 @@ export function DetailContent({ initialInterland }: Props) {
           name: interland.name,
           branchId: interland.branchId,
           branchName: interland.branchName,
-          status: interland.status,
         }}
         onSave={(value) => {
           setInterland((prev) => ({ ...prev, ...value }))
@@ -70,7 +69,7 @@ export function DetailContent({ initialInterland }: Props) {
         }}
       />
 
-      <div className="flex flex-1 flex-col gap-4 bg-slate-50 p-4 pt-0">
+      <div className="flex flex-1 flex-col gap-5 bg-slate-50 p-6">
         <DetailHeaderCard
           interland={interland}
           onEdit={() => setEditOpen(true)}
@@ -92,7 +91,7 @@ export function DetailContent({ initialInterland }: Props) {
 
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="grid h-10 w-full grid-cols-2 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
-            <TabsTrigger value="overview" className="text-xs">Kapsam ve Hiyerarşi</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs">Kapsam</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs">Notlar ve Geçmiş</TabsTrigger>
           </TabsList>
 

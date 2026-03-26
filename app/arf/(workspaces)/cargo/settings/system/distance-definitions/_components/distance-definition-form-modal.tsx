@@ -8,13 +8,11 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -36,13 +34,12 @@ import { KmRangePreview } from "./km-range-preview"
 
 const schema = z
   .object({
-    name: z.string().min(2, "Barem adi en az 2 karakter olmalidir."),
+    name: z.string().min(2, "Tanım adı en az 2 karakter olmalidir."),
     description: z.string().optional(),
     minKm: z.coerce.number().nonnegative("Minimum mesafe 0 veya buyuk olmalidir."),
     hasUpperLimit: z.boolean(),
     maxKm: z.coerce.number().nullable(),
     slaTarget: z.enum(["24h", "48h", "72h"]),
-    status: z.enum(["active", "passive"]),
   })
   .superRefine((value, context) => {
     if (value.hasUpperLimit) {
@@ -82,10 +79,9 @@ const defaultValues: FormValues = {
   hasUpperLimit: true,
   maxKm: 0,
   slaTarget: "24h",
-  status: "active",
 }
 
-function toPayload(values: FormValues): UpsertDistanceDefinitionPayload {
+function toPayload(values: FormValues, status: DistanceDefinitionStatus): UpsertDistanceDefinitionPayload {
   return {
     name: values.name.trim(),
     description: values.description?.trim() || undefined,
@@ -93,7 +89,7 @@ function toPayload(values: FormValues): UpsertDistanceDefinitionPayload {
     maxKm: values.hasUpperLimit && values.maxKm !== null ? Number(values.maxKm.toFixed(2)) : null,
     hasUpperLimit: values.hasUpperLimit,
     slaTarget: values.slaTarget as DistanceSlaTarget,
-    status: values.status as DistanceDefinitionStatus,
+    status,
   }
 }
 
@@ -117,7 +113,8 @@ export function DistanceDefinitionFormModal({
   const hasUpperLimit = form.watch("hasUpperLimit")
   const minKm = form.watch("minKm")
   const maxKm = form.watch("maxKm")
-  const status = form.watch("status")
+  const effectiveStatus = initial?.status ?? "active"
+  const isDirty = form.formState.isDirty
 
   useEffect(() => {
     if (!hasUpperLimit) {
@@ -137,7 +134,6 @@ export function DistanceDefinitionFormModal({
             hasUpperLimit: initial.hasUpperLimit,
             maxKm: initial.maxKm,
             slaTarget: initial.slaTarget,
-            status: initial.status,
           }
         : defaultValues,
     )
@@ -146,12 +142,18 @@ export function DistanceDefinitionFormModal({
   }, [form, initial, open])
 
   useEffect(() => {
+    if (mode === "create" && !isDirty) {
+      setCollisionMessage(null)
+      setGapWarnings([])
+      return
+    }
+
     const timer = setTimeout(() => {
       const payload = {
         minKm: Number(minKm),
         maxKm: maxKm === null ? null : Number(maxKm),
         hasUpperLimit,
-        status,
+        status: effectiveStatus,
       }
 
       if (Number.isNaN(payload.minKm) || (payload.maxKm !== null && Number.isNaN(payload.maxKm))) {
@@ -162,7 +164,7 @@ export function DistanceDefinitionFormModal({
         if (!result.isValid) {
           const first = result.collisions[0]
           setCollisionMessage(
-            `Dikkat! Girdiginiz degerler '${first?.conflictingName ?? "bir barem"}' ile cakismaktadir.`,
+            `Dikkat! girdiğiniz değerler '${first?.conflictingName ?? "bir tanım"}' ile çakışmaktadır.`,
           )
         } else {
           setCollisionMessage(null)
@@ -172,10 +174,10 @@ export function DistanceDefinitionFormModal({
     }, 250)
 
     return () => clearTimeout(timer)
-  }, [hasUpperLimit, initial?.id, maxKm, minKm, status])
+  }, [effectiveStatus, hasUpperLimit, initial?.id, isDirty, maxKm, minKm, mode])
 
   const submitHandler = form.handleSubmit(async (values) => {
-    const payload = toPayload(values)
+    const payload = toPayload(values, effectiveStatus)
 
     const validation = await validateDistanceRange(
       {
@@ -190,7 +192,7 @@ export function DistanceDefinitionFormModal({
     if (!validation.isValid) {
       const first = validation.collisions[0]
       setCollisionMessage(
-        `Dikkat! Girdiginiz degerler '${first?.conflictingName ?? "bir barem"}' ile cakismaktadir.`,
+        `Dikkat! girdiğiniz değerler '${first?.conflictingName ?? "bir tanım"}' ile çakışmaktadır.`,
       )
       return
     }
@@ -212,18 +214,15 @@ export function DistanceDefinitionFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Yeni Mesafe Baremi" : "Mesafe Baremi Düzenle"}</DialogTitle>
-          <DialogDescription>
-            Mesafe aralığını tanımlayın, SLA hedefine bağlayın ve çakışma kontrolünü tamamlayın.
-          </DialogDescription>
+      <DialogContent className="w-[min(78rem,calc(100%-2rem))] max-h-[90vh] overflow-y-auto p-8 sm:max-w-6xl">
+        <DialogHeader className="space-y-1 pr-8">
+          <DialogTitle>{mode === "create" ? "Yeni Mesafe Tanımı" : "Mesafe Tanımı Düzenle"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form className="space-y-4" onSubmit={submitHandler}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
+          <form className="space-y-6" onSubmit={submitHandler}>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-12">
+              <div className="md:col-span-2 xl:col-span-12">
                 <h3 className="text-sm font-semibold text-slate-900">1. Tanım Bilgileri</h3>
               </div>
 
@@ -231,10 +230,10 @@ export function DistanceDefinitionFormModal({
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem className="md:col-span-2 xl:col-span-12">
                     <FormLabel>İsim</FormLabel>
                     <FormControl>
-                      <Input placeholder="Örnek: Şehir İçi" {...field} />
+                      <Input className="h-11" placeholder="Örnek: Şehir İçi" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,28 +244,29 @@ export function DistanceDefinitionFormModal({
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem className="md:col-span-2 xl:col-span-12">
                     <FormLabel>Açıklama</FormLabel>
                     <FormControl>
-                      <Input placeholder="Opsiyonel" {...field} value={field.value ?? ""} />
+                      <Input className="h-11" placeholder="Opsiyonel" {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="md:col-span-2 mt-1">
-                <h3 className="text-sm font-semibold text-slate-900">2. Barem Değerleri</h3>
+              <div className="md:col-span-2 xl:col-span-12 mt-1">
+                <h3 className="text-sm font-semibold text-slate-900">2. Tanım Değerleri</h3>
               </div>
 
               <FormField
                 control={form.control}
                 name="minKm"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="xl:col-span-4">
                     <FormLabel>Min Km</FormLabel>
                     <FormControl>
                       <Input
+                        className="h-11"
                         type="number"
                         step="0.01"
                         min="0"
@@ -277,7 +277,6 @@ export function DistanceDefinitionFormModal({
                         }}
                       />
                     </FormControl>
-                    <FormDescription>Başlangıç mesafesi (ondalık destekler).</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -287,10 +286,11 @@ export function DistanceDefinitionFormModal({
                 control={form.control}
                 name="maxKm"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="xl:col-span-4">
                     <FormLabel>Max Km</FormLabel>
                     <FormControl>
                       <Input
+                        className="h-11"
                         type="number"
                         step="0.01"
                         min="0"
@@ -302,7 +302,6 @@ export function DistanceDefinitionFormModal({
                         }}
                       />
                     </FormControl>
-                    <FormDescription>Limit yok işaretliyse alan pasif olur.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,10 +311,9 @@ export function DistanceDefinitionFormModal({
                 control={form.control}
                 name="hasUpperLimit"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-xl border border-slate-200 p-3 md:col-span-2">
+                  <FormItem className="flex items-center justify-between rounded-xl border border-slate-200 p-3 xl:col-span-4 xl:self-end">
                     <div>
-                      <FormLabel>Limit Yok (Sonsuz)</FormLabel>
-                      <FormDescription>İşaretli ise maxKm değeri null kaydedilir.</FormDescription>
+                      <FormLabel>Max Km Limitsiz</FormLabel>
                     </div>
                     <FormControl>
                       <Checkbox
@@ -327,23 +325,23 @@ export function DistanceDefinitionFormModal({
                 )}
               />
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 xl:col-span-12">
                 <KmRangePreview minKm={Number(minKm || 0)} maxKm={maxKm} hasUpperLimit={hasUpperLimit} />
               </div>
 
-              <div className="md:col-span-2 mt-1">
-                <h3 className="text-sm font-semibold text-slate-900">3. Operasyonel Varsayılanlar</h3>
+              <div className="md:col-span-2 xl:col-span-12 mt-1">
+                <h3 className="text-sm font-semibold text-slate-900">3. Operasyonel</h3>
               </div>
 
               <FormField
                 control={form.control}
                 name="slaTarget"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hedeflenen Teslimat (SLA)</FormLabel>
+                  <FormItem className="xl:col-span-4">
+                    <FormLabel>Hedeflenen Teslimat Süresi</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11">
                           <SelectValue placeholder="SLA seçin" />
                         </SelectTrigger>
                       </FormControl>
@@ -358,27 +356,6 @@ export function DistanceDefinitionFormModal({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Durum</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Durum seçin" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Aktif</SelectItem>
-                        <SelectItem value="passive">Pasif</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {collisionMessage && (

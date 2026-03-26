@@ -12,22 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { ChevronDown, Eye, MapPin, Phone, Power, PowerOff, Share2 } from "lucide-react"
+import { ChevronDown, Eye, MapPin, Pencil, Power, PowerOff, Share2 } from "lucide-react"
 import type { BranchRecord } from "../_mock/branches-mock-data"
 
 export function getBranchesListColumns(
   onToggleStatus: (branchId: string) => void,
 ): ColumnDef<BranchRecord>[] {
   return [
-    {
-      accessorKey: "kod",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Şube Kodu" />,
-      cell: ({ row }) => (
-        <Link href={`/arf/cargo/settings/system/branches/${row.original.id}`} className="font-mono font-medium text-secondary hover:underline">
-          {row.original.kod}
-        </Link>
-      ),
-    },
     {
       accessorKey: "ad",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Şube Adı" />,
@@ -38,28 +29,46 @@ export function getBranchesListColumns(
       ),
     },
     {
-      id: "konum",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Konum" />,
+      accessorKey: "kod",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Şube Kodu" />,
       cell: ({ row }) => (
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <MapPin className="size-3" />
-          {row.original.il}, {row.original.ilce}
-        </div>
+        <Link href={`/arf/cargo/settings/system/branches/${row.original.id}`} className="font-mono font-medium text-secondary hover:underline">
+          {row.original.kod}
+        </Link>
       ),
+    },
+    {
+      accessorKey: "bagliTransferMerkezi",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Bağlı Transfer Merkezi" />,
+    },
+    {
+      accessorKey: "il",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="İl" />,
+    },
+    {
+      accessorKey: "ilce",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="İlçe" />,
+    },
+    {
+      accessorKey: "mahalle",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Mahalle" />,
     },
     {
       accessorKey: "telefon",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Telefon" />,
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <Phone className="size-3" />
-          {row.original.telefon}
-        </div>
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Şube Telefon" />,
     },
     {
-      accessorKey: "yetkili",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Yetkili" />,
+      accessorKey: "eposta",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Şube E-Posta" />,
+    },
+    {
+      accessorKey: "subeYoneticisi",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Şube Yöneticisi" />,
+    },
+    {
+      accessorKey: "toplamKargo",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Toplam Kargo" />,
+      cell: ({ row }) => row.original.toplamKargo.toLocaleString("tr-TR"),
     },
     {
       accessorKey: "aktif",
@@ -84,7 +93,7 @@ export function getBranchesListColumns(
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">İşlemler</span>,
+      header: () => null,
       enableSorting: false,
       enableHiding: false,
       cell: ({ row }) => (
@@ -103,6 +112,12 @@ export function getBranchesListColumns(
                   Detay Görüntüle
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/arf/cargo/settings/system/branches/${row.original.id}`}>
+                  <Pencil className="mr-2 size-4" />
+                  Düzenle
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => {
                   void navigator.clipboard?.writeText(`${window.location.origin}/arf/cargo/settings/system/branches/${row.original.id}`)
@@ -110,6 +125,16 @@ export function getBranchesListColumns(
               >
                 <Share2 className="mr-2 size-4" />
                 Paylaş
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(`${row.original.il} ${row.original.ilce} ${row.original.mahalle}`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapPin className="mr-2 size-4" />
+                  Konum
+                </a>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => onToggleStatus(row.original.id)}>
                 {row.original.aktif ? (

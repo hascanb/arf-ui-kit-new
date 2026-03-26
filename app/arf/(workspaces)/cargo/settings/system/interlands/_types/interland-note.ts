@@ -1,4 +1,4 @@
-export type InterlandNoteCategory = "genel" | "operasyon" | "teknik" | "diger"
+export type InterlandNoteCategory = "genel" | "operasyon" | "finans" | "teknik" | "diger"
 export type InterlandNoteVisibility = "internal" | "public"
 
 export interface InterlandNote {
@@ -9,4 +9,6 @@ export interface InterlandNote {
   createdAt: string
   createdBy: string
   createdByName: string
+  createdByRole?: string
+  sourceName?: string
 }

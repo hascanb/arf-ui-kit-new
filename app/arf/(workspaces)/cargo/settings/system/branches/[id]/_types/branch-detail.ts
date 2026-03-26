@@ -23,6 +23,7 @@ export interface BranchDetail {
   acenteSahibiEposta?: string
   acenteYoneticisi?: string
   acenteYoneticisiTelefon?: string
+  managerUserId?: string
   alimHakedisOrani?: number
   dagitimHakedisOrani?: number
   bankAdi?: string

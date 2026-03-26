@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { ChevronDown, Pencil, Trash2 } from "lucide-react"
+import { ChevronDown, Pencil, Power, PowerOff, Trash2 } from "lucide-react"
 import type { DistanceDefinitionRecord } from "../_types"
 import { DISTANCE_SLA_LABELS, DISTANCE_STATUS_LABELS } from "../_types"
 
@@ -40,7 +40,7 @@ export function getDistanceDefinitionsListColumns(
   return [
     {
       accessorKey: "name",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="İsim" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Tanım Adı" />,
       cell: ({ row }) => (
         <div className="space-y-1">
           <p className="font-medium text-slate-900">{row.original.name}</p>
@@ -53,12 +53,12 @@ export function getDistanceDefinitionsListColumns(
     {
       accessorFn: (row) => row.minKm,
       id: "range",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Barem Aralığı" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Tanım Aralığı" />,
       cell: ({ row }) => <p className="text-sm text-slate-700">{formatRange(row.original)}</p>,
     },
     {
       accessorKey: "slaTarget",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Varsayılan SLA" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Hedeflenen Teslimat Süresi" />,
       cell: ({ row }) => <p className="text-sm text-slate-700">{DISTANCE_SLA_LABELS[row.original.slaTarget]}</p>,
     },
     {
@@ -96,7 +96,12 @@ export function getDistanceDefinitionsListColumns(
               Düzenle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => actions.onToggleStatus(row.original)}>
-              {row.original.status === "active" ? "Pasife Çek" : "Aktif Et"}
+              {row.original.status === "active" ? (
+                <PowerOff className="mr-2 size-4" />
+              ) : (
+                <Power className="mr-2 size-4" />
+              )}
+              {row.original.status === "active" ? "Pasif Yap" : "Aktif Yap"}
             </DropdownMenuItem>
             <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => actions.onDelete(row.original)}>
               <Trash2 className="mr-2 size-4" />

@@ -1,4 +1,4 @@
-import type { LocationOption, UserRecord, UserRole } from "../_types"
+import type { LocationOption, UserAssetDraft, UserDocument, UserRecord, UserRole } from "../_types"
 import {
   deleteStoredUser,
   findUserByEmail,
@@ -58,9 +58,14 @@ export async function deactivateUser(id: string): Promise<UserRecord | undefined
 export interface UpdateUserPayload {
   firstName: string
   lastName: string
+  identityNumber?: string
+  email: string
   phoneNumber: string
   role: UserRole
   locationId: string | null
+  profilePhotoUrl?: string
+  documents?: UserDocument[]
+  asset?: UserAssetDraft
 }
 
 // TODO: Remove mock when API is ready
@@ -74,11 +79,16 @@ export async function updateUser(
   return updateStoredUser(id, {
     firstName: payload.firstName,
     lastName: payload.lastName,
+    identityNumber: payload.identityNumber,
+    email: payload.email,
     phoneNumber: payload.phoneNumber,
     role: payload.role,
     locationId: payload.locationId,
     locationName: location?.name ?? null,
     locationType: location?.type ?? null,
+    profilePhotoUrl: payload.profilePhotoUrl,
+    documents: payload.documents,
+    asset: payload.asset,
   })
 }
 

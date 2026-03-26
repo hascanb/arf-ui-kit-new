@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone, Shield, User } from "lucide-react"
+import { Mail, MapPin, Phone, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { UserDetail } from "../../_types"
@@ -18,18 +18,6 @@ const ROLE_BADGE_CLASSES: Record<UserRole, string> = {
   operator: "bg-slate-100 text-slate-700 border-slate-200",
 }
 
-const STATUS_LABELS: Record<UserDetail["status"], string> = {
-  active: "Aktif",
-  passive: "Pasif",
-  suspended: "Askıda",
-}
-
-const STATUS_CLASSES: Record<UserDetail["status"], string> = {
-  active: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  passive: "bg-slate-100 text-slate-600 border-slate-200",
-  suspended: "bg-red-100 text-red-700 border-red-200",
-}
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("tr-TR", {
     day: "2-digit",
@@ -38,74 +26,34 @@ function formatDate(iso: string) {
   })
 }
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("tr-TR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
 export function UserProfileSection({ user }: Props) {
   return (
-    <div className="space-y-4">
-      {/* Kimlik bilgileri */}
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <User className="size-4" />
-            Kimlik Bilgileri
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <User className="size-4 text-slate-400" />
+          Kullanıcı Bilgileri
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6 p-6 pt-0">
+        <section className="space-y-3">
+          <dl className="grid gap-3 sm:grid-cols-1">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <dt className="text-xs text-slate-500">Ad Soyad</dt>
               <dd className="text-sm font-medium text-slate-900">
                 {user.firstName} {user.lastName}
               </dd>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <dt className="text-xs text-slate-500">Durum</dt>
-              <dd>
-                <Badge
-                  variant="outline"
-                  className={`text-xs ${STATUS_CLASSES[user.status]}`}
-                >
-                  {STATUS_LABELS[user.status]}
-                </Badge>
-              </dd>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <dt className="text-xs text-slate-500">Son Giriş</dt>
-              <dd className="text-sm font-medium text-slate-900">
-                {user.lastLogin ? formatDateTime(user.lastLogin) : "—"}
-              </dd>
-            </div>
           </dl>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* İletişim bilgileri */}
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <Mail className="size-4" />
-            İletişim Bilgileri
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <section className="space-y-3 pt-1">
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <dt className="flex items-center gap-1 text-xs text-slate-500">
                 <Mail className="size-3" /> E-posta
               </dt>
               <dd className="text-sm font-medium text-slate-900">{user.email}</dd>
-              {user.isTemporaryPassword && (
-                <p className="mt-1 text-xs text-amber-600">Şifre aktivasyonu bekleniyor</p>
-              )}
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <dt className="flex items-center gap-1 text-xs text-slate-500">
@@ -114,18 +62,9 @@ export function UserProfileSection({ user }: Props) {
               <dd className="text-sm font-medium text-slate-900">{user.phoneNumber}</dd>
             </div>
           </dl>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Rol ve birim */}
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <Shield className="size-4" />
-            Rol ve Birim
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <section className="space-y-3 pt-1">
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <dt className="text-xs text-slate-500">Rol</dt>
@@ -147,27 +86,21 @@ export function UserProfileSection({ user }: Props) {
               </dd>
             </div>
           </dl>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Meta bilgiler */}
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-800">Sistem Bilgileri</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <section className="space-y-3 pt-1">
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <dt className="text-xs text-slate-500">Kayıt Tarihi</dt>
+              <dt className="text-xs text-slate-500">Kayıt Zamanı</dt>
               <dd className="text-sm font-medium text-slate-900">{formatDate(user.createdAt)}</dd>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <dt className="text-xs text-slate-500">Kaydeden</dt>
+              <dt className="text-xs text-slate-500">Oluşturan</dt>
               <dd className="text-sm font-medium text-slate-900">{user.createdByName}</dd>
             </div>
           </dl>
-        </CardContent>
-      </Card>
-    </div>
+        </section>
+      </CardContent>
+    </Card>
   )
 }

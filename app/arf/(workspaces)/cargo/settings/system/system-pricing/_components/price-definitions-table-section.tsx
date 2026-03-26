@@ -1,23 +1,20 @@
 "use client"
 
-import { useMemo, useState, type ChangeEvent } from "react"
+import { useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { Table as TanStackTable } from "@tanstack/react-table"
-import { DataTable, DataTablePagination } from "@hascanb/arf-ui-kit/datatable-kit"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  DataTable,
+  DataTableExcelActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from "@hascanb/arf-ui-kit/datatable-kit"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Filter, Plus } from "lucide-react"
 import {
   clonePricingDefinition,
   createPricingDefinition,
-  exportPricingDefinition,
-  fetchPricingDefinitionDetail,
   setPricingDefinitionStatus,
   updatePricingDefinition,
   type UpsertPriceDefinitionInput,
@@ -36,7 +33,12 @@ function isExpired(validTo: string): boolean {
 
 function matchesSearch(row: PriceDefinitionRecord, query: string): boolean {
   const normalized = query.toLocaleLowerCase("tr-TR")
-  return `${row.name} ${row.code}`.toLocaleLowerCase("tr-TR").includes(normalized)
+  const validFrom = new Date(row.validFrom).toLocaleDateString("tr-TR")
+  const validTo = new Date(row.validTo).toLocaleDateString("tr-TR")
+
+  return `${row.name} ${row.code} ${row.validFrom} ${row.validTo} ${validFrom} ${validTo}`
+    .toLocaleLowerCase("tr-TR")
+    .includes(normalized)
 }
 
 function toRecord(detail: PriceDefinitionDetail): PriceDefinitionRecord {
@@ -71,16 +73,6 @@ export function PriceDefinitionsTableSection({ data }: Props) {
   const type = searchParams.get("type") ?? "all"
   const isDefault = searchParams.get("isDefault") ?? "all"
 
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (!value || value === "all") {
-      params.delete(key)
-    } else {
-      params.set(key, value)
-    }
-    router.replace(params.size > 0 ? `${pathname}?${params.toString()}` : pathname)
-  }
-
   const filtered = useMemo(() => {
     return rows.filter((row) => {
       if (q && !matchesSearch(row, q)) {
@@ -105,24 +97,12 @@ export function PriceDefinitionsTableSection({ data }: Props) {
   const columns = useMemo(
     () =>
       getPriceDefinitionsListColumns({
-        onEdit: async (id) => {
-          const detail = await fetchPricingDefinitionDetail(id)
-          if (!detail) {
-            return
-          }
-          setEditingDetail(detail)
-          setCreateOpen(true)
-        },
         onClone: async (id) => {
           const cloned = await clonePricingDefinition(id)
           if (!cloned) {
             return
           }
           setRows((prev) => [toRecord(cloned), ...prev])
-        },
-        onExport: async (id, format) => {
-          const result = await exportPricingDefinition(id, format)
-          window.alert(`Dışa aktarma hazır: ${result.url}`)
         },
         onToggleStatus: async (row) => {
           const next = row.status === "active" ? "passive" : "active"
@@ -150,7 +130,17 @@ export function PriceDefinitionsTableSection({ data }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Fiyat Tanımları</h1>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} size="sm" className="gap-2">
+          <Plus className="size-4" />
+          Fiyat Tanımla
+        </Button>
+      </div>
+
       <CreatePriceDefinitionModal
         open={createOpen}
         onOpenChange={(open) => {
@@ -163,71 +153,37 @@ export function PriceDefinitionsTableSection({ data }: Props) {
         onSubmit={onSubmit}
       />
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Input value={q} onChange={(event: ChangeEvent<HTMLInputElement>) => setParam("q", event.target.value)} placeholder="Tarife adı veya kod ara..." />
+      <Card>
+        <CardContent className="space-y-4">
+          {table && (
+            <div className="flex items-center gap-2">
+              <DataTableExcelActions table={table} filename="fiyat-tanimlari" exportSelected={false} exportLabel="Dışarı Aktar" />
+              <DataTableToolbar table={table} showColumnSelector viewLabel="Görünüm" columnsLabel="Sütunlar" resetLabel="Sıfırla">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mr-3 h-8"
+                  onClick={() => router.replace(pathname)}
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filtreler
+                </Button>
+              </DataTableToolbar>
+            </div>
+          )}
+          <DataTable
+            data={filtered}
+            columns={columns}
+            onTableReady={setTable}
+          />
+          {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
 
-          <Select value={status} onValueChange={(value: string) => setParam("status", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Durum" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Durumlar</SelectItem>
-              <SelectItem value="active">Aktif</SelectItem>
-              <SelectItem value="passive">Pasif</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={type} onValueChange={(value: string) => setParam("type", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Tarife Tipi" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Tipler</SelectItem>
-              <SelectItem value="b2b">B2B</SelectItem>
-              <SelectItem value="b2c">B2C</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={isDefault} onValueChange={(value: string) => setParam("isDefault", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Varsayılan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="true">Sadece Default</SelectItem>
-              <SelectItem value="false">Default Olmayanlar</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" onClick={() => router.replace(pathname)}>
-            Filtreleri Sıfırla
-          </Button>
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            Fiyat Oluştur
-          </Button>
-        </div>
-      </div>
-
-      <DataTable
-        data={filtered}
-        columns={columns}
-        onTableReady={setTable}
-        className="rounded-2xl border border-slate-200 bg-white shadow-sm"
-        tableClassName="[&_tr[data-state=selected]]:bg-transparent"
-      />
-
-      <div className="text-xs text-slate-500">
-        Not: Geçerlilik süresi dolmuş tarifeler gri görünümde listelenir ve önerilen kullanım dışıdır.
-      </div>
-
-      {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
-
-      <div className="hidden">
-        {filtered.some((item) => isExpired(item.validTo)) ? "expired-present" : "no-expired"}
-      </div>
+          <div className="hidden">
+            {filtered.some((item) => isExpired(item.validTo)) ? "expired-present" : "no-expired"}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

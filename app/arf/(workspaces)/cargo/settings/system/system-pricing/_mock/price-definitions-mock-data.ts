@@ -36,7 +36,10 @@ function cloneRules(rules: PriceRuleRow[]): PriceRuleRow[] {
 }
 
 function cloneSurcharges(surcharges: PriceSurcharge): PriceSurcharge {
-  return { ...surcharges }
+  return {
+    ...surcharges,
+    customServices: surcharges.customServices.map((service) => ({ ...service })),
+  }
 }
 
 function cloneDetail(detail: PriceDefinitionDetail): PriceDefinitionDetail {
@@ -109,6 +112,7 @@ function makeSurcharges(input: {
   codCommissionValue: number
   pickupFee: number
   remoteAreaDeliveryFee: number
+  customServices?: PriceSurcharge["customServices"]
 }): PriceSurcharge {
   return {
     smsNotificationFee: roundToTwo(input.smsNotificationFee),
@@ -116,6 +120,11 @@ function makeSurcharges(input: {
     codCommissionValue: roundToTwo(input.codCommissionValue),
     pickupFee: roundToTwo(input.pickupFee),
     remoteAreaDeliveryFee: roundToTwo(input.remoteAreaDeliveryFee),
+    customServices: (input.customServices ?? []).map((service) => ({
+      id: service.id,
+      name: service.name,
+      fee: roundToTwo(service.fee),
+    })),
   }
 }
 
@@ -250,13 +259,13 @@ export function validatePriceRuleMatrix(rules: PriceRuleRow[]): PriceMatrixValid
 
       if (roundToTwo(current.rangeStart) < roundToTwo(expectedStart)) {
         overlapErrors.push(
-          `${key} grubunda kesişen barem var: ${previous.rangeStart}-${previous.rangeEnd} ile ${current.rangeStart}-${current.rangeEnd}.`,
+          `${key} grubunda kesişen Tanım var: ${previous.rangeStart}-${previous.rangeEnd} ile ${current.rangeStart}-${current.rangeEnd}.`,
         )
       }
 
       if (roundToTwo(current.rangeStart) > roundToTwo(expectedStart)) {
         gapWarnings.push(
-          `${key} grubunda barem boşluğu var: ${previous.rangeEnd} sonrası ${current.rangeStart} başlıyor.`,
+          `${key} grubunda Tanım boşluğu var: ${previous.rangeEnd} sonrası ${current.rangeStart} başlıyor.`,
         )
       }
     }

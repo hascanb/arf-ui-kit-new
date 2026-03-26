@@ -19,12 +19,6 @@ export default async function BankAccountsPage() {
 
       <div className="flex flex-1 flex-col gap-4 bg-slate-50 p-4 pt-0">
         <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle>Banka Hesapları</CardTitle>
-            <CardDescription>
-              Şubelerin para yatıracağı ve sistemin havuzunu besleyecek whitelist banka hesaplarını yönetin.
-            </CardDescription>
-          </CardHeader>
           <CardContent>
             <Suspense fallback={<div className="py-6 text-sm text-slate-500">Banka hesapları yükleniyor...</div>}>
               <BankAccountsTableSection data={bankAccounts} />

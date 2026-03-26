@@ -11,4 +11,10 @@ export interface BranchCommissionRecord {
   hesaplamaDetayi: string
   netKazanc: number
   status: BranchCommissionStatus
+  cancelCategory?: string
+  cancelReason?: string
+  cancelDescription?: string
+  cancelledAt?: string
+  cancelledById?: string
+  cancelledByName?: string
 }

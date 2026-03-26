@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Cargo — Ayarlar / Entegrasyonlar Modülü
 - `app/arf/(workspaces)/cargo/settings/integrations/`: Entegrasyon yönetimi modülü tamamlandı.
-  - Marketplace ekranı: kategori ve durum filtrelemeleri (URL state), entegrasyon kartları, sayfalama.
+  - Marketplace ekranı: kategori ve durum Filtrelerleri (URL state), entegrasyon kartları, sayfalama.
   - 3-adımlı entegrasyon oluşturma wizard'ı (Platform seçimi → Kimlik bilgileri → Bağlantı testi); RHF + Zod.
   - Özel Webhook akışı: checkbox ile `custom-webhook` platformuna geçiş, bağlantı geri yükleme.
   - Entegrasyon detay sayfası: Senkronizasyon, Parametre Eşleştirme ve Log sekmeleri.

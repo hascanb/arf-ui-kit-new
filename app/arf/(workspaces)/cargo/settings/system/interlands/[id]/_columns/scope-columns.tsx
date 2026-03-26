@@ -3,7 +3,13 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { DataTableColumnHeader } from "@hascanb/arf-ui-kit/datatable-kit"
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown, Pencil, Trash2 } from "lucide-react"
 import type { InterlandScopeRow } from "../../_types"
 
 export interface InterlandScopeGroupedRow {
@@ -38,16 +44,28 @@ export function getScopeColumns(
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">İşlemler</span>,
+      header: () => null,
       enableSorting: false,
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => onEdit(row.original)}>
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button type="button" size="sm" variant="outline" className="h-8 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700" onClick={() => onDelete(row.original)}>
-            <Trash2 className="size-3.5" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="h-8 rounded-lg px-2.5 text-xs">
+                İşlemler
+                <ChevronDown className="ml-1 size-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onSelect={() => onEdit(row.original)}>
+                <Pencil className="mr-2 size-4" />
+                Düzenle
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-700 focus:text-red-700" onSelect={() => onDelete(row.original)}>
+                <Trash2 className="mr-2 size-4" />
+                Sil
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },

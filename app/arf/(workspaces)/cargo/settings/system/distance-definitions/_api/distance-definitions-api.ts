@@ -59,8 +59,9 @@ function buildGapWarnings(rows: DistanceDefinitionRecord[]): string[] {
 
     const expectedNextMin = Number((currentMax + 0.01).toFixed(2))
     if (next.minKm > expectedNextMin) {
+      const gapEnd = Number((next.minKm - 0.01).toFixed(2))
       warnings.push(
-        `${current.name} ve ${next.name} arasinda bosluk var: ${currentMax} -> ${next.minKm}`,
+        `${current.name} ve ${next.name} arasında boşluk var: ${expectedNextMin} KM - ${gapEnd} KM`,
       )
     }
   }
@@ -94,7 +95,7 @@ export async function validateDistanceRange(
     return {
       isValid: false,
       collisions: [],
-      gapWarnings: ["minKm 0'dan kucuk olamaz."],
+      gapWarnings: ["Min Km değeri 0'dan küçük olamaz."],
     }
   }
 
@@ -102,7 +103,7 @@ export async function validateDistanceRange(
     return {
       isValid: false,
       collisions: [],
-      gapWarnings: ["maxKm degeri minKm degerinden kucuk olamaz."],
+      gapWarnings: ["Max Km değeri Min Km değerinden küçük olamaz."],
     }
   }
 
@@ -129,7 +130,7 @@ export async function validateDistanceRange(
     ...rows,
     {
       id: ignoreId ?? "candidate",
-      name: "Yeni Barem",
+      name: "Yeni Tanım",
       minKm: candidateMin,
       maxKm: Number.isFinite(candidateMax) ? candidateMax : null,
       hasUpperLimit: Number.isFinite(candidateMax),
@@ -155,7 +156,7 @@ export async function createDistanceDefinition(
   const validation = await validateDistanceRange(payload)
   if (!validation.isValid) {
     const first = validation.collisions[0]
-    throw new Error(`Dikkat! Girdiginiz degerler '${first?.conflictingName ?? "bir barem"}' ile cakismaktadir.`)
+    throw new Error(`Dikkat! girdiğiniz değerler '${first?.conflictingName ?? "bir tanım"}' ile çakışmaktadır.`)
   }
 
   await latency(150)
@@ -169,7 +170,7 @@ export async function updateDistanceDefinition(
   const validation = await validateDistanceRange(payload, id)
   if (!validation.isValid) {
     const first = validation.collisions[0]
-    throw new Error(`Dikkat! Girdiginiz degerler '${first?.conflictingName ?? "bir barem"}' ile cakismaktadir.`)
+    throw new Error(`Dikkat! girdiğiniz değerler '${first?.conflictingName ?? "bir tanım"}' ile çakışmaktadır.`)
   }
 
   await latency(150)
@@ -199,7 +200,7 @@ export async function setDistanceDefinitionStatus(
 
     if (!validation.isValid) {
       const first = validation.collisions[0]
-      throw new Error(`Dikkat! Girdiginiz degerler '${first?.conflictingName ?? "bir barem"}' ile cakismaktadir.`)
+      throw new Error(`Dikkat! girdiğiniz değerler '${first?.conflictingName ?? "bir tanım"}' ile çakışmaktadır.`)
     }
   }
 

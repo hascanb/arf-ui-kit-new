@@ -1,12 +1,21 @@
 import { Package, Smartphone, Truck } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { UserDetail } from "../../_types"
+import type { UserAssetKind, UserDetail } from "../../_types"
 import type { UserRole } from "../../_types/user"
 
 const ASSET_ROLES: UserRole[] = ["courier", "branch_manager", "tm_manager"]
 
 interface Props {
   user: UserDetail
+}
+
+const ASSET_KIND_LABELS: Record<UserAssetKind, string> = {
+  phone: "Telefon",
+  computer: "Bilgisayar",
+  tablet: "Tablet",
+  simcard: "Simkart",
+  car: "Araba",
+  house: "Ev",
 }
 
 function formatDate(iso: string) {
@@ -22,7 +31,7 @@ export function UserAssetsSection({ user }: Props) {
 
   if (!hasAssetRole) {
     return (
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
         <CardContent className="flex items-center justify-center py-10 text-sm text-slate-400">
           <div className="flex flex-col items-center gap-2">
             <Package className="size-8 text-slate-300" />
@@ -35,7 +44,7 @@ export function UserAssetsSection({ user }: Props) {
 
   if (!user.asset) {
     return (
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
         <CardContent className="flex items-center justify-center py-10 text-sm text-slate-400">
           <div className="flex flex-col items-center gap-2">
             <Package className="size-8 text-slate-300" />
@@ -48,17 +57,70 @@ export function UserAssetsSection({ user }: Props) {
 
   const { asset } = user
 
+  if (asset.entries && asset.entries.length > 0) {
+    return (
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <Package className="size-4 text-slate-400" />
+            Zimmet Kalemleri
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-2">
+          {asset.entries.map((entry) => (
+            <div key={entry.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <div className="text-xs text-slate-500">Tür</div>
+                  <div className="text-sm font-medium text-slate-900">{ASSET_KIND_LABELS[entry.kind]}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Varlık Adı</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.assetName || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Marka / Model</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.brandModel || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Zimmet No</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.assignmentNumber || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Seri No</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.serialNumber || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">IMEI</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.imei || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Teslim Tarihi</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.providedAt ? formatDate(entry.providedAt) : "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Not</div>
+                  <div className="text-sm font-medium text-slate-900">{entry.notes || "-"}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {asset.vehiclePlate && (
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-              <Truck className="size-4" />
+        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <Truck className="size-4 text-slate-400" />
               Araç Zimmeti
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             <dl className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                 <dt className="text-xs text-slate-500">Plaka</dt>
@@ -88,14 +150,14 @@ export function UserAssetsSection({ user }: Props) {
       )}
 
       {asset.deviceId && (
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-              <Smartphone className="size-4" />
+        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <Smartphone className="size-4 text-slate-400" />
               Cihaz Zimmeti
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             <dl className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                 <dt className="text-xs text-slate-500">Cihaz ID</dt>

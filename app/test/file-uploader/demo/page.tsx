@@ -24,7 +24,7 @@
  * - **Paste**: Panodan yapıştır (images)
  * 
  * ### 3. File Validation
- * - **File Types**: MIME type bazlı filtreleme (image/*, .pdf, vb.)
+ * - **File Types**: MIME type bazlı Filtreler (image/*, .pdf, vb.)
  * - **File Size**: Max file size limiti (MB)
  * - **File Count**: Max file count (tek/çoklu)
  * - **Custom Validation**: Zod schemas ile özel kurallar

@@ -14,20 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { validatePricingRules, type UpsertPriceDefinitionInput } from "../_api/price-definitions-api"
 import type {
   PriceDefinitionDetail,
-  PriceDefinitionStatus,
-  PriceDefinitionType,
   PriceRuleRow,
   PriceSurcharge,
 } from "../_types"
@@ -53,19 +42,26 @@ const surchargeSchema = z.object({
   codCommissionValue: z.number().min(0),
   pickupFee: z.number().min(0),
   remoteAreaDeliveryFee: z.number().min(0),
+  customServices: z.array(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      fee: z.number().min(0),
+    }),
+  ).default([]),
 })
 
 const formSchema = z
   .object({
     id: z.string().optional(),
     name: z.string().min(2, "Tarife adı zorunludur."),
-    code: z.string().min(3, "Tarife kodu zorunludur."),
+    code: z.string().optional(),
     type: z.enum(["b2b", "b2c"]),
     isDefault: z.boolean(),
     validFrom: z.string().min(1, "Başlangıç tarihi zorunludur."),
     validTo: z.string().min(1, "Bitiş tarihi zorunludur."),
     status: z.enum(["active", "passive"]),
-    rules: z.array(ruleSchema).min(1, "En az bir barem satırı gerekir."),
+    rules: z.array(ruleSchema).min(1, "En az bir Tanım satırı gerekir."),
     surcharges: surchargeSchema,
   })
   .superRefine((value, context) => {
@@ -89,6 +85,12 @@ interface Props {
   onSubmit: (payload: UpsertPriceDefinitionInput & { id?: string }) => Promise<void>
 }
 
+const WIZARD_STEPS = [
+  { key: 1 as const, title: "Fiyatlandırma Kimliği" },
+  { key: 2 as const, title: "Fiyat Matrisi" },
+  { key: 3 as const, title: "Ek Hizmetler" },
+]
+
 function createDefaultRule(index: number): PriceRuleRow {
   return {
     id: `rule-${Date.now()}-${index}`,
@@ -111,6 +113,7 @@ function createDefaultSurcharges(): PriceSurcharge {
     codCommissionValue: 40,
     pickupFee: 20,
     remoteAreaDeliveryFee: 65,
+    customServices: [],
   }
 }
 
@@ -141,7 +144,11 @@ export function PriceDefinitionWizard({
           validTo: initialValue.validTo,
           status: initialValue.status,
           rules: initialValue.rules,
-          surcharges: initialValue.surcharges,
+          // Keep compatibility for old records that do not include custom services yet.
+          surcharges: {
+            ...initialValue.surcharges,
+            customServices: initialValue.surcharges.customServices ?? [],
+          },
         }
       : {
           id: undefined,
@@ -200,7 +207,7 @@ export function PriceDefinitionWizard({
 
   const nextStep = async () => {
     if (step === 1) {
-      const valid = await form.trigger(["name", "code", "type", "validFrom", "validTo", "status"])
+      const valid = await form.trigger(["name", "validFrom", "validTo"])
       if (!valid) {
         return
       }
@@ -241,13 +248,13 @@ export function PriceDefinitionWizard({
     try {
       await onSubmit({
         id: values.id,
-        code: values.code.trim(),
+        code: values.code?.trim() || initialValue?.code || `TRF-${Date.now().toString().slice(-6)}`,
         name: values.name.trim(),
-        type: values.type,
-        isDefault: values.isDefault,
+        type: values.type ?? initialValue?.type ?? "b2c",
+        isDefault: values.isDefault ?? initialValue?.isDefault ?? false,
         validFrom: values.validFrom,
         validTo: values.validTo,
-        status: values.status,
+        status: values.status ?? initialValue?.status ?? "active",
         rules: values.rules,
         surcharges: values.surcharges,
       })
@@ -258,26 +265,47 @@ export function PriceDefinitionWizard({
 
   return (
     <Form {...form}>
-      <form className="space-y-6" onSubmit={submitHandler}>
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-          <p className="text-xs text-slate-500">Adım {step}/3</p>
-        </div>
+      <form className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]" onSubmit={submitHandler}>
+        <aside className="space-y-2">
+          {WIZARD_STEPS.map((wizardStep, index) => {
+            const isActive = wizardStep.key === step
+            const isCompleted = wizardStep.key < step
 
-        <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1 text-xs">
-          <button type="button" className={`rounded-lg px-2 py-1 ${step === 1 ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500"}`} onClick={() => setStep(1)}>
-            1. Tarife Kimliği
-          </button>
-          <button type="button" className={`rounded-lg px-2 py-1 ${step === 2 ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500"}`} onClick={() => setStep(2)}>
-            2. Fiyat Matrisi
-          </button>
-          <button type="button" className={`rounded-lg px-2 py-1 ${step === 3 ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500"}`} onClick={() => setStep(3)}>
-            3. Ek Hizmetler
-          </button>
-        </div>
+            return (
+              <button
+                key={wizardStep.key}
+                type="button"
+                onClick={() => setStep(wizardStep.key)}
+                className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                  isActive
+                    ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                    : isCompleted
+                      ? "border-lime-200 bg-lime-50 text-slate-900"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                      isActive
+                        ? "bg-white/15 text-white"
+                        : isCompleted
+                          ? "bg-lime-200 text-slate-900"
+                          : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="text-sm font-medium leading-snug">{wizardStep.title}</div>
+                </div>
+              </button>
+            )
+          })}
+        </aside>
 
-        {step === 1 && (
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          {step === 1 && (
+            <div className="grid gap-4 md:grid-cols-2">
             <FormField
               control={form.control}
               name="name"
@@ -287,64 +315,6 @@ export function PriceDefinitionWizard({
                   <FormControl>
                     <Input {...field} placeholder="Örn: E-Ticaret Standart 2026" />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tarife Kodu</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Örn: TRF-ECOM-26" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tarife Tipi</FormLabel>
-                  <Select value={field.value} onValueChange={(value: PriceDefinitionType) => field.onChange(value)}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="b2b">B2B Kurumsal</SelectItem>
-                      <SelectItem value="b2c">B2C Bireysel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Durum</FormLabel>
-                  <Select value={field.value} onValueChange={(value: PriceDefinitionStatus) => field.onChange(value)}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Aktif</SelectItem>
-                      <SelectItem value="passive">Pasif</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -378,29 +348,14 @@ export function PriceDefinitionWizard({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="isDefault"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
-                    <div>
-                      <Label className="text-sm font-medium">Varsayılan Yap</Label>
-                      <p className="text-xs text-slate-500">Bu tarife sistemde varsayılan fiyat kaynağı olarak işaretlenir.</p>
-                    </div>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
+            </div>
+          )}
 
-        {step === 2 && (
-          <div className="space-y-3">
+          {step === 2 && (
+            <div className="space-y-3">
             {overlapErrors.length > 0 && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                <p className="font-medium">Kesişen barem var:</p>
+                <p className="font-medium">Kesişen Tanım var:</p>
                 <ul className="mt-1 list-disc pl-5">
                   {overlapErrors.map((error) => (
                     <li key={error}>{error}</li>
@@ -411,7 +366,7 @@ export function PriceDefinitionWizard({
 
             {gapWarnings.length > 0 && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-                <p className="font-medium">Barem boşluğu uyarısı:</p>
+                <p className="font-medium">Tanım boşluğu uyarısı:</p>
                 <ul className="mt-1 list-disc pl-5">
                   {gapWarnings.map((warning) => (
                     <li key={warning}>{warning}</li>
@@ -420,32 +375,34 @@ export function PriceDefinitionWizard({
               </div>
             )}
 
-            <RulesMatrixEditor rows={rules} onAdd={addRule} onDuplicate={duplicateRule} onRemove={removeRule} onChange={setRuleField} />
+            <RulesMatrixEditor
+              rows={rules}
+              onAdd={addRule}
+              onDuplicate={duplicateRule}
+              onRemove={removeRule}
+              onChange={setRuleField}
+            />
             <FormMessage>{form.formState.errors.rules?.message}</FormMessage>
-          </div>
-        )}
+            </div>
+          )}
 
-        {step === 3 && (
-          <SurchargeEditor
-            value={surcharges}
-            onChange={(key, val) => {
-              const updated = { ...form.getValues("surcharges"), [key]: val }
-              form.setValue("surcharges", updated, { shouldDirty: true, shouldValidate: true })
-            }}
-          />
-        )}
+          {step === 3 && (
+            <SurchargeEditor
+              value={surcharges}
+              onChange={(key, val) => {
+                const updated = { ...form.getValues("surcharges"), [key]: val }
+                form.setValue("surcharges", updated, { shouldDirty: true, shouldValidate: true })
+              }}
+            />
+          )}
 
-        <div className="flex items-center justify-between">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Vazgeç
-          </Button>
-
-          <div className="flex items-center gap-2">
-            {step > 1 && (
-              <Button type="button" variant="outline" onClick={prevStep}>
-                Geri
-              </Button>
-            )}
+          <div className="mt-6 flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Vazgeç
+            </Button>
+            <Button type="button" variant="outline" onClick={prevStep} disabled={step === 1}>
+              Geri
+            </Button>
             {step < 3 ? (
               <Button type="button" onClick={nextStep}>
                 İleri

@@ -33,16 +33,6 @@ export const auditColumns: ColumnDef<InterlandAuditLog>[] = [
     },
   },
   {
-    accessorKey: "oldValue",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Eski Değer" />,
-    cell: ({ row }) => row.original.oldValue ?? "-",
-  },
-  {
-    accessorKey: "newValue",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Yeni Değer" />,
-    cell: ({ row }) => row.original.newValue ?? "-",
-  },
-  {
     accessorKey: "actorName",
     header: ({ column }) => <DataTableColumnHeader column={column} title="İşlemi Yapan" />,
   },

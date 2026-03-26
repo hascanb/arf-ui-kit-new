@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   setPricingDefinitionStatus,
   updatePricingDefinition,
@@ -11,7 +10,6 @@ import {
 import type { PriceDefinitionDetail } from "../../_types"
 import { CreatePriceDefinitionModal } from "../../_components/create-price-definition-modal"
 import { DetailHeaderCard } from "./detail-header-card"
-import { DetailOverviewSection } from "./detail-overview-section"
 import { DetailRulesSection } from "./detail-rules-section"
 import { DetailSurchargesSection } from "./detail-surcharges-section"
 
@@ -46,7 +44,7 @@ export function DetailContent({ initialDetail }: Props) {
         }}
       />
 
-      <div className="flex flex-1 flex-col gap-4 bg-slate-50 p-4 pt-0">
+      <div className="flex flex-1 flex-col gap-4 bg-slate-50 p-4 pt-4">
         <DetailHeaderCard
           detail={detail}
           onEdit={() => setEditOpen(true)}
@@ -59,25 +57,8 @@ export function DetailContent({ initialDetail }: Props) {
           }}
         />
 
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid h-10 w-full grid-cols-3 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
-            <TabsTrigger value="overview" className="text-xs">Genel</TabsTrigger>
-            <TabsTrigger value="rules" className="text-xs">Barem Kuralları</TabsTrigger>
-            <TabsTrigger value="surcharges" className="text-xs">Ek Hizmetler</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview">
-            <DetailOverviewSection detail={detail} />
-          </TabsContent>
-
-          <TabsContent value="rules">
-            <DetailRulesSection rules={detail.rules} />
-          </TabsContent>
-
-          <TabsContent value="surcharges">
-            <DetailSurchargesSection surcharges={detail.surcharges} />
-          </TabsContent>
-        </Tabs>
+        <DetailRulesSection rules={detail.rules} />
+        <DetailSurchargesSection surcharges={detail.surcharges} />
       </div>
     </>
   )

@@ -124,7 +124,7 @@ export function DetailOverviewSection({ interland, onInterlandChange, onAuditApp
           editingRow
             ? {
                 city: editingRow.city,
-                district: editingRow.district,
+                districts: [editingRow.district],
                 neighborhoods: editingRow.neighborhoods,
                 sourceIds: editingRow.sourceRows.map((item) => item.id),
               }
@@ -132,22 +132,24 @@ export function DetailOverviewSection({ interland, onInterlandChange, onAuditApp
         }
         scopeRows={interland.scopeRows}
         onSave={async (payload) => {
-          const uniqueNeighborhoods = Array.from(new Set(payload.neighborhoods)).sort((a, b) =>
-            a.localeCompare(b, "tr"),
-          )
-
           const sourceIds = new Set(payload.sourceIds ?? [])
           const remainingRows =
             sourceIds.size > 0
               ? interland.scopeRows.filter((item) => !sourceIds.has(item.id))
               : interland.scopeRows
 
-          const nextRows: InterlandScopeRow[] = uniqueNeighborhoods.map((neighborhood, index) => ({
-            id: `scope-${Date.now()}-${index}`,
-            city: payload.city,
-            district: payload.district,
-            neighborhood,
-          }))
+          const nextRows: InterlandScopeRow[] = payload.districts.flatMap((district, districtIndex) => {
+            const uniqueNeighborhoods = Array.from(new Set(payload.neighborhoodsByDistrict[district] ?? [])).sort((a, b) =>
+              a.localeCompare(b, "tr"),
+            )
+
+            return uniqueNeighborhoods.map((neighborhood, neighborhoodIndex) => ({
+              id: `scope-${Date.now()}-${districtIndex}-${neighborhoodIndex}`,
+              city: payload.city,
+              district,
+              neighborhood,
+            }))
+          })
 
           const dedupedByKey = new Map<string, InterlandScopeRow>()
           for (const row of [...nextRows, ...remainingRows]) {
@@ -166,7 +168,9 @@ export function DetailOverviewSection({ interland, onInterlandChange, onAuditApp
               payload.sourceIds?.length && editingRow
                 ? `${editingRow.city} / ${editingRow.district} / ${editingRow.neighborhoods.join(", ")}`
                 : "-",
-            newValue: `${payload.city} / ${payload.district} / ${uniqueNeighborhoods.join(", ")}`,
+            newValue: `${payload.city} / ${payload.districts.join(", ")} / ${payload.districts
+              .flatMap((district) => payload.neighborhoodsByDistrict[district] ?? [])
+              .join(", ")}`,
             actorId: "current-user",
             actorName: "Mevcut Kullanıcı",
           })
@@ -174,13 +178,7 @@ export function DetailOverviewSection({ interland, onInterlandChange, onAuditApp
       />
 
       <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold text-slate-700">Kapsam Özeti</CardTitle>
-        </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-600">
-            Bu interland toplam <span className="font-semibold text-slate-900">{districts} ilçe</span> ve <span className="font-semibold text-slate-900">{interland.scopeRows.length} mahalleyi</span> kapsamaktadır.
-          </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">Şehir: <span className="font-semibold">{cities}</span></div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">İlçe: <span className="font-semibold">{districts}</span></div>
@@ -191,36 +189,15 @@ export function DetailOverviewSection({ interland, onInterlandChange, onAuditApp
 
       <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-slate-700">Kapsam ve Hiyerarşi</CardTitle>
+          <CardTitle className="text-sm font-semibold text-slate-700">Kapsam</CardTitle>
           <Button type="button" size="sm" onClick={() => setModalOpen(true)}>
-            Kapsamı Güncelle
+            Ekle
           </Button>
         </CardHeader>
         <Separator />
         <CardContent className="pt-4">
           <DataTable data={groupedRows} columns={columns} onTableReady={setTable} />
           {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold text-slate-700">Lojistik Hiyerarşi</CardTitle>
-        </CardHeader>
-        <Separator />
-        <CardContent className="space-y-2 pt-4 text-sm text-slate-600">
-          <p>
-            Bağlı Şube: <Link className="font-medium text-secondary hover:underline" href={`/arf/cargo/settings/system/branches/${interland.branchId}`}>{interland.branchName}</Link>
-          </p>
-          <p>
-            Transfer Merkezi: {interland.transferCenterId ? (
-              <Link className="font-medium text-secondary hover:underline" href={`/arf/cargo/settings/system/transfer-centers/${interland.transferCenterId}`}>{interland.transferCenterName}</Link>
-            ) : (
-              "-"
-            )}
-          </p>
-          <p>Şube Müdürü: <span className="font-medium text-slate-800">{interland.branchManagerName ?? "-"}</span></p>
-          <p>İletişim: <span className="font-medium text-slate-800">{interland.branchManagerPhone ?? "-"}</span></p>
         </CardContent>
       </Card>
     </div>

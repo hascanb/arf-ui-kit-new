@@ -12,6 +12,7 @@ export type AuditAction =
 export interface AuditLogEntry {
   id: string
   userId: string
+  actorName?: string
   action: AuditAction
   resourceType: "shipment" | "user" | "system" | "finance"
   resourceId?: string

@@ -6,12 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { PriceDefinitionDetail } from "../../_types"
-import { ArrowLeft, Copy, Edit3, Power, PowerOff, Share2, Star } from "lucide-react"
+import { ArrowLeft, Edit3, Power, PowerOff } from "lucide-react"
 
 interface Props {
   detail: PriceDefinitionDetail
   onEdit: () => void
   onToggleStatus: () => void
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleDateString("tr-TR")
 }
 
 export function DetailHeaderCard({ detail, onEdit, onToggleStatus }: Props) {
@@ -30,30 +39,18 @@ export function DetailHeaderCard({ detail, onEdit, onToggleStatus }: Props) {
 
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-semibold tracking-tight text-slate-900">Fiyat Detay: {detail.name}</h1>
+                <h1 className="text-xl font-semibold tracking-tight text-slate-900">{detail.name}</h1>
                 <Badge variant="outline" className={cn("border", passive ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700")}>
                   {passive ? "Pasif" : "Aktif"}
                 </Badge>
-                {detail.isDefault && (
-                  <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                    <Star className="mr-1 size-3.5 fill-amber-500 text-amber-500" />
-                    Varsayılan
-                  </Badge>
-                )}
               </div>
-              <p className="text-sm text-slate-600">{detail.code} | {detail.type.toUpperCase()} | {detail.ruleCount} kural</p>
+              <p className="text-sm text-slate-600">
+                Geçerlilik: {formatDate(detail.validFrom)} - {formatDate(detail.validTo)}
+              </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-9" onClick={() => void navigator.clipboard?.writeText(detail.code)}>
-              <Copy className="mr-1.5 size-4" />
-              Kod Kopyala
-            </Button>
-            <Button type="button" variant="outline" size="sm" className="h-9" onClick={() => void navigator.clipboard?.writeText(window.location.href)}>
-              <Share2 className="mr-1.5 size-4" />
-              Paylaş
-            </Button>
             <Button type="button" variant="outline" size="sm" className="h-9" onClick={onToggleStatus}>
               {passive ? <Power className="mr-1.5 size-4" /> : <PowerOff className="mr-1.5 size-4" />}
               {passive ? "Aktif Yap" : "Pasif Yap"}

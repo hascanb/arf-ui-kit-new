@@ -3,16 +3,20 @@
 import type { ChangeEvent } from "react"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { Check, ChevronsUpDown } from "lucide-react"
 import type { InterlandRecord } from "../_types"
 
 interface BranchOption {
@@ -30,6 +34,7 @@ interface Props {
 export function CreateInterlandModal({ open, onOpenChange, branches, onCreate }: Props) {
   const [name, setName] = useState("")
   const [branchId, setBranchId] = useState("")
+  const [branchPickerOpen, setBranchPickerOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const selectedBranch = useMemo(
@@ -40,6 +45,7 @@ export function CreateInterlandModal({ open, onOpenChange, branches, onCreate }:
   const reset = () => {
     setName("")
     setBranchId("")
+    setBranchPickerOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -70,18 +76,42 @@ export function CreateInterlandModal({ open, onOpenChange, branches, onCreate }:
           </div>
           <div className="space-y-1.5">
             <Label>Bağlı Şube</Label>
-            <Select value={branchId} onValueChange={setBranchId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Şube seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((branch) => (
-                  <SelectItem key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={branchPickerOpen} onOpenChange={setBranchPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between font-normal"
+                >
+                  {selectedBranch?.name ?? "Şube seçin"}
+                  <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                  <CommandInput placeholder="Şube ara..." />
+                  <CommandList>
+                    <CommandEmpty>Şube bulunamadı.</CommandEmpty>
+                    <CommandGroup>
+                      {branches.map((branch) => (
+                        <CommandItem
+                          key={branch.id}
+                          value={branch.name}
+                          onSelect={() => {
+                            setBranchId(branch.id)
+                            setBranchPickerOpen(false)
+                          }}
+                        >
+                          <Check className={cn("mr-2 size-4", branchId === branch.id ? "opacity-100" : "opacity-0")} />
+                          {branch.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         <DialogFooter>

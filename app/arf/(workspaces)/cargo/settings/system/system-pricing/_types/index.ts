@@ -4,7 +4,7 @@ import type { PriceSurcharge } from "./price-surcharge"
 
 export type { PriceDefinitionStatus, PriceDefinitionType, PriceDefinitionRecord } from "./price-definition"
 export type { PriceRuleRow, RegionType, ShipmentType, UnitType } from "./price-rule"
-export type { PriceSurcharge, SurchargeValueType } from "./price-surcharge"
+export type { CustomSurchargeService, PriceSurcharge, SurchargeValueType } from "./price-surcharge"
 
 export interface PriceDefinitionDetail extends PriceDefinitionRecord {
   rules: PriceRuleRow[]

@@ -8,6 +8,7 @@ import type { BranchCargoRecord, BranchDetail } from "../_types"
 import { DetailCargoesSection } from "./detail-cargoes-section"
 import { DetailCommissionSection } from "./detail-commission-section"
 import { DetailFinancialSection } from "./detail-financial-section"
+import { BranchDetailEditModal } from "./branch-detail-edit-modal"
 import { DetailHeaderCard } from "./detail-header-card"
 import { DetailInfoSection } from "./detail-info-section"
 import { DetailNotesSection } from "./detail-notes-section"
@@ -20,6 +21,7 @@ interface Props {
 
 export function BranchDetailContent({ initialBranch, initialCargoes }: Props) {
   const [branch, setBranch] = useState(initialBranch)
+  const [editOpen, setEditOpen] = useState(false)
 
   const handleToggleStatus = () => {
     setBranch((prev) => ({
@@ -30,6 +32,8 @@ export function BranchDetailContent({ initialBranch, initialCargoes }: Props) {
 
   return (
     <>
+      <BranchDetailEditModal open={editOpen} onOpenChange={setEditOpen} branch={branch} onSave={setBranch} />
+
       <AppHeader
         breadcrumbs={[
           { label: "Ana Sayfa", href: "/" },
@@ -38,7 +42,7 @@ export function BranchDetailContent({ initialBranch, initialCargoes }: Props) {
         ]}
       />
       <div className="flex flex-1 flex-col gap-5 bg-slate-50 p-6">
-        <DetailHeaderCard branch={branch} status={branch.status} onToggleStatus={handleToggleStatus} />
+        <DetailHeaderCard branch={branch} status={branch.status} onToggleStatus={handleToggleStatus} onEdit={() => setEditOpen(true)} />
 
         <Tabs defaultValue="info" className="space-y-4">
           <TabsList className="grid h-10 w-full grid-cols-6 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
@@ -69,7 +73,7 @@ export function BranchDetailContent({ initialBranch, initialCargoes }: Props) {
           </TabsList>
 
           <TabsContent value="info">
-            <DetailInfoSection branch={branch} onBranchChange={setBranch} />
+            <DetailInfoSection branch={branch} />
           </TabsContent>
           <TabsContent value="cargoes">
             <Suspense fallback={<div className="text-sm text-slate-500">Kargo verisi yükleniyor...</div>}>

@@ -374,7 +374,7 @@ function ServerSideDataTableContent() {
             <div>
               <div className="font-semibold mb-1">Manual Filtering</div>
               <p className="text-muted-foreground">
-                Filtreleme backend'de uygulanır. `manualFiltering=true` ile aktif edilir.
+                Filtreler backend'de uygulanır. `manualFiltering=true` ile aktif edilir.
               </p>
             </div>
           </CardContent>

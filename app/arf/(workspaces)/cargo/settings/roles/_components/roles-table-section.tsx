@@ -1,18 +1,30 @@
 "use client"
 
-import { useEffect, useMemo, useState, type ChangeEvent } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { OnChangeFn, PaginationState, Table as TanStackTable } from "@tanstack/react-table"
-import { DataTable, DataTablePagination } from "@hascanb/arf-ui-kit/datatable-kit"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  DataTable,
+  DataTableExcelActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from "@hascanb/arf-ui-kit/datatable-kit"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
+import { CheckIcon, Filter, Plus, PlusCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   activateRole,
   deleteRole,
@@ -32,11 +44,22 @@ interface Props {
   definitions: PermissionDefinition[]
 }
 
+const statusOptions = [
+  { label: "Aktif", value: "active" },
+  { label: "Pasif", value: "passive" },
+] as const
+
+const typeOptions = [
+  { label: "Sistem", value: "system" },
+  { label: "Özel", value: "custom" },
+] as const
+
 export function RolesTableSection({ data, categories, definitions }: Props) {
   const [rows, setRows] = useState<RoleRecord[]>(data)
   const [table, setTable] = useState<TanStackTable<RoleRecord> | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [editRole, setEditRole] = useState<RoleDetail | null>(null)
+  const [showFacetedFilters, setShowFacetedFilters] = useState(false)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -60,6 +83,9 @@ export function RolesTableSection({ data, categories, definitions }: Props) {
     type: typeFilter,
     sortBy,
   })
+
+  const selectedStatusOption = statusOptions.find((o) => o.value === statusFilter)
+  const selectedTypeOption = typeOptions.find((o) => o.value === typeFilter)
 
   const updateQueryParam = (key: string, value: string, resetPage = true) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -148,7 +174,7 @@ export function RolesTableSection({ data, categories, definitions }: Props) {
   }, [currentPage])
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <CreateRoleModal
         open={createOpen}
         categories={categories}
@@ -176,74 +202,206 @@ export function RolesTableSection({ data, categories, definitions }: Props) {
         />
       )}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Input
-            value={query}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => updateQueryParam("q", event.target.value)}
-            placeholder="Rol adi veya aciklama ara..."
-          />
-
-          <Select
-            value={statusFilter}
-            onValueChange={(value: string) => updateQueryParam("status", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Durum" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tum Durumlar</SelectItem>
-              <SelectItem value="active">Aktif</SelectItem>
-              <SelectItem value="passive">Pasif</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={typeFilter} onValueChange={(value: string) => updateQueryParam("type", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Rol Tipi" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tum Tipler</SelectItem>
-              <SelectItem value="system">Sistem</SelectItem>
-              <SelectItem value="custom">Ozel</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={sortBy}
-            onValueChange={(value: string) => updateQueryParam("sortBy", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Siralama" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="userCount">Kullanici Sayisi</SelectItem>
-              <SelectItem value="createdAt">Olusturma Tarihi</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Roller</h1>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" onClick={() => router.replace(pathname)}>
-            Filtreleri Sifirla
-          </Button>
+        <div className="flex items-center gap-2">
           {(filteredRows[0] ?? rows[0]) && (
-            <RoleCopyAction role={(filteredRows[0] ?? rows[0]) as RoleRecord} onCopied={() => void refreshRows()} />
+            <RoleCopyAction
+              role={(filteredRows[0] ?? rows[0]) as RoleRecord}
+              onCopied={() => void refreshRows()}
+            />
           )}
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            + Yeni Rol Olustur
+          <Button type="button" size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Yeni Rol Oluştur
           </Button>
         </div>
       </div>
 
-      <DataTable
-        data={filteredRows}
-        columns={columns}
-        onTableReady={setTable}
-        pagination={pagination}
-        onPaginationChange={handlePaginationChange}
-      />
-      {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
+      <Card>
+        <CardContent className="space-y-4">
+          {table && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                {!showFacetedFilters && (
+                  <DataTableExcelActions
+                    table={table}
+                    filename="roller"
+                    exportSelected={false}
+                    exportLabel="Dışarı Aktar"
+                  />
+                )}
+                <DataTableToolbar
+                  table={table}
+                  showColumnSelector={!showFacetedFilters}
+                  viewLabel="Görünüm"
+                  columnsLabel="Sütunlar"
+                  resetLabel="Sıfırla"
+                >
+                  <Button
+                    type="button"
+                    variant={showFacetedFilters ? "default" : "outline"}
+                    size="sm"
+                    className="mr-3 h-8"
+                    onClick={() => setShowFacetedFilters((prev) => !prev)}
+                  >
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filtreler
+                  </Button>
+
+                  {showFacetedFilters && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 border-dashed">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Durum
+                            {selectedStatusOption && (
+                              <>
+                                <Separator orientation="vertical" className="mx-2 h-4" />
+                                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                  {selectedStatusOption.label}
+                                </Badge>
+                              </>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[220px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Durum" />
+                            <CommandList>
+                              <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
+                              <CommandGroup>
+                                {statusOptions.map((option) => {
+                                  const isSelected = statusFilter === option.value
+                                  return (
+                                    <CommandItem
+                                      key={option.value}
+                                      onSelect={() =>
+                                        updateQueryParam(
+                                          "status",
+                                          isSelected ? "all" : option.value,
+                                        )
+                                      }
+                                    >
+                                      <div
+                                        className={cn(
+                                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                          isSelected
+                                            ? "bg-primary text-primary-foreground"
+                                            : "opacity-50 [&_svg]:invisible",
+                                        )}
+                                      >
+                                        <CheckIcon className="h-4 w-4" />
+                                      </div>
+                                      <span>{option.label}</span>
+                                    </CommandItem>
+                                  )
+                                })}
+                              </CommandGroup>
+                              {selectedStatusOption && (
+                                <>
+                                  <CommandSeparator />
+                                  <CommandGroup>
+                                    <CommandItem
+                                      onSelect={() => updateQueryParam("status", "all")}
+                                      className="justify-center text-center"
+                                    >
+                                      Filtreleri Temizle
+                                    </CommandItem>
+                                  </CommandGroup>
+                                </>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 border-dashed">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Tip
+                            {selectedTypeOption && (
+                              <>
+                                <Separator orientation="vertical" className="mx-2 h-4" />
+                                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                  {selectedTypeOption.label}
+                                </Badge>
+                              </>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[220px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Tip" />
+                            <CommandList>
+                              <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
+                              <CommandGroup>
+                                {typeOptions.map((option) => {
+                                  const isSelected = typeFilter === option.value
+                                  return (
+                                    <CommandItem
+                                      key={option.value}
+                                      onSelect={() =>
+                                        updateQueryParam(
+                                          "type",
+                                          isSelected ? "all" : option.value,
+                                        )
+                                      }
+                                    >
+                                      <div
+                                        className={cn(
+                                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                          isSelected
+                                            ? "bg-primary text-primary-foreground"
+                                            : "opacity-50 [&_svg]:invisible",
+                                        )}
+                                      >
+                                        <CheckIcon className="h-4 w-4" />
+                                      </div>
+                                      <span>{option.label}</span>
+                                    </CommandItem>
+                                  )
+                                })}
+                              </CommandGroup>
+                              {selectedTypeOption && (
+                                <>
+                                  <CommandSeparator />
+                                  <CommandGroup>
+                                    <CommandItem
+                                      onSelect={() => updateQueryParam("type", "all")}
+                                      className="justify-center text-center"
+                                    >
+                                      Filtreleri Temizle
+                                    </CommandItem>
+                                  </CommandGroup>
+                                </>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </DataTableToolbar>
+              </div>
+            </div>
+          )}
+
+          <DataTable
+            data={filteredRows}
+            columns={columns}
+            onTableReady={setTable}
+            pagination={pagination}
+            onPaginationChange={handlePaginationChange}
+          />
+          {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
+        </CardContent>
+      </Card>
     </div>
   )
 }
+

@@ -9,12 +9,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 const USERS_BASE = "/arf/cargo/settings/system/users"
-import { ChevronDown, Eye, Pencil, ShieldBan, ShieldCheck, UserX } from "lucide-react"
+import { ChevronDown, Eye, Pencil, ShieldCheck, UserX } from "lucide-react"
 import type { UserRecord, UserRole, UserStatus } from "../_types"
 import { USER_ROLE_LABELS } from "../_types"
 
@@ -27,25 +26,6 @@ function formatRelativeTime(isoString: string | undefined): string {
   if (diffHr < 24) return `${diffHr} saat önce`
   const diffDay = Math.floor(diffHr / 24)
   return `${diffDay} gün önce`
-}
-
-function getRoleBadgeClass(role: UserRole): string {
-  switch (role) {
-    case "superadmin":
-      return "border-slate-700 bg-slate-800 text-white"
-    case "hq_manager":
-      return "border-violet-200 bg-violet-50 text-violet-700"
-    case "tm_manager":
-      return "border-blue-200 bg-blue-50 text-blue-700"
-    case "branch_manager":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700"
-    case "courier":
-      return "border-amber-200 bg-amber-50 text-amber-700"
-    case "operator":
-      return "border-sky-200 bg-sky-50 text-sky-700"
-    default:
-      return "border-slate-200 bg-slate-50 text-slate-700"
-  }
 }
 
 function getStatusBadgeClass(status: UserStatus): string {
@@ -76,9 +56,8 @@ function getStatusLabel(status: UserStatus): string {
 
 interface ColumnActions {
   onEdit: (row: UserRecord) => void
-  onSuspend: (row: UserRecord) => void
-  onReactivate: (row: UserRecord) => void
   onDeactivate: (row: UserRecord) => void
+  onReactivate: (row: UserRecord) => void
 }
 
 export function getUsersListColumns(actions: ColumnActions): ColumnDef<UserRecord>[] {
@@ -98,9 +77,6 @@ export function getUsersListColumns(actions: ColumnActions): ColumnDef<UserRecor
               <p className="font-medium text-slate-900">
                 {row.original.firstName} {row.original.lastName}
               </p>
-              {row.original.isTemporaryPassword && (
-                <p className="text-xs text-amber-600">Şifre aktivasyonu bekleniyor</p>
-              )}
             </div>
           </div>
         )
@@ -114,15 +90,17 @@ export function getUsersListColumns(actions: ColumnActions): ColumnDef<UserRecor
       ),
     },
     {
+      accessorKey: "phoneNumber",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Telefon" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-slate-600">{row.original.phoneNumber}</span>
+      ),
+    },
+    {
       accessorKey: "role",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Rol" />,
       cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={cn("border text-xs", getRoleBadgeClass(row.original.role))}
-        >
-          {USER_ROLE_LABELS[row.original.role]}
-        </Badge>
+        <span className="text-sm text-slate-700">{USER_ROLE_LABELS[row.original.role as UserRole]}</span>
       ),
     },
     {
@@ -133,13 +111,6 @@ export function getUsersListColumns(actions: ColumnActions): ColumnDef<UserRecor
         <span className="text-sm text-slate-700">
           {row.original.locationName ?? "Tüm Sistem"}
         </span>
-      ),
-    },
-    {
-      accessorKey: "phoneNumber",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Telefon" />,
-      cell: ({ row }) => (
-        <span className="text-sm text-slate-600">{row.original.phoneNumber}</span>
       ),
     },
     {
@@ -171,6 +142,7 @@ export function getUsersListColumns(actions: ColumnActions): ColumnDef<UserRecor
       cell: ({ row }) => {
         const user = row.original
         const detailUrl = `${USERS_BASE}/${user.id}`
+        const toggleStatusLabel = user.status === "active" ? "Pasif Yap" : "Aktif Yap"
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -189,25 +161,14 @@ export function getUsersListColumns(actions: ColumnActions): ColumnDef<UserRecor
                 <Pencil className="mr-2 size-4 text-slate-600" />
                 Düzenle
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {user.status !== "active" && (
-                <DropdownMenuItem onClick={() => actions.onReactivate(user)}>
-                  <ShieldCheck className="mr-2 size-4 text-emerald-600" />
-                  Aktifleştir
-                </DropdownMenuItem>
-              )}
-              {user.status === "active" && (
-                <DropdownMenuItem onClick={() => actions.onSuspend(user)}>
-                  <ShieldBan className="mr-2 size-4 text-amber-600" />
-                  Askıya Al
-                </DropdownMenuItem>
-              )}
-              {user.status !== "passive" && (
-                <DropdownMenuItem onClick={() => actions.onDeactivate(user)}>
+              <DropdownMenuItem onClick={() => (user.status === "active" ? actions.onDeactivate(user) : actions.onReactivate(user))}>
+                {user.status === "active" ? (
                   <UserX className="mr-2 size-4 text-slate-500" />
-                  Pasife Al
-                </DropdownMenuItem>
-              )}
+                ) : (
+                  <ShieldCheck className="mr-2 size-4 text-emerald-600" />
+                )}
+                {toggleStatusLabel}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )

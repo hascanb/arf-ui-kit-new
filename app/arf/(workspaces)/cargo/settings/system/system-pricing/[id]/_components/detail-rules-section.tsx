@@ -18,8 +18,7 @@ export function DetailRulesSection({ rules }: Props) {
   return (
     <Card className="rounded-2xl border-slate-200 shadow-sm">
       <CardHeader>
-        <CardTitle>Dinamik Fiyatlandırma Matrisi</CardTitle>
-        <CardDescription>Bu tarifedeki tüm barem satırları.</CardDescription>
+        <CardTitle>Fiyatlandırma</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <DataTable data={rules} columns={columns} onTableReady={setTable} emptyMessage="Kural satırı bulunamadı." />

@@ -27,10 +27,11 @@ export interface InterlandDetail extends InterlandRecord {
 }
 
 export interface BlockedInterlandPayload {
-  city: string
-  district: string
-  neighborhood?: string
-  reason: string
-  startsAt?: string
-  endsAt?: string
+  name: string
+  branchId: string
+  branchName: string
+}
+
+export interface BlockedInterlandRecord extends BlockedInterlandPayload {
+  id: string
 }

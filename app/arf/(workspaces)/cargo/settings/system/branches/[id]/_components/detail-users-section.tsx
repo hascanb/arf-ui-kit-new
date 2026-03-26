@@ -110,7 +110,7 @@ export function DetailUsersSection({ users, onUsersChange }: Props) {
                   <DataTableToolbar table={table} showColumnSelector={!showFilters} viewLabel="Görünüm" columnsLabel="Sütunlar" resetLabel="Sıfırla">
                     <Button type="button" variant={showFilters ? "default" : "outline"} size="sm" className="mr-3 h-8" onClick={() => setShowFilters((value) => !value)}>
                       <Filter className="mr-2 size-4" />
-                      Filtreleme
+                      Filtreler
                     </Button>
                   </DataTableToolbar>
                 </div>

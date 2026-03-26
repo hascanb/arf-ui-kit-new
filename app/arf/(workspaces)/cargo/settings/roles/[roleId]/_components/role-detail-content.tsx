@@ -21,7 +21,7 @@ export function RoleDetailContent({ role, categories, definitions }: Props) {
         breadcrumbs={[
           { label: "Ana Sayfa", href: "/" },
           { label: "Ayarlar", href: "/arf/cargo/settings" },
-          { label: "Rol Listesi", href: "/arf/cargo/settings/roles" },
+          { label: "Roller", href: "/arf/cargo/settings/roles" },
           { label: role.name },
         ]}
       />

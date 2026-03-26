@@ -56,6 +56,20 @@ export function BranchAcenteEditModal({ open, onOpenChange, value, onSave }: Pro
     updateField(key, event.target.value)
   }
 
+  const ibanBodyValue = (form.iban ?? "")
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/^TR/, "")
+
+  const handleIbanChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value
+      .toUpperCase()
+      .replace(/\s+/g, "")
+      .replace(/^TR/, "")
+
+    updateField("iban", raw ? `TR${raw}` : "")
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -76,11 +90,11 @@ export function BranchAcenteEditModal({ open, onOpenChange, value, onSave }: Pro
             <Input id="agency-owner" value={form.acenteSahibi ?? ""} onChange={handleInputChange("acenteSahibi")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="agency-owner-phone">Sahibi Telefon</Label>
+            <Label htmlFor="agency-owner-phone">Telefon</Label>
             <Input id="agency-owner-phone" value={form.acenteSahibiTelefon ?? ""} onChange={handleInputChange("acenteSahibiTelefon")} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="agency-owner-email">Sahibi E-posta</Label>
+            <Label htmlFor="agency-owner-email">E-Posta</Label>
             <Input id="agency-owner-email" value={form.acenteSahibiEposta ?? ""} onChange={handleInputChange("acenteSahibiEposta")} />
           </div>
           <div className="space-y-1.5">
@@ -96,12 +110,23 @@ export function BranchAcenteEditModal({ open, onOpenChange, value, onSave }: Pro
             <Input id="agency-bank" value={form.bankAdi ?? ""} onChange={handleInputChange("bankAdi")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="agency-account-holder">Hesap Sahibi</Label>
-            <Input id="agency-account-holder" value={form.hesapSahibi ?? ""} onChange={handleInputChange("hesapSahibi")} />
+            <Label htmlFor="agency-iban">IBAN</Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-slate-500">
+                TR
+              </span>
+              <Input
+                id="agency-iban"
+                value={ibanBodyValue}
+                onChange={handleIbanChange}
+                className="pl-12"
+                placeholder="0001001745792316110001"
+              />
+            </div>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="agency-iban">IBAN</Label>
-            <Input id="agency-iban" value={form.iban ?? ""} onChange={handleInputChange("iban")} />
+            <Label htmlFor="agency-account-holder">Hesap Sahibi</Label>
+            <Input id="agency-account-holder" value={form.hesapSahibi ?? ""} onChange={handleInputChange("hesapSahibi")} />
           </div>
         </div>
         <DialogFooter>

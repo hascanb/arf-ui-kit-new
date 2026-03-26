@@ -87,9 +87,9 @@ export function DetailNotesSection({ branchId, branchName, notes, onNotesChange 
             <MessageSquare className="size-4 text-slate-400" />
             Notlar
             {visibleNotes.length > 0 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+              <span className="inline-flex h-5 items-center rounded-full bg-slate-100 px-1.5 text-[10px] font-normal text-slate-500">
                 {visibleNotes.length}
-              </Badge>
+              </span>
             )}
           </CardTitle>
           <Button size="sm" className="h-8 text-xs" onClick={() => setModalOpen(true)}>

@@ -1,5 +1,5 @@
 // TODO: Remove when API is ready
-import type { AuditLogEntry, UserAsset, UserDetail, UserRecord, UserRole, UserStatus } from "../_types"
+import type { AuditLogEntry, UserAsset, UserAssetDraft, UserDetail, UserDocument, UserRecord, UserRole, UserStatus } from "../_types"
 
 function cloneAuditLog(entry: AuditLogEntry): AuditLogEntry {
   return { ...entry }
@@ -18,6 +18,7 @@ function toRecord(detail: UserDetail): UserRecord {
     id: detail.id,
     firstName: detail.firstName,
     lastName: detail.lastName,
+    identityNumber: detail.identityNumber,
     email: detail.email,
     phoneNumber: detail.phoneNumber,
     role: detail.role,
@@ -25,6 +26,8 @@ function toRecord(detail: UserDetail): UserRecord {
     locationName: detail.locationName,
     locationType: detail.locationType,
     profilePhotoUrl: detail.profilePhotoUrl,
+    documents: detail.documents,
+    asset: detail.asset ? { ...detail.asset } : undefined,
     status: detail.status,
     lastLogin: detail.lastLogin,
     isTemporaryPassword: detail.isTemporaryPassword,
@@ -43,10 +46,12 @@ function makeAuditLog(
   description: string,
   timestamp: string,
   resourceId?: string,
+  actorName?: string,
 ): AuditLogEntry {
   return {
     id,
     userId,
+    actorName,
     action,
     resourceType,
     resourceId,
@@ -88,6 +93,9 @@ function makeDetail(input: {
   createdAt: string
   updatedAt: string
   createdByName: string
+  identityNumber?: string
+  profilePhotoUrl?: string
+  documents?: UserDocument[]
   asset?: UserAsset
   auditLogs?: AuditLogEntry[]
 }): UserDetail {
@@ -95,12 +103,15 @@ function makeDetail(input: {
     id: input.id,
     firstName: input.firstName,
     lastName: input.lastName,
+    identityNumber: input.identityNumber,
     email: input.email,
     phoneNumber: input.phoneNumber,
     role: input.role,
     locationId: input.locationId,
     locationName: input.locationName,
     locationType: input.locationType,
+    profilePhotoUrl: input.profilePhotoUrl,
+    documents: input.documents,
     status: input.status,
     lastLogin: input.lastLogin,
     isTemporaryPassword: input.isTemporaryPassword ?? false,
@@ -108,7 +119,7 @@ function makeDetail(input: {
     updatedAt: input.updatedAt,
     createdBy: input.createdByName.toLowerCase().replace(/\s+/g, "-"),
     createdByName: input.createdByName,
-    asset: input.asset,
+       asset: input.asset ? { ...input.asset, entries: input.asset.entries } : undefined,
     auditLogs: input.auditLogs ?? [],
   }
 }
@@ -131,8 +142,8 @@ const storedUsers: UserDetail[] = [
     createdByName: "Sistem",
     auditLogs: [
       makeAuditLog("al-001", "usr-001", "login", "system", "Sisteme giriş yaptı", "2026-03-24T09:15:00Z"),
-      makeAuditLog("al-002", "usr-001", "user_modified", "user", "Yeni kullanıcı oluşturdu: Ahmet Yılmaz", "2026-03-23T14:30:00Z", "usr-002"),
-      makeAuditLog("al-003", "usr-001", "shipment_status_updated", "shipment", "TRF-1002 no'lu kargonun durumunu 'Teslim Edildi' yaptı", "2026-03-22T11:00:00Z", "TRF-1002"),
+      makeAuditLog("al-002", "usr-001", "user_modified", "user", "Yeni kullanıcı oluşturdu: Ahmet Yılmaz", "2026-03-23T14:30:00Z", "usr-002", "Mehmet Kaya"),
+      makeAuditLog("al-003", "usr-001", "shipment_status_updated", "shipment", "TRF-1002 no'lu kargonun durumunu 'Teslim Edildi' yaptı", "2026-03-22T11:00:00Z", "TRF-1002", "Mehmet Kaya"),
     ],
   }),
   makeDetail({
@@ -151,8 +162,8 @@ const storedUsers: UserDetail[] = [
     updatedAt: "2026-03-24T08:45:00Z",
     createdByName: "Mehmet Kaya",
     auditLogs: [
-      makeAuditLog("al-010", "usr-002", "login", "system", "Sisteme giriş yaptı", "2026-03-24T08:45:00Z"),
-      makeAuditLog("al-011", "usr-002", "shipment_created", "shipment", "Yeni kargo oluşturdu: TRF-1010", "2026-03-23T10:00:00Z", "TRF-1010"),
+      makeAuditLog("al-010", "usr-002", "login", "system", "Sisteme giriş yaptı", "2026-03-24T08:45:00Z", undefined, "Ahmet Yılmaz"),
+      makeAuditLog("al-011", "usr-002", "shipment_created", "shipment", "Yeni kargo oluşturdu: TRF-1010", "2026-03-23T10:00:00Z", "TRF-1010", "Ahmet Yılmaz"),
     ],
   }),
   makeDetail({
@@ -171,7 +182,7 @@ const storedUsers: UserDetail[] = [
     updatedAt: "2026-03-23T17:30:00Z",
     createdByName: "Mehmet Kaya",
     auditLogs: [
-      makeAuditLog("al-020", "usr-003", "login", "system", "Sisteme giriş yaptı", "2026-03-23T17:30:00Z"),
+      makeAuditLog("al-020", "usr-003", "login", "system", "Sisteme giriş yaptı", "2026-03-23T17:30:00Z", undefined, "Fatma Demir"),
     ],
   }),
   makeDetail({
@@ -190,7 +201,7 @@ const storedUsers: UserDetail[] = [
     updatedAt: "2026-03-24T07:00:00Z",
     createdByName: "Fatma Demir",
     auditLogs: [
-      makeAuditLog("al-030", "usr-004", "login", "system", "Sisteme giriş yaptı", "2026-03-24T07:00:00Z"),
+      makeAuditLog("al-030", "usr-004", "login", "system", "Sisteme giriş yaptı", "2026-03-24T07:00:00Z", undefined, "Ali Çelik"),
     ],
   }),
   makeDetail({
@@ -213,10 +224,33 @@ const storedUsers: UserDetail[] = [
       assignedTerritory: "Adana Seyhan İnterland",
       deviceId: "DEV-0042",
       deviceSerialNumber: "SN-MOTOROLA-042",
+         entries: [
+           {
+             id: "asset-entry-usr-005-phone",
+             kind: "phone",
+             assetName: "Motorola TC27",
+             brandModel: "Motorola / TC27",
+             serialNumber: "SN-MOTOROLA-042",
+             imei: "356789104200123",
+             assignmentNumber: "ZMT-2025-0042",
+             providedAt: "2025-05-10T08:00:00Z",
+             notes: "Kurye teslim cihazı",
+           },
+           {
+             id: "asset-entry-usr-005-car",
+             kind: "car",
+             assetName: "Dağıtım Aracı",
+             brandModel: "Ford Courier",
+             serialNumber: "01 AKD 123",
+             assignmentNumber: "ZMT-2025-0043",
+             providedAt: "2025-05-10T08:00:00Z",
+             notes: "Seyhan dağıtım hattı",
+           },
+         ],
     }),
     auditLogs: [
-      makeAuditLog("al-040", "usr-005", "login", "system", "Sisteme giriş yaptı", "2026-03-24T06:30:00Z"),
-      makeAuditLog("al-041", "usr-005", "shipment_status_updated", "shipment", "TRF-0999 no'lu kargonun durumunu 'Teslim Edildi' yaptı", "2026-03-24T10:45:00Z", "TRF-0999"),
+      makeAuditLog("al-040", "usr-005", "login", "system", "Sisteme giriş yaptı", "2026-03-24T06:30:00Z", undefined, "Zeynep Arslan"),
+      makeAuditLog("al-041", "usr-005", "shipment_status_updated", "shipment", "TRF-0999 no'lu kargonun durumunu 'Teslim Edildi' yaptı", "2026-03-24T10:45:00Z", "TRF-0999", "Zeynep Arslan"),
     ],
   }),
   makeDetail({
@@ -239,15 +273,27 @@ const storedUsers: UserDetail[] = [
       assignedTerritory: "Bursa Nilüfer İnterland",
       deviceId: "DEV-0075",
       deviceSerialNumber: "SN-ZEBRA-075",
+         entries: [
+           {
+             id: "asset-entry-usr-006-device",
+             kind: "computer",
+             assetName: "Zebra El Terminali",
+             brandModel: "Zebra / TC57",
+             serialNumber: "SN-ZEBRA-075",
+             assignmentNumber: "ZMT-2025-0075",
+             providedAt: "2025-06-20T09:00:00Z",
+           },
+         ],
     }),
     auditLogs: [
-      makeAuditLog("al-050", "usr-006", "login", "system", "Sisteme giriş yaptı", "2026-02-15T14:00:00Z"),
+      makeAuditLog("al-050", "usr-006", "login", "system", "Sisteme giriş yaptı", "2026-02-15T14:00:00Z", undefined, "Kemal Şahin"),
     ],
   }),
   makeDetail({
     id: "usr-007",
     firstName: "Havva",
     lastName: "Yıldız",
+    identityNumber: "12345678901",
     email: "havva.yildiz@kargosistemi.com",
     phoneNumber: "0562 777 88 99",
     role: "operator",
@@ -261,7 +307,7 @@ const storedUsers: UserDetail[] = [
     updatedAt: "2026-03-20T10:00:00Z",
     createdByName: "Mehmet Kaya",
     auditLogs: [
-      makeAuditLog("al-060", "usr-007", "user_created", "user", "Kullanıcı hesabı oluşturuldu", "2026-03-20T10:00:00Z"),
+      makeAuditLog("al-060", "usr-007", "user_created", "user", "Kullanıcı hesabı oluşturuldu", "2026-03-20T10:00:00Z", undefined, "Mehmet Kaya"),
     ],
   }),
   makeDetail({
@@ -280,8 +326,8 @@ const storedUsers: UserDetail[] = [
     updatedAt: "2026-01-15T09:00:00Z",
     createdByName: "Ahmet Yılmaz",
     auditLogs: [
-      makeAuditLog("al-070", "usr-008", "login", "system", "Sisteme giriş yaptı", "2026-01-10T12:00:00Z"),
-      makeAuditLog("al-071", "usr-008", "user_suspended", "user", "Kullanıcı askıya alındı", "2026-01-15T09:00:00Z"),
+      makeAuditLog("al-070", "usr-008", "login", "system", "Sisteme giriş yaptı", "2026-01-10T12:00:00Z", undefined, "Burak Öztürk"),
+      makeAuditLog("al-071", "usr-008", "user_suspended", "user", "Kullanıcı askıya alındı", "2026-01-15T09:00:00Z", undefined, "Ahmet Yılmaz"),
     ],
   }),
 ]
@@ -358,11 +404,16 @@ export function updateStoredUser(
   payload: {
     firstName: string
     lastName: string
+    identityNumber?: string
+    email: string
     phoneNumber: string
     role: UserRole
     locationId: string | null
     locationName: string | null
     locationType: "branch" | "tm" | "hq" | null
+    profilePhotoUrl?: string
+    documents?: UserDocument[]
+    asset?: UserAssetDraft
   },
 ): UserRecord | undefined {
   const index = storedUsers.findIndex((u) => u.id === id)
@@ -370,6 +421,23 @@ export function updateStoredUser(
   storedUsers[index] = {
     ...storedUsers[index],
     ...payload,
+    asset: payload.asset
+      ? {
+          ...storedUsers[index].asset,
+          userId: storedUsers[index].id,
+          assignedAt: payload.asset.assignedAt ?? storedUsers[index].asset?.assignedAt ?? new Date().toISOString(),
+          assignedBy: (payload.asset.assignedByName ?? storedUsers[index].asset?.assignedByName ?? "Sistem")
+            .toLowerCase()
+            .replace(/\s+/g, "-"),
+          assignedByName: payload.asset.assignedByName ?? storedUsers[index].asset?.assignedByName ?? "Sistem",
+          vehiclePlate: payload.asset.vehiclePlate,
+          assignedTerritory: payload.asset.assignedTerritory,
+          deviceId: payload.asset.deviceId,
+          deviceSerialNumber: payload.asset.deviceSerialNumber,
+          allocations: payload.asset.allocations,
+           entries: payload.asset.entries,
+        }
+      : storedUsers[index].asset,
     updatedAt: new Date().toISOString(),
   }
   return toRecord(storedUsers[index])

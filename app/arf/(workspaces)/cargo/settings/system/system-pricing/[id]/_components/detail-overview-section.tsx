@@ -12,7 +12,7 @@ export function DetailOverviewSection({ detail }: Props) {
     <div className="grid gap-4 lg:grid-cols-2">
       <Card className="rounded-2xl border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Tarife Kimliği</CardTitle>
+          <CardTitle>Fiyatlandırma Kimliği</CardTitle>
           <CardDescription>Bu fiyat tanımının ana metadata alanları.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm">

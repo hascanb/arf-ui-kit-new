@@ -13,21 +13,40 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 
+function formatUnit(value: PriceRuleRow["unitType"]): string {
+  if (value === "kg") {
+    return "Kg"
+  }
+
+  return "Desi"
+}
+
+function formatShipmentType(value: PriceRuleRow["shipmentType"]): string {
+  if (value === "koli") {
+    return "Koli"
+  }
+  if (value === "zarf") {
+    return "Zarf"
+  }
+
+  return "Palet"
+}
+
 export function getRulesColumns(): ColumnDef<PriceRuleRow>[] {
   return [
     {
       accessorKey: "unitType",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Tür" />,
-      cell: ({ row }) => row.original.unitType.toUpperCase(),
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Birim" />,
+      cell: ({ row }) => formatUnit(row.original.unitType),
     },
     {
       accessorKey: "shipmentType",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Gönderi Tipi" />,
-      cell: ({ row }) => row.original.shipmentType,
+      cell: ({ row }) => formatShipmentType(row.original.shipmentType),
     },
     {
       accessorKey: "regionLabel",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Mesafe / Bölge" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Mesafe" />,
     },
     {
       id: "range",
@@ -36,13 +55,16 @@ export function getRulesColumns(): ColumnDef<PriceRuleRow>[] {
     },
     {
       accessorKey: "basePrice",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Taban Fiyat" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Fiyat (TL)" />,
       cell: ({ row }) => formatCurrency(row.original.basePrice),
     },
     {
       accessorKey: "incrementalPrice",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="+ Fiyat" />,
-      cell: ({ row }) => formatCurrency(row.original.incrementalPrice),
+      header: ({ column }) => <DataTableColumnHeader column={column} title="+ Fiyat Dinamik" />,
+      cell: ({ row }) => {
+        const value = row.original.incrementalPrice
+        return value > 0 ? formatCurrency(value) : "-"
+      },
     },
   ]
 }

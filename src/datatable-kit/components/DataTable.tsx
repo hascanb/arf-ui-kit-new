@@ -95,8 +95,8 @@ export function DataTable<TData>({
   
   // States
   isLoading = false,
-  emptyMessage = 'No data available.',
-  loadingMessage = 'Loading...',
+  emptyMessage = 'Veri bulunamadı.',
+  loadingMessage = 'Yükleniyor...',
   
   // Callbacks
   onRowClick,

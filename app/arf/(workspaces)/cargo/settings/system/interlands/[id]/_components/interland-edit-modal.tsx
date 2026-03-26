@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { InterlandDetail, InterlandStatus } from "../../_types"
+import type { InterlandDetail } from "../../_types"
 
 interface BranchOption {
   id: string
@@ -23,20 +23,18 @@ interface BranchOption {
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  value: Pick<InterlandDetail, "name" | "branchId" | "branchName" | "status">
+  value: Pick<InterlandDetail, "name" | "branchId" | "branchName">
   branches: BranchOption[]
-  onSave: (value: Pick<InterlandDetail, "name" | "branchId" | "branchName" | "status">) => void
+  onSave: (value: Pick<InterlandDetail, "name" | "branchId" | "branchName">) => void
 }
 
 export function InterlandEditModal({ open, onOpenChange, value, branches, onSave }: Props) {
   const [name, setName] = useState(value.name)
   const [branchId, setBranchId] = useState(value.branchId)
-  const [status, setStatus] = useState<InterlandStatus>(value.status)
 
   useEffect(() => {
     setName(value.name)
     setBranchId(value.branchId)
-    setStatus(value.status)
   }, [open, value])
 
   const selectedBranch = branches.find((branch) => branch.id === branchId)
@@ -67,18 +65,6 @@ export function InterlandEditModal({ open, onOpenChange, value, branches, onSave
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label>Durum</Label>
-            <Select value={status} onValueChange={(next: InterlandStatus) => setStatus(next)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="passive">Pasif</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -94,7 +80,6 @@ export function InterlandEditModal({ open, onOpenChange, value, branches, onSave
                 name: name.trim(),
                 branchId: selectedBranch.id,
                 branchName: selectedBranch.name,
-                status,
               })
               onOpenChange(false)
             }}

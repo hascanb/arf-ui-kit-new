@@ -1,16 +1,23 @@
 "use client"
 
-import { useMemo, useState, type ChangeEvent } from "react"
+import { useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
+import { CheckIcon, Filter, Plus, PlusCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { createIntegration } from "../_api/integrations-api"
 import type {
   CreateIntegrationPayload,
@@ -28,11 +35,19 @@ interface Props {
   categories: IntegrationCategoryOption[]
 }
 
+const statusOptions = [
+  { label: "Bağlı ve Aktif", value: "connected" },
+  { label: "Bağlantı Koptu", value: "disconnected" },
+  { label: "Hata Var", value: "error" },
+  { label: "Kurulum Bekliyor", value: "pending_setup" },
+] as const
+
 export function IntegrationsMarketplaceSection({ integrations, platforms, categories }: Props) {
   const [rows, setRows] = useState(integrations)
   const [modalOpen, setModalOpen] = useState(false)
   const [initialPlatformId, setInitialPlatformId] = useState<string | undefined>(undefined)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showFacetedFilters, setShowFacetedFilters] = useState(false)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -57,6 +72,8 @@ export function IntegrationsMarketplaceSection({ integrations, platforms, catego
     [categories],
   )
 
+  const selectedStatusOption = statusOptions.find((o) => o.value === status)
+
   const setParam = (key: string, value: string, resetPage = true) => {
     const params = new URLSearchParams(searchParams.toString())
     if (!value || value === "all") {
@@ -77,13 +94,7 @@ export function IntegrationsMarketplaceSection({ integrations, platforms, catego
   }
 
   return (
-    <div className="space-y-4">
-      {successMessage ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {successMessage}
-        </div>
-      ) : null}
-
+    <div className="space-y-6">
       <CreateIntegrationModal
         open={modalOpen}
         platforms={platforms}
@@ -95,77 +106,166 @@ export function IntegrationsMarketplaceSection({ integrations, platforms, catego
         onCreate={handleCreate}
       />
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid flex-1 gap-3 md:grid-cols-3">
-          <Input value={q} onChange={(event: ChangeEvent<HTMLInputElement>) => setParam("q", event.target.value)} placeholder="Platform adı ara..." />
-
-          <Select value={status} onValueChange={(value: string) => setParam("status", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Durum" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Durumlar</SelectItem>
-              <SelectItem value="connected">Bağlı</SelectItem>
-              <SelectItem value="disconnected">Bağlantı Koptu</SelectItem>
-              <SelectItem value="error">Hata</SelectItem>
-              <SelectItem value="pending_setup">Kurulum Bekliyor</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button type="button" variant="outline" onClick={() => router.replace(pathname)}>Filtreleri Sıfırla</Button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Entegrasyonlar</h1>
         </div>
-
-        <Button type="button" onClick={() => setModalOpen(true)}>+ Yeni Entegrasyon Oluştur / Bağla</Button>
+        <Button type="button" size="sm" className="gap-2" onClick={() => setModalOpen(true)}>
+          <Plus className="size-4" />
+          Yeni Entegrasyon Oluştur / Bağla
+        </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {categoryButtons.map((item) => (
-          <Button key={item.id} variant={category === item.id ? "default" : "outline"} size="sm" onClick={() => setParam("category", item.id)}>
-            {item.label}
-          </Button>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="space-y-4">
+          {successMessage && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {successMessage}
+            </div>
+          )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {pagedRows.map((row) => (
-          <IntegrationCard
-            key={row.id}
-            row={row}
-            onConnect={(platformId) => {
-              setInitialPlatformId(platformId)
-              setModalOpen(true)
-            }}
-            onDuplicate={(rowToClone) => {
-              setInitialPlatformId(rowToClone.platformId)
-              setModalOpen(true)
-            }}
-          />
-        ))}
-      </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant={showFacetedFilters ? "default" : "outline"}
+              size="sm"
+              className="h-8"
+              onClick={() => setShowFacetedFilters((prev) => !prev)}
+            >
+              <Filter className="mr-2 h-4 w-4" />
+              Filtreler
+            </Button>
 
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500">Sayfa {currentPage} / {totalPages}</p>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage <= 1}
-            onClick={() => setParam("page", String(currentPage - 1), false)}
-          >
-            Önceki
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => setParam("page", String(currentPage + 1), false)}
-          >
-            Sonraki
-          </Button>
-        </div>
-      </div>
+            {showFacetedFilters && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 border-dashed">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Durum
+                    {selectedStatusOption && (
+                      <>
+                        <Separator orientation="vertical" className="mx-2 h-4" />
+                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                          {selectedStatusOption.label}
+                        </Badge>
+                      </>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[220px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Durum" />
+                    <CommandList>
+                      <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
+                      <CommandGroup>
+                        {statusOptions.map((option) => {
+                          const isSelected = status === option.value
+                          return (
+                            <CommandItem
+                              key={option.value}
+                              onSelect={() =>
+                                setParam("status", isSelected ? "all" : option.value)
+                              }
+                            >
+                              <div
+                                className={cn(
+                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground"
+                                    : "opacity-50 [&_svg]:invisible",
+                                )}
+                              >
+                                <CheckIcon className="h-4 w-4" />
+                              </div>
+                              <span>{option.label}</span>
+                            </CommandItem>
+                          )
+                        })}
+                      </CommandGroup>
+                      {selectedStatusOption && (
+                        <>
+                          <CommandSeparator />
+                          <CommandGroup>
+                            <CommandItem
+                              onSelect={() => setParam("status", "all")}
+                              className="justify-center text-center"
+                            >
+                              Filtreleri Temizle
+                            </CommandItem>
+                          </CommandGroup>
+                        </>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {categoryButtons.map((item) => (
+              <Button
+                key={item.id}
+                variant={category === item.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setParam("category", item.id)}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {pagedRows.map((row) => (
+              <IntegrationCard
+                key={row.id}
+                row={row}
+                onConnect={(platformId) => {
+                  setInitialPlatformId(platformId)
+                  setModalOpen(true)
+                }}
+                onDuplicate={(rowToClone) => {
+                  setInitialPlatformId(rowToClone.platformId)
+                  setModalOpen(true)
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">
+              Sayfa {currentPage} / {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setParam("page", String(currentPage - 1), false)}
+              >
+                Önceki
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setParam("page", String(currentPage + 1), false)}
+              >
+                Sonraki
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
+
+interface Props {
+  integrations: IntegrationRecord[]
+  platforms: IntegrationPlatform[]
+  categories: IntegrationCategoryOption[]
+}
+

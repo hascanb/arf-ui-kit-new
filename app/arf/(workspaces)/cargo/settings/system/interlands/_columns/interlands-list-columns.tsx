@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { ChevronDown, Eye, Power, PowerOff, Share2, Trash2 } from "lucide-react"
+import { ChevronDown, Eye, Power, PowerOff, Trash2 } from "lucide-react"
 import type { InterlandRecord } from "../_types"
 
 export function getInterlandsListColumns(
@@ -24,10 +24,31 @@ export function getInterlandsListColumns(
       accessorKey: "name",
       header: ({ column }) => <DataTableColumnHeader column={column} title="İnterland Adı" />,
       cell: ({ row }) => (
-        <Link href={`/arf/cargo/settings/system/interlands/${row.original.id}`} className="font-medium text-slate-800 hover:text-primary hover:underline">
+        <Link href={`/arf/cargo/settings/system/interlands/${encodeURIComponent(row.original.id)}`} className="font-medium text-slate-800 hover:text-primary hover:underline">
           {row.original.name}
         </Link>
       ),
+    },
+    {
+      id: "type",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Tür" />,
+      cell: ({ row }) => {
+        const isBlocked = row.original.id.startsWith("blocked-")
+
+        return (
+          <Badge
+            variant="outline"
+            className={cn(
+              "border",
+              isBlocked
+                ? "border-amber-200 bg-amber-50 text-amber-700"
+                : "border-sky-200 bg-sky-50 text-sky-700",
+            )}
+          >
+            {isBlocked ? "Yasaklı" : "Normal"}
+          </Badge>
+        )
+      },
     },
     {
       accessorKey: "branchName",
@@ -62,7 +83,7 @@ export function getInterlandsListColumns(
     },
     {
       accessorKey: "updatedAt",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Güncellenme" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Güncellenme Zamanı" />,
       cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString("tr-TR"),
     },
     {
@@ -81,18 +102,10 @@ export function getInterlandsListColumns(
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem asChild>
-                <Link href={`/arf/cargo/settings/system/interlands/${row.original.id}`}>
+                <Link href={`/arf/cargo/settings/system/interlands/${encodeURIComponent(row.original.id)}`}>
                   <Eye className="mr-2 size-4" />
                   Detay Görüntüle
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  void navigator.clipboard?.writeText(`${window.location.origin}/arf/cargo/settings/system/interlands/${row.original.id}`)
-                }}
-              >
-                <Share2 className="mr-2 size-4" />
-                Paylaş
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => onToggleStatus(row.original.id)}>
                 {row.original.status === "active" ? (
