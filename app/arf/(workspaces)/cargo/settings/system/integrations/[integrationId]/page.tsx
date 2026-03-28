@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import {
   fetchIntegrationAuditLogs,
@@ -26,11 +27,13 @@ export default async function IntegrationDetailPage({ params }: Props) {
   }
 
   return (
-    <IntegrationDetailContent
-      integration={integration}
-      initialSyncSettings={syncSettings}
-      initialMappings={mappings}
-      initialLogs={logs}
-    />
+    <Suspense>
+      <IntegrationDetailContent
+        integration={integration}
+        initialSyncSettings={syncSettings}
+        initialMappings={mappings}
+        initialLogs={logs}
+      />
+    </Suspense>
   )
 }

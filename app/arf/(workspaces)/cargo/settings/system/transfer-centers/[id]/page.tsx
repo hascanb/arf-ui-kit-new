@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { fetchTransferCenterDetail } from "./_api/transfer-center-detail-api"
 import { TransferCenterDetailContent } from "./_components/detail-content"
@@ -14,5 +15,9 @@ export default async function TransferMerkeziDetayPage({ params }: Props) {
     notFound()
   }
 
-  return <TransferCenterDetailContent center={center} />
+  return (
+    <Suspense>
+      <TransferCenterDetailContent center={center} />
+    </Suspense>
+  )
 }
