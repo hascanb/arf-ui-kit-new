@@ -1,11 +1,18 @@
 export type {
   SupplierDetail,
   SupplierVehicle,
+  SupplierVehicleDocument,
   SupplierDriver,
+  DriverDocument,
   SupplierDocument,
   VehicleType,
   VehicleStatus,
+  VehicleBodyType,
+  VehicleDocumentType,
   LicenseClass,
   DriverStatus,
+  SrcType,
+  BloodGroup,
+  DriverDocumentType,
   DocumentType,
 } from "./supplier-detail-types"

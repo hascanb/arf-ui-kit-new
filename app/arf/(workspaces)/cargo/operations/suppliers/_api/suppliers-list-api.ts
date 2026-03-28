@@ -1,4 +1,6 @@
 import { computeSupplierKpi, suppliersDb } from "../_mock/suppliers-mock-data"
+import { supplierDetailMockData } from "../[supplierId]/_mock/supplier-detail-mock-data"
+import type { SupplierDocument } from "../[supplierId]/_types"
 import type { SupplierListKpi, SupplierRecord } from "../_types"
 
 // TODO: Replace with real API calls when backend is ready
@@ -13,6 +15,19 @@ export async function fetchSupplierListKpi(): Promise<SupplierListKpi> {
 
 export async function createSupplier(
   data: Omit<SupplierRecord, "id" | "vehicleCount" | "driverCount" | "activeTripsCount" | "totalTripsCount" | "isDeletable" | "isDeactivatable" | "hasExpiringDocuments" | "createdAt" | "updatedAt">
+  & {
+    contactPersonTitle?: string
+    contactEmail?: string
+    officialAddress?: string
+    taxOffice?: string
+    taxNumber?: string
+    paymentTermDays?: number
+    pricePerTrip?: number
+    pricePerDesi?: number
+    iban?: string
+    accountHolder?: string
+    documents?: SupplierDocument[]
+  }
 ): Promise<SupplierRecord> {
   const newRecord: SupplierRecord = {
     ...data,
@@ -28,6 +43,24 @@ export async function createSupplier(
     updatedAt: new Date().toISOString(),
   }
   suppliersDb.push(newRecord)
+
+  supplierDetailMockData[newRecord.id] = {
+    ...newRecord,
+    taxOffice: data.taxOffice,
+    taxNumber: data.taxNumber,
+    officialAddress: data.officialAddress,
+    contactPersonTitle: data.contactPersonTitle,
+    contactEmail: data.contactEmail,
+    iban: data.iban,
+    accountHolder: data.accountHolder,
+    paymentTermDays: data.paymentTermDays,
+    pricePerTrip: data.pricePerTrip,
+    pricePerDesi: data.pricePerDesi,
+    vehicles: [],
+    drivers: [],
+    documents: data.documents ?? [],
+  }
+
   return newRecord
 }
 

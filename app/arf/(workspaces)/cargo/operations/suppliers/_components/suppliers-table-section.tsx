@@ -9,7 +9,9 @@ import {
   DataTablePagination,
   DataTableToolbar,
 } from "@hascanb/arf-ui-kit/datatable-kit"
+import { Filter } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { toggleSupplierStatus } from "../_api/suppliers-list-api"
 import { getSuppliersColumns } from "../_columns/suppliers-columns"
 import type { SupplierRecord } from "../_types"
@@ -20,7 +22,6 @@ interface Props {
   pagination: PaginationState
   onPaginationChange: OnChangeFn<PaginationState>
   onCreateOpen: () => void
-  onEditOpen: (supplier: SupplierRecord) => void
 }
 
 const supplierTypeOptions = [
@@ -47,9 +48,9 @@ export function SuppliersTableSection({
   onRowsChange,
   pagination,
   onPaginationChange,
-  onEditOpen,
 }: Props) {
   const [table, setTable] = useState<TanStackTable<SupplierRecord> | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
 
   const columns = useMemo(
     () =>
@@ -63,9 +64,8 @@ export function SuppliersTableSection({
           if (!updated) return
           onRowsChange(rows.map((r) => (r.id === updated.id ? updated : r)))
         },
-        onEdit: onEditOpen,
       }),
-    [rows, onRowsChange, onEditOpen]
+    [rows, onRowsChange]
   )
 
   return (
@@ -73,36 +73,53 @@ export function SuppliersTableSection({
       <CardContent className="p-4 space-y-4">
         {table && (
           <div className="flex items-center gap-2">
-            <DataTableExcelActions
-              table={table}
-              filename="tedarikci-listesi"
-              exportSelected={false}
-              exportLabel="Dışarı Aktar"
-            />
+            {!showFilters && (
+              <DataTableExcelActions
+                table={table}
+                filename="tedarikci-listesi"
+                exportSelected={false}
+                exportLabel="Dışarı Aktar"
+              />
+            )}
             <DataTableToolbar
               table={table}
-              searchPlaceholder="Tedarikçi adı veya yetkili ara..."
-              showColumnSelector
+              searchPlaceholder="Firma adı, yetkili veya telefon ara..."
+              showColumnSelector={!showFilters}
               viewLabel="Görünüm"
               columnsLabel="Sütunlar"
               resetLabel="Sıfırla"
             >
-              <DataTableFacetedFilter
-                column={table.getColumn("supplierType")}
-                title="Tedarikçi Tipi"
-                options={supplierTypeOptions}
-              />
-              <DataTableFacetedFilter
-                column={table.getColumn("contractType")}
-                title="Sözleşme Tipi"
-                options={contractTypeOptions}
-              />
-              <DataTableFacetedFilter
-                column={table.getColumn("status")}
-                title="Durum"
-                options={statusOptions}
-              />
+              <Button
+                type="button"
+                variant={showFilters ? "default" : "outline"}
+                size="sm"
+                className="mr-3 h-8"
+                onClick={() => setShowFilters((value) => !value)}
+              >
+                <Filter className="mr-2 size-4" />
+                Filtreler
+              </Button>
             </DataTableToolbar>
+          </div>
+        )}
+
+        {showFilters && table && (
+          <div className="flex flex-wrap gap-2">
+            <DataTableFacetedFilter
+              column={table.getColumn("supplierType")}
+              title="Tedarikçi Tipi"
+              options={supplierTypeOptions}
+            />
+            <DataTableFacetedFilter
+              column={table.getColumn("contractType")}
+              title="Anlaşma Tipi"
+              options={contractTypeOptions}
+            />
+            <DataTableFacetedFilter
+              column={table.getColumn("status")}
+              title="Durum"
+              options={statusOptions}
+            />
           </div>
         )}
 

@@ -19,7 +19,6 @@ export function SuppliersListPageContent({ suppliers, kpi }: Props) {
   const [summary, setSummary] = useState(kpi)
   const [isSummaryVisible, setIsSummaryVisible] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
-  const [editSupplier, setEditSupplier] = useState<SupplierRecord | null>(null)
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (updater) => {
@@ -31,19 +30,25 @@ export function SuppliersListPageContent({ suppliers, kpi }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {/* KPI Başlık */}
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setIsSummaryVisible((v) => !v)}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
-        >
-          {isSummaryVisible ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-          {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
-        </button>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-1.5 size-4" />
-          Tedarikçi Oluştur
-        </Button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Tedarikçi Listesi</h1>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSummaryVisible((v) => !v)}
+          >
+            {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
+            {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
+          </Button>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-1.5 size-4" />
+            Tedarikçi Oluştur
+          </Button>
+        </div>
       </div>
 
       {/* KPI Kartları */}
@@ -62,7 +67,6 @@ export function SuppliersListPageContent({ suppliers, kpi }: Props) {
         pagination={pagination}
         onPaginationChange={handlePaginationChange}
         onCreateOpen={() => setCreateOpen(true)}
-        onEditOpen={(supplier) => setEditSupplier(supplier)}
       />
 
       {/* Tedarikçi Oluştur Modalı */}

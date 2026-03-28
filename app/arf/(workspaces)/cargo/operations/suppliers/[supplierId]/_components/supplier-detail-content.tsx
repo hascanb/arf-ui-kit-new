@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Building2, Route, Truck, Users } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { SupplierHeaderCard } from "./supplier-header-card"
 import { SupplierProfileSection } from "./supplier-profile-section"
 import { SupplierFleetSection } from "./supplier-fleet-section"
@@ -19,6 +21,7 @@ export function SupplierDetailContent({ initialSupplier }: Props) {
   const [editOpen, setEditOpen] = useState(false)
 
   const isWarehouse = supplier.supplierType === "warehouse"
+  const tabCount = isWarehouse ? 2 : 4
 
   return (
     <div className="space-y-6">
@@ -29,21 +32,25 @@ export function SupplierDetailContent({ initialSupplier }: Props) {
       />
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="h-10 rounded-xl bg-white shadow-sm">
-          <TabsTrigger value="profile" className="rounded-lg px-5 text-sm">
-            Profil
+        <TabsList className={cn("grid h-10 w-full rounded-xl border border-slate-200 bg-slate-100 p-0.5", tabCount === 2 ? "grid-cols-2" : "grid-cols-4")}>
+          <TabsTrigger value="profile" className="flex items-center gap-1.5 text-xs">
+            <Building2 className="size-3.5" />
+            Firma
           </TabsTrigger>
           {!isWarehouse && (
-            <TabsTrigger value="fleet" className="rounded-lg px-5 text-sm">
+            <TabsTrigger value="fleet" className="flex items-center gap-1.5 text-xs">
+              <Truck className="size-3.5" />
               Filo
             </TabsTrigger>
           )}
           {!isWarehouse && (
-            <TabsTrigger value="drivers" className="rounded-lg px-5 text-sm">
+            <TabsTrigger value="drivers" className="flex items-center gap-1.5 text-xs">
+              <Users className="size-3.5" />
               Sürücüler
             </TabsTrigger>
           )}
-          <TabsTrigger value="trips" className="rounded-lg px-5 text-sm">
+          <TabsTrigger value="trips" className="flex items-center gap-1.5 text-xs">
+            <Route className="size-3.5" />
             Seferler
           </TabsTrigger>
         </TabsList>

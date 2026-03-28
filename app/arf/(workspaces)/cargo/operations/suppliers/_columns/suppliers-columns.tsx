@@ -10,10 +10,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Pencil, PowerOff, CheckCircle2 } from "lucide-react"
+import { ChevronDown, Eye, Power, PowerOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { SupplierRecord } from "../_types"
 
@@ -32,7 +33,7 @@ export const CONTRACT_TYPE_LABELS: Record<SupplierRecord["contractType"], string
 }
 
 const SUPPLIER_TYPE_BADGE_CLASSES: Record<SupplierRecord["supplierType"], string> = {
-  ozmal: "border-primary/25 bg-primary/10 text-primary",
+  ozmal: "border-slate-300 bg-slate-100 text-slate-700",
   logistics: "border-blue-500/25 bg-blue-500/10 text-blue-700",
   truck_owner: "border-amber-500/25 bg-amber-500/10 text-amber-700",
   warehouse: "border-slate-500/25 bg-slate-500/10 text-slate-700",
@@ -47,14 +48,13 @@ const CONTRACT_TYPE_BADGE_CLASSES: Record<SupplierRecord["contractType"], string
 
 interface Options {
   onToggleStatus: (row: SupplierRecord) => void
-  onEdit: (row: SupplierRecord) => void
 }
 
-export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<ColumnDef<SupplierRecord>> {
+export function getSuppliersColumns({ onToggleStatus }: Options): Array<ColumnDef<SupplierRecord>> {
   return [
     {
       accessorKey: "name",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Tedarikçi Adı" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Firma Adı" />,
       cell: ({ row }) => (
         <div className="flex items-center gap-1.5">
           {row.original.supplierType === "ozmal" && (
@@ -64,7 +64,7 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
             href={`/arf/cargo/operations/suppliers/${row.original.id}`}
             className={cn(
               "text-sm underline decoration-slate-300 underline-offset-4 transition-all hover:decoration-slate-600",
-              row.original.supplierType === "ozmal" ? "font-semibold text-primary" : "text-slate-800"
+              row.original.supplierType === "ozmal" ? "font-semibold text-slate-900" : "text-slate-800"
             )}
           >
             {row.original.name}
@@ -85,7 +85,7 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
     },
     {
       accessorKey: "contractType",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Sözleşme Tipi" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Anlaşma Tipi" />,
       cell: ({ row }) => (
         <Badge variant="outline" className={cn("text-xs", CONTRACT_TYPE_BADGE_CLASSES[row.original.contractType])}>
           {CONTRACT_TYPE_LABELS[row.original.contractType]}
@@ -95,7 +95,7 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
     },
     {
       accessorKey: "contactPerson",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Yetkili" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Yetkili Kişi" />,
       cell: ({ row }) => (
         <span className="text-slate-700">{row.original.contactPerson ?? "-"}</span>
       ),
@@ -116,14 +116,14 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
     },
     {
       accessorKey: "vehicleCount",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Araç" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Araç Sayısı" />,
       cell: ({ row }) => (
         <span className="text-slate-700">{row.original.vehicleCount}</span>
       ),
     },
     {
       accessorKey: "driverCount",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Sürücü" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Sürücü Sayısı" />,
       cell: ({ row }) => (
         <span className="text-slate-700">{row.original.driverCount}</span>
       ),
@@ -133,6 +133,13 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
       header: ({ column }) => <DataTableColumnHeader column={column} title="Aktif Sefer" />,
       cell: ({ row }) => (
         <span className="text-slate-700">{row.original.activeTripsCount}</span>
+      ),
+    },
+    {
+      accessorKey: "totalTripsCount",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Toplam Sefer" />,
+      cell: ({ row }) => (
+        <span className="text-slate-700">{row.original.totalTripsCount}</span>
       ),
     },
     {
@@ -158,7 +165,7 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
     },
     {
       accessorKey: "hasExpiringDocuments",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Evrak" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Dosya Durumu" />,
       cell: ({ row }) =>
         row.original.hasExpiringDocuments ? (
           <span title="Süresi dolan veya yakında dolacak evrak mevcut">
@@ -178,38 +185,33 @@ export function getSuppliersColumns({ onToggleStatus, onEdit }: Options): Array<
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-8">
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">İşlemler</span>
+                <Button variant="outline" size="sm" className="h-8 rounded-full px-4 text-xs">
+                  İşlemler
+                  <ChevronDown className="ml-1.5 size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>{`${supplier.name} İşlemleri`}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={`/arf/cargo/operations/suppliers/${supplier.id}`}>
                     <Eye className="mr-2 size-4" />
                     Detay Görüntüle
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(supplier)}>
-                  <Pencil className="mr-2 size-4" />
-                  Düzenle
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onToggleStatus(supplier)}
+                  disabled={isOzmal}
+                  className={supplier.status === "active" ? "text-amber-600" : "text-emerald-600"}
+                >
+                  {supplier.status === "active" ? (
+                    <PowerOff className="mr-2 size-4" />
+                  ) : (
+                    <Power className="mr-2 size-4" />
+                  )}
+                  {supplier.status === "active" ? "Pasif Yap" : "Aktif Yap"}
                 </DropdownMenuItem>
-                {!isOzmal && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => onToggleStatus(supplier)}
-                      className={supplier.status === "active" ? "text-amber-600" : "text-emerald-600"}
-                    >
-                      {supplier.status === "active" ? (
-                        <PowerOff className="mr-2 size-4" />
-                      ) : (
-                        <CheckCircle2 className="mr-2 size-4" />
-                      )}
-                      {supplier.status === "active" ? "Pasif Yap" : "Aktif Yap"}
-                    </DropdownMenuItem>
-                  </>
-                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

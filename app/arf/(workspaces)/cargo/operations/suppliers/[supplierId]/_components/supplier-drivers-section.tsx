@@ -1,34 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Users } from "lucide-react"
-import { AlertTriangle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useMemo, useState } from "react"
+import type { Table as TanStackTable } from "@tanstack/react-table"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  DataTable,
+  DataTableExcelActions,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableToolbar,
+} from "@hascanb/arf-ui-kit/datatable-kit"
+import { Filter, Plus, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import {
+  deleteSupplierDriver,
+  toggleSupplierDriverStatus,
+} from "../_api/supplier-detail-api"
 import { AddDriverModal } from "./add-driver-modal"
-import type { SupplierDetail, SupplierDriver, DriverStatus } from "../_types"
-
-const STATUS_BADGE: Record<DriverStatus, { label: string; className: string }> = {
-  available: { label: "Müsait", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  on_trip: { label: "Seferde", className: "border-blue-200 bg-blue-50 text-blue-700" },
-  off_duty: { label: "Görev Dışı", className: "border-slate-200 bg-slate-50 text-slate-600" },
-}
-
-function isExpiringSoon(dateStr?: string): boolean {
-  if (!dateStr) return false
-  const date = new Date(dateStr)
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000
-  return date.getTime() - Date.now() < thirtyDays && date > new Date()
-}
+import { DriverDocumentsModal } from "./driver-documents-modal"
+import { getDriversColumns } from "../_columns/drivers-columns"
+import type { SupplierDetail, SupplierDriver } from "../_types"
 
 interface Props {
   supplier: SupplierDetail
@@ -36,133 +28,164 @@ interface Props {
 }
 
 export function SupplierDriversSection({ supplier, onSupplierChange }: Props) {
+  const [table, setTable] = useState<TanStackTable<SupplierDriver> | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  const [selectedDriver, setSelectedDriver] = useState<SupplierDriver | null>(null)
+  const [documentsOpen, setDocumentsOpen] = useState(false)
 
-  function handleDriverAdded(driver: SupplierDriver) {
+  const statusOptions = useMemo(
+    () => [
+      { label: "Müsait", value: "available" },
+      { label: "Seferde", value: "on_trip" },
+      { label: "Görev Dışı", value: "off_duty" },
+    ],
+    [],
+  )
+
+  const licenseClassOptions = useMemo(
+    () => [
+      { label: "B", value: "B" },
+      { label: "C", value: "C" },
+      { label: "CE", value: "CE" },
+      { label: "D", value: "D" },
+    ],
+    [],
+  )
+
+  const columns = useMemo(
+    () =>
+      getDriversColumns({
+        onViewDocuments: (driver) => {
+          setSelectedDriver(driver)
+          setDocumentsOpen(true)
+        },
+        onEdit: (driver) => {
+          setSelectedDriver(driver)
+          setAddOpen(true)
+        },
+        onDelete: async (driver) => {
+          const confirmed = window.confirm(`${driver.firstName} ${driver.lastName} adlı sürücü silinecek. Onaylıyor musunuz?`)
+          if (!confirmed) return
+          await deleteSupplierDriver(supplier.id, driver.id)
+          onSupplierChange({
+            ...supplier,
+            drivers: supplier.drivers.filter((d) => d.id !== driver.id),
+            driverCount: Math.max(0, supplier.driverCount - 1),
+          })
+        },
+        onToggleStatus: async (driver) => {
+          const updatedDriver = await toggleSupplierDriverStatus(supplier.id, driver.id)
+          onSupplierChange({
+            ...supplier,
+            drivers: supplier.drivers.map((d) => (d.id === updatedDriver.id ? updatedDriver : d)),
+          })
+        },
+      }),
+    [onSupplierChange, supplier],
+  )
+
+  function handleDriverSaved(driver: SupplierDriver) {
+    const exists = supplier.drivers.some((d) => d.id === driver.id)
     onSupplierChange({
       ...supplier,
-      drivers: [...supplier.drivers, driver],
-      driverCount: supplier.driverCount + 1,
+      drivers: exists
+        ? supplier.drivers.map((d) => (d.id === driver.id ? driver : d))
+        : [...supplier.drivers, driver],
+      driverCount: exists ? supplier.driverCount : supplier.driverCount + 1,
     })
+    setSelectedDriver(null)
     setAddOpen(false)
   }
 
   return (
     <Card className="rounded-2xl border-slate-200">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <Users className="size-4 text-slate-400" />
-          Sürücü Listesi ({supplier.drivers.length})
+          Sürücü Listesi
+          {supplier.drivers.length > 0 && (
+            <span className="inline-flex h-5 items-center rounded-full bg-slate-100 px-1.5 text-[10px] font-normal text-slate-500">
+              {supplier.drivers.length}
+            </span>
+          )}
         </CardTitle>
         <Button
-          variant="outline"
           size="sm"
-          className="h-8 rounded-lg text-xs"
-          onClick={() => setAddOpen(true)}
+          className="h-8 text-xs"
+          onClick={() => {
+            setSelectedDriver(null)
+            setAddOpen(true)
+          }}
         >
-          <Plus className="mr-1 size-3.5" />
+          <Plus className="mr-1.5 size-3.5" />
           Sürücü Ekle
         </Button>
       </CardHeader>
-      <CardContent className="p-0">
+      <Separator />
+      <CardContent className="pt-4">
         {supplier.drivers.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">Henüz sürücü eklenmemiş.</p>
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-slate-400">
+            <Users className="size-8" />
+            <p className="text-sm">Henüz sürücü eklenmemiş</p>
+          </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-100 bg-slate-50/50">
-                <TableHead className="text-xs font-semibold text-slate-500">Sürücü Adı</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Telefon</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Ehliyet</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Ehliyet Bitiş</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">SRC</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Durum</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Toplam Sefer</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Aktif Araç</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {supplier.drivers.map((driver) => {
-                const badge = STATUS_BADGE[driver.status]
-                const licenseExpiringSoon = isExpiringSoon(driver.licenseExpiry)
-                const srcExpiringSoon = isExpiringSoon(driver.srcExpiryDate)
+          <div className="space-y-3">
+            {table && (
+              <div className="flex items-center gap-2">
+                {!showFilters && (
+                  <DataTableExcelActions table={table} filename="tedarikci-surucu-listesi" exportSelected={false} exportLabel="Dışarı Aktar" />
+                )}
+                <DataTableToolbar table={table} searchPlaceholder="Sürücü, TCKN, telefon ara..." showColumnSelector={!showFilters} viewLabel="Görünüm" columnsLabel="Sütunlar" resetLabel="Sıfırla">
+                  <Button type="button" variant={showFilters ? "default" : "outline"} size="sm" className="mr-3 h-8" onClick={() => setShowFilters((value) => !value)}>
+                    <Filter className="mr-2 size-4" />
+                    Filtreler
+                  </Button>
+                </DataTableToolbar>
+              </div>
+            )}
 
-                return (
-                  <TableRow key={driver.id} className="border-slate-100">
-                    <TableCell className="font-medium text-slate-800">
-                      {driver.fullName}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">{driver.phone}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-slate-200 text-slate-600">
-                        Sınıf {driver.licenseClass}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`text-sm ${licenseExpiringSoon ? "font-semibold text-amber-700" : "text-slate-600"}`}
-                      >
-                        {new Date(driver.licenseExpiry).toLocaleDateString("tr-TR")}
-                        {licenseExpiringSoon && (
-                          <AlertTriangle className="ml-1 inline size-3.5 text-amber-600" />
-                        )}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {!driver.hasSrcCertificate ? (
-                        <Badge
-                          variant="outline"
-                          className="border-rose-200 bg-rose-50 text-rose-600"
-                        >
-                          Yok
-                        </Badge>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <Badge
-                            variant="outline"
-                            className={
-                              srcExpiringSoon
-                                ? "border-amber-200 bg-amber-50 text-amber-700"
-                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            }
-                          >
-                            {srcExpiringSoon ? "Yakın Bitiş" : "Var"}
-                          </Badge>
-                          {driver.srcExpiryDate && (
-                            <span className="text-xs text-slate-500">
-                              {new Date(driver.srcExpiryDate).toLocaleDateString("tr-TR")}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={badge.className}>
-                        {badge.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-700">
-                      {driver.totalTrips}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-slate-600">
-                      {driver.activeVehiclePlate ?? (
-                        <span className="font-sans text-slate-400">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+            {showFilters && table && (
+              <div className="flex flex-wrap gap-2">
+                <DataTableFacetedFilter column={table.getColumn("status")} title="Durum" options={statusOptions} />
+                <DataTableFacetedFilter column={table.getColumn("licenseClass")} title="Ehliyet Sınıfı" options={licenseClassOptions} />
+              </div>
+            )}
+
+            <DataTable
+              columns={columns}
+              data={supplier.drivers}
+              onTableReady={setTable}
+              enableSorting
+              enableColumnVisibility
+              enableHorizontalScroll
+              stickyFirstColumn
+              stickyLastColumn
+              className="[&_thead_tr]:bg-slate-50 [&_thead_th]:font-semibold [&_thead_th]:text-slate-600"
+              emptyMessage="Gösterilecek sürücü bulunamadı."
+            />
+            {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
+          </div>
         )}
       </CardContent>
 
       <AddDriverModal
         supplierId={supplier.id}
         open={addOpen}
-        onOpenChange={setAddOpen}
-        onAdded={handleDriverAdded}
+        onOpenChange={(open) => {
+          if (!open) setSelectedDriver(null)
+          setAddOpen(open)
+        }}
+        onSaved={handleDriverSaved}
+        driver={selectedDriver}
+      />
+
+      <DriverDocumentsModal
+        open={documentsOpen}
+        onOpenChange={setDocumentsOpen}
+        driver={selectedDriver}
       />
     </Card>
   )
 }
+

@@ -1,34 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Truck } from "lucide-react"
+import { useMemo, useState } from "react"
+import type { Table as TanStackTable } from "@tanstack/react-table"
+import {
+  DataTable,
+  DataTableExcelActions,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableToolbar,
+} from "@hascanb/arf-ui-kit/datatable-kit"
+import { Filter, Plus, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, Wrench } from "lucide-react"
+  deleteSupplierVehicle,
+  toggleSupplierVehicleStatus,
+} from "../_api/supplier-detail-api"
 import { AddVehicleModal } from "./add-vehicle-modal"
-import type { SupplierDetail, SupplierVehicle, VehicleStatus, VehicleType } from "../_types"
-
-const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
-  tir: "TIR",
-  kamyon: "Kamyon",
-  van: "Van",
-  pickup: "Pickup",
-}
-
-const STATUS_BADGE: Record<VehicleStatus, { label: string; className: string }> = {
-  idle: { label: "Müsait", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  on_road: { label: "Yolda", className: "border-blue-200 bg-blue-50 text-blue-700" },
-  maintenance: { label: "Bakımda", className: "border-amber-200 bg-amber-50 text-amber-700" },
-}
+import { VehicleDocumentsModal } from "./vehicle-documents-modal"
+import { getVehiclesColumns } from "../_columns/vehicles-columns"
+import type { SupplierDetail, SupplierVehicle } from "../_types"
 
 interface Props {
   supplier: SupplierDetail
@@ -36,111 +28,166 @@ interface Props {
 }
 
 export function SupplierFleetSection({ supplier, onSupplierChange }: Props) {
+  const [table, setTable] = useState<TanStackTable<SupplierVehicle> | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  const [selectedVehicle, setSelectedVehicle] = useState<SupplierVehicle | null>(null)
+  const [documentsOpen, setDocumentsOpen] = useState(false)
+
+  const vehicleTypeOptions = useMemo(
+    () => [
+      { label: "TIR", value: "tir" },
+      { label: "Kamyon", value: "kamyon" },
+      { label: "Van", value: "van" },
+      { label: "Pickup", value: "pickup" },
+    ],
+    [],
+  )
+
+  const statusOptions = useMemo(
+    () => [
+      { label: "Aktif", value: "active" },
+      { label: "Pasif", value: "passive" },
+    ],
+    [],
+  )
+
+  const bodyTypeOptions = useMemo(
+    () => [
+      { label: "Tenteli", value: "tenteli" },
+      { label: "Kapalı Kasa", value: "kapali_kasa" },
+      { label: "Frigorifik", value: "frigorifik" },
+      { label: "Açık Kasa", value: "acik_kasa" },
+      { label: "Panelvan", value: "panelvan" },
+      { label: "Diğer", value: "diger" },
+    ],
+    [],
+  )
+
+  const columns = useMemo(
+    () =>
+      getVehiclesColumns({
+        onViewDocuments: (vehicle) => {
+          setSelectedVehicle(vehicle)
+          setDocumentsOpen(true)
+        },
+        onEdit: (vehicle) => {
+          setSelectedVehicle(vehicle)
+          setAddOpen(true)
+        },
+        onDelete: async (vehicle) => {
+          const confirmed = window.confirm(`${vehicle.plate} plakalı araç silinecek. Onaylıyor musunuz?`)
+          if (!confirmed) return
+          await deleteSupplierVehicle(supplier.id, vehicle.id)
+          onSupplierChange({
+            ...supplier,
+            vehicles: supplier.vehicles.filter((item) => item.id !== vehicle.id),
+            vehicleCount: Math.max(0, supplier.vehicleCount - 1),
+          })
+        },
+        onToggleStatus: async (vehicle) => {
+          const updatedVehicle = await toggleSupplierVehicleStatus(supplier.id, vehicle.id)
+          onSupplierChange({
+            ...supplier,
+            vehicles: supplier.vehicles.map((item) => (item.id === updatedVehicle.id ? updatedVehicle : item)),
+          })
+        },
+      }),
+    [onSupplierChange, supplier],
+  )
 
   function handleVehicleAdded(vehicle: SupplierVehicle) {
+    const exists = supplier.vehicles.some((item) => item.id === vehicle.id)
+
     onSupplierChange({
       ...supplier,
-      vehicles: [...supplier.vehicles, vehicle],
-      vehicleCount: supplier.vehicleCount + 1,
+      vehicles: exists ? supplier.vehicles.map((item) => (item.id === vehicle.id ? vehicle : item)) : [...supplier.vehicles, vehicle],
+      vehicleCount: exists ? supplier.vehicleCount : supplier.vehicleCount + 1,
     })
+
+    setSelectedVehicle(null)
     setAddOpen(false)
   }
 
   return (
     <Card className="rounded-2xl border-slate-200">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <Truck className="size-4 text-slate-400" />
-          Araç Listesi ({supplier.vehicles.length})
+          Araç Listesi
+          {supplier.vehicles.length > 0 && (
+            <span className="inline-flex h-5 items-center rounded-full bg-slate-100 px-1.5 text-[10px] font-normal text-slate-500">
+              {supplier.vehicles.length}
+            </span>
+          )}
         </CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 rounded-lg text-xs"
-          onClick={() => setAddOpen(true)}
-        >
-          <Plus className="mr-1 size-3.5" />
+        <Button size="sm" className="h-8 text-xs" onClick={() => setAddOpen(true)}>
+          <Plus className="mr-1.5 size-3.5" />
           Araç Ekle
         </Button>
       </CardHeader>
-      <CardContent className="p-0">
+      <Separator />
+      <CardContent className="pt-4">
         {supplier.vehicles.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">Henüz araç eklenmemiş.</p>
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-slate-400">
+            <Truck className="size-8" />
+            <p className="text-sm">Henüz araç eklenmemiş</p>
+          </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-100 bg-slate-50/50">
-                <TableHead className="text-xs font-semibold text-slate-500">Plaka</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Araç</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Tip</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Kapasite</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Durum</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Sürücü</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500">Muayene</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-500"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {supplier.vehicles.map((vehicle) => {
-                const badge = STATUS_BADGE[vehicle.status]
-                return (
-                  <TableRow key={vehicle.id} className="border-slate-100">
-                    <TableCell className="font-mono text-sm font-semibold">
-                      {vehicle.plate}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {vehicle.brand} {vehicle.model} ({vehicle.year})
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-slate-200 text-slate-600">
-                        {VEHICLE_TYPE_LABELS[vehicle.vehicleType]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-700">
-                      {vehicle.capacity} ton
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={badge.className}>
-                        {badge.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">
-                      {vehicle.currentDriverName ?? <span className="text-slate-400">—</span>}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">
-                      {vehicle.nextInspectionDate
-                        ? new Date(vehicle.nextInspectionDate).toLocaleDateString("tr-TR")
-                        : <span className="text-slate-400">—</span>}
-                    </TableCell>
-                    <TableCell>
-                      {vehicle.isInsuranceExpiringSoon && (
-                        <div className="flex items-center gap-1 text-amber-600">
-                          <AlertTriangle className="size-3.5" />
-                          <span className="text-xs">Sigorta</span>
-                        </div>
-                      )}
-                      {vehicle.status === "maintenance" && (
-                        <div className="flex items-center gap-1 text-amber-600">
-                          <Wrench className="size-3.5" />
-                          <span className="text-xs">Bakımda</span>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+          <div className="space-y-3">
+            {table && (
+              <div className="flex items-center gap-2">
+                {!showFilters && (
+                  <DataTableExcelActions table={table} filename="tedarikci-arac-listesi" exportSelected={false} exportLabel="Dışarı Aktar" />
+                )}
+                <DataTableToolbar table={table} searchPlaceholder="Plaka, araç, sürücü ara..." showColumnSelector={!showFilters} viewLabel="Görünüm" columnsLabel="Sütunlar" resetLabel="Sıfırla">
+                  <Button type="button" variant={showFilters ? "default" : "outline"} size="sm" className="mr-3 h-8" onClick={() => setShowFilters((value) => !value)}>
+                    <Filter className="mr-2 size-4" />
+                    Filtreler
+                  </Button>
+                </DataTableToolbar>
+              </div>
+            )}
+
+            {showFilters && table && (
+              <div className="flex flex-wrap gap-2">
+                <DataTableFacetedFilter column={table.getColumn("vehicleType")} title="Tip" options={vehicleTypeOptions} />
+                <DataTableFacetedFilter column={table.getColumn("bodyType")} title="Kasa Tipi" options={bodyTypeOptions} />
+                <DataTableFacetedFilter column={table.getColumn("status")} title="Durum" options={statusOptions} />
+              </div>
+            )}
+
+            <DataTable
+              columns={columns}
+              data={supplier.vehicles}
+              onTableReady={setTable}
+              enableSorting
+              enableColumnVisibility
+              enableHorizontalScroll
+              stickyFirstColumn
+              stickyLastColumn
+              className="[&_thead_tr]:bg-slate-50 [&_thead_th]:font-semibold [&_thead_th]:text-slate-600"
+              emptyMessage="Gösterilecek araç bulunamadı."
+            />
+            {table && <DataTablePagination table={table as TanStackTable<unknown>} />}
+          </div>
         )}
       </CardContent>
 
       <AddVehicleModal
         supplierId={supplier.id}
         open={addOpen}
-        onOpenChange={setAddOpen}
-        onAdded={handleVehicleAdded}
+        onOpenChange={(open) => {
+          setAddOpen(open)
+          if (!open) {
+            setSelectedVehicle(null)
+          }
+        }}
+        onSaved={handleVehicleAdded}
+        vehicle={selectedVehicle}
       />
+
+      <VehicleDocumentsModal open={documentsOpen} onOpenChange={setDocumentsOpen} vehicle={selectedVehicle} />
     </Card>
   )
 }

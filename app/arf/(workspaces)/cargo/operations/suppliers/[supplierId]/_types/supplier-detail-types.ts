@@ -2,41 +2,84 @@ import type { SupplierRecord, SupplierType, SupplierStatus, ContractType } from 
 
 // ───────── Araç ─────────
 export type VehicleType = "tir" | "kamyon" | "van" | "pickup"
-export type VehicleStatus = "idle" | "on_road" | "maintenance"
+export type VehicleStatus = "active" | "passive"
+export type VehicleBodyType = "tenteli" | "kapali_kasa" | "frigorifik" | "acik_kasa" | "panelvan" | "diger"
+export type VehicleDocumentType = "ruhsat" | "trafik_sigortasi" | "kasko" | "muayene" | "diger"
+
+export interface SupplierVehicleDocument {
+  id: string
+  type: VehicleDocumentType
+  label: string
+  fileName?: string
+  fileSize?: number
+  uploadedBy?: string
+  fileUrl?: string
+  uploadedAt?: string
+}
 
 export interface SupplierVehicle {
   id: string
   plate: string
   brand: string
   model: string
+  bodyType?: VehicleBodyType
   vehicleType: VehicleType
   year: number
-  capacity: number // ton
+  maxWeightCapacity?: number
+  maxVolumeCapacity?: number
   status: VehicleStatus
   currentDriverId?: string
   currentDriverName?: string
-  lastTrip?: string
-  nextInspectionDate?: string
-  isInsuranceExpiringSoon?: boolean
+  inspectionExpiryDate?: string
+  trafficInsuranceExpiryDate?: string
+  cascoPolicyNumber?: string
+  cascoExpiryDate?: string
+  documents?: SupplierVehicleDocument[]
 }
 
 // ───────── Sürücü ─────────
 export type LicenseClass = "B" | "C" | "CE" | "D"
 export type DriverStatus = "available" | "on_trip" | "off_duty"
+export type SrcType = "SRC-1" | "SRC-2" | "SRC-3" | "SRC-4" | "SRC-5"
+export type BloodGroup = "A Rh+" | "A Rh-" | "B Rh+" | "B Rh-" | "AB Rh+" | "AB Rh-" | "0 Rh+" | "0 Rh-"
+export type DriverDocumentType =
+  | "ehliyet_fotokopisi"
+  | "src_belgesi"
+  | "psikoteknik_belgesi"
+  | "nufus_cuzdani"
+  | "saglik_raporu"
+  | "diger"
+
+export interface DriverDocument {
+  id: string
+  type: DriverDocumentType
+  label: string
+  fileName?: string
+  fileSize?: number
+  uploadedBy?: string
+  fileUrl?: string
+  uploadedAt?: string
+}
 
 export interface SupplierDriver {
   id: string
-  fullName: string
+  firstName: string
+  lastName: string
   phone: string
   nationalId: string // TCKN
+  birthDate?: string
+  bloodGroup?: BloodGroup
   licenseClass: LicenseClass
   licenseExpiry: string
+  srcType?: SrcType
   hasSrcCertificate: boolean
   srcExpiryDate?: string
+  psychotechnicExpiryDate?: string
   status: DriverStatus
   activeVehicleId?: string
   activeVehiclePlate?: string
   totalTrips: number
+  documents: DriverDocument[]
 }
 
 // ───────── Evrak ─────────

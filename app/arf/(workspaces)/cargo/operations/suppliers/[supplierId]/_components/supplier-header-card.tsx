@@ -14,10 +14,12 @@ import {
   Phone,
   PowerOff,
   Star,
+  Trash2,
   Truck,
   Users,
 } from "lucide-react"
-import { toggleSupplierDetailStatus } from "../_api/supplier-detail-api"
+import { ARF_ROUTES } from "../../../../../../_shared/routes"
+import { deleteSupplierDetail, toggleSupplierDetailStatus } from "../_api/supplier-detail-api"
 import type { SupplierDetail } from "../_types"
 
 const SUPPLIER_TYPE_LABELS: Record<string, string> = {
@@ -58,6 +60,21 @@ export function SupplierHeaderCard({ supplier, onEditClick, onSupplierChange }: 
     }
   }
 
+  async function handleDelete() {
+    if (!supplier.isDeletable) return
+    const confirmed = window.confirm(`${supplier.name} silinecek. Onaylıyor musunuz?`)
+    if (!confirmed) return
+
+    setIsActioning(true)
+    try {
+      await deleteSupplierDetail(supplier.id)
+      router.push(ARF_ROUTES.cargo.operations.suppliers)
+      router.refresh()
+    } finally {
+      setIsActioning(false)
+    }
+  }
+
   return (
     <Card
       className={`overflow-hidden rounded-3xl border shadow-sm ${
@@ -85,14 +102,6 @@ export function SupplierHeaderCard({ supplier, onEditClick, onSupplierChange }: 
                 >
                   {isPassive ? "Pasif" : "Aktif"}
                 </Badge>
-                {isOzmal && (
-                  <Badge
-                    variant="outline"
-                    className="border-primary/25 bg-primary/10 text-primary"
-                  >
-                    Özmal
-                  </Badge>
-                )}
               </div>
 
               <div className="flex flex-wrap gap-4 text-sm text-slate-600">
@@ -151,6 +160,18 @@ export function SupplierHeaderCard({ supplier, onEditClick, onSupplierChange }: 
                     Pasif Yap
                   </>
                 )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-10 rounded-xl px-4 text-red-700 hover:text-red-700"
+                disabled={!supplier.isDeletable || isActioning}
+                onClick={() => void handleDelete()}
+                title={!supplier.isDeletable ? "Bu tedarikçi silinemez" : undefined}
+              >
+                <Trash2 className="mr-1.5 size-4" />
+                Sil
               </Button>
             </div>
           </div>
