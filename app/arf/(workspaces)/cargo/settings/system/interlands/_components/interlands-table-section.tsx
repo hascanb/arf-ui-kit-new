@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { Table as TanStackTable } from "@tanstack/react-table"
@@ -136,6 +137,9 @@ export function InterlandsTableSection({ data }: Props) {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">İnterlandlar</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/arf/cargo/operations/interland-units">İnterland Birimleri</Link>
+          </Button>
           <Button size="sm" onClick={() => setCreateOpen(true)}>İnterland Oluştur</Button>
           <Button size="sm" variant="outline" onClick={() => setCreateBlockedOpen(true)}>
             Yasaklı İnterland Oluştur

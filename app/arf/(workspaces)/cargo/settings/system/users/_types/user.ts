@@ -41,6 +41,7 @@ export interface UserRecord {
   email: string
   phoneNumber: string
   role: UserRole
+  roleId?: string
   locationId: string | null
   locationName: string | null
   locationType: "branch" | "tm" | "hq" | null

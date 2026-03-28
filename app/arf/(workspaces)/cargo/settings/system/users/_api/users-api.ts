@@ -2,6 +2,7 @@ import type { LocationOption, UserAssetDraft, UserDocument, UserRecord, UserRole
 import {
   deleteStoredUser,
   findUserByEmail,
+  getUsersByRoleId,
   getUsersList,
   insertUser,
   setStoredUserStatus,
@@ -21,6 +22,11 @@ export interface CreateUserPayload {
 // TODO: Remove mock when API is ready
 export async function fetchUsers(): Promise<UserRecord[]> {
   return getUsersList()
+}
+
+// TODO: Remove mock when API is ready
+export async function fetchUsersByRoleId(roleId: string): Promise<UserRecord[]> {
+  return getUsersByRoleId(roleId)
 }
 
 // TODO: Remove mock when API is ready

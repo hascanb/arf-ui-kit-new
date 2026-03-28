@@ -72,7 +72,6 @@ export default function HomePage() {
   const quickActions = [
     { title: "Yeni Kargo", description: "Hızlı kargo oluştur", href: "/arf/cargo/shipments/new", icon: Plus },
     { title: "Kargo Sorgula", description: "Takip numarası ile ara", href: "/arf/cargo/shipments/track", icon: Package },
-    { title: "Raporlar", description: "Detaylı analizler", href: "/arf/cargo/reports", icon: TrendingUp },
   ]
 
   return (

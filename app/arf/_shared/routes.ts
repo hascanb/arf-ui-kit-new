@@ -46,20 +46,22 @@ export const ARF_ROUTES = {
     },
 
     operations: {
-      routes: `${CARGO_BASE}/operations/routes`,
+      routes: `${CARGO_BASE}/operations/trips`,
+      trips: `${CARGO_BASE}/operations/trips`,
+      suppliers: `${CARGO_BASE}/operations/suppliers`,
       lines: `${CARGO_BASE}/operations/lines`,
       ktf: `${CARGO_BASE}/operations/ktf`,
       interlandUnits: `${CARGO_BASE}/operations/interland-units`,
     },
 
     sales: {
-      customers: `${CARGO_BASE}/customers`,
-      contracts: `${CARGO_BASE}/contracts`,
-      priceLists: `${CARGO_BASE}/price-lists`,
+      customers: `${CARGO_BASE}/marketing/customers`,
+      contracts: `${CARGO_BASE}/marketing/contracts`,
+      priceLists: `${CARGO_BASE}/marketing/price-lists`,
     },
 
     definitions: {
-      suppliers: `${CARGO_BASE}/definitions/suppliers`,
+      suppliers: `${CARGO_BASE}/operations/suppliers`,
       drivers: `${CARGO_BASE}/definitions/drivers`,
       vehicles: `${CARGO_BASE}/definitions/vehicles`,
     },
@@ -73,6 +75,10 @@ export const ARF_ROUTES = {
         branchEntitlementDetail: `${CARGO_BASE}/finance/branch-transfer-center/branch-entitlement-detail`,
         transferCenterEntitlementDetail: `${CARGO_BASE}/finance/branch-transfer-center/transfer-center-entitlement-detail`,
       },
+      headquarters: {
+        root: `${CARGO_BASE}/finance/headquarters`,
+        bankAccounts: `${CARGO_BASE}/finance/headquarters/bank-accounts`,
+      },
       headOffice: {
         root: `${CARGO_BASE}/finance/head-office`,
         customerCash: `${CARGO_BASE}/finance/head-office/customer-cash`,
@@ -80,6 +86,7 @@ export const ARF_ROUTES = {
         collectionStatement: `${CARGO_BASE}/finance/head-office/collection-statement`,
         branchCashes: `${CARGO_BASE}/finance/head-office/branch-cashes`,
         branchCashLists: `${CARGO_BASE}/finance/head-office/branch-cash-lists`,
+        approvalQueue: `${CARGO_BASE}/finance/head-office/approval-queue`,
         branchEntitlementList: `${CARGO_BASE}/finance/head-office/branch-entitlement-list`,
         transferCenterEntitlementList: `${CARGO_BASE}/finance/head-office/transfer-center-entitlement-list`,
       },
@@ -87,15 +94,17 @@ export const ARF_ROUTES = {
 
     settings: {
       root: `${CARGO_BASE}/settings`,
-      roles: `${CARGO_BASE}/settings/roles`,
-      integrations: `${CARGO_BASE}/settings/integrations`,
+      roles: `${CARGO_BASE}/settings/system/roles`,
+      integrations: `${CARGO_BASE}/settings/system/integrations`,
       system: {
         root: `${CARGO_BASE}/settings/system`,
+        roles: `${CARGO_BASE}/settings/system/roles`,
+        integrations: `${CARGO_BASE}/settings/system/integrations`,
         transferCenters: `${CARGO_BASE}/settings/system/transfer-centers`,
         branches: `${CARGO_BASE}/settings/system/branches`,
         interlands: `${CARGO_BASE}/settings/system/interlands`,
         blockedInterlands: `${CARGO_BASE}/settings/system/blocked-interlands`,
-        bankAccounts: `${CARGO_BASE}/settings/system/bank-accounts`,
+        bankAccounts: `${CARGO_BASE}/finance/headquarters/bank-accounts`,
         systemPricing: `${CARGO_BASE}/settings/system/system-pricing`,
         lines: `${CARGO_BASE}/settings/system/lines`,
         neighborhoods: `${CARGO_BASE}/settings/system/neighborhoods`,

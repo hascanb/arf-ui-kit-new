@@ -1,0 +1,278 @@
+import { notFound } from "next/navigation"
+import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
+import { CustomerAddressesSection } from "./_components/customer-addresses-section"
+import { CustomerContractsSection } from "./_components/customer-contracts-section"
+import { CustomerFinancialMovementsSection } from "./_components/customer-financial-movements-section"
+import { CustomerHeaderActions } from "./_components/customer-header-actions"
+import { CustomerInfoEditorCard } from "./_components/customer-info-editor-card"
+import { CustomerShipmentsSection } from "./_components/customer-shipments-section"
+import {
+  ArrowRightLeft,
+  Building2,
+  CalendarClock,
+  CalendarX2,
+  CheckCircle2,
+  CircleDollarSign,
+  Package,
+  ShieldCheck,
+} from "lucide-react"
+import {
+  getCustomerById,
+} from "../_data/customers"
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+  }).format(value)
+
+const toDateOnlyLabel = (value?: string | null) => {
+  if (!value) {
+    return "-"
+  }
+
+  if (value.includes(" ")) {
+    return value.split(" ")[0]
+  }
+
+  if (value.includes("T")) {
+    return value.split("T")[0]
+  }
+
+  return value
+}
+
+export default async function MusteriDetayPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ customerId: string }>
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { customerId } = await params
+  const { tab } = await searchParams
+  const customer = getCustomerById(customerId)
+
+  if (!customer) {
+    notFound()
+  }
+
+  const displayName =
+    customer.customerType === "corporate"
+      ? customer.tradeName
+      : `${customer.firstName} ${customer.lastName}`.trim()
+
+  const totalShipmentCount = customer.shipments.length
+  const totalShipmentAmount = customer.shipments.reduce(
+    (acc, shipment) => acc + shipment.amount,
+    0,
+  )
+  const deliveredCount = customer.shipments.filter(
+    (shipment) => shipment.status === "teslim_edildi",
+  ).length
+  const activeContractCount = customer.contracts.filter(
+    (contract) => contract.status === "active",
+  ).length
+
+  const activeContractEndDate = customer.contracts
+    .filter((contract) => contract.status === "active")
+    .sort((a, b) => a.endDate.localeCompare(b.endDate))
+    .at(0)?.endDate ?? null
+
+  const currentBalance =
+    customer.financialMovements[customer.financialMovements.length - 1]?.balance ?? 0
+  const lastCollectionAt =
+    [...customer.financialMovements]
+      .reverse()
+      .find((movement) => movement.type === "tahsilat")
+      ?.date ?? "-"
+
+  const initialTab =
+    tab === "addresses" ||
+    tab === "contracts" ||
+    tab === "shipments" ||
+    tab === "finance"
+      ? tab
+      : "info"
+
+  return (
+    <>
+      <AppHeader
+        breadcrumbs={[
+          { label: "Ana Sayfa", href: "/" },
+          { label: "Müşteriler", href: "/arf/cargo/marketing/customers" },
+          { label: displayName },
+        ]}
+      />
+
+      <div className="flex flex-1 flex-col gap-4 bg-slate-50 p-4">
+        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{displayName}</h1>
+                  <Badge
+                    className={cn(
+                      "border",
+                      customer.customerType === "corporate"
+                        ? "border-secondary/30 bg-primary/12 text-secondary"
+                        : "border-slate-300 bg-slate-100 text-slate-700",
+                    )}
+                  >
+                    {customer.customerType === "corporate" ? "Kurumsal" : "Bireysel"}
+                  </Badge>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-sm text-slate-600">
+                  <InfoPill icon={CalendarClock} label={`Kayıt: ${toDateOnlyLabel(customer.createdAt)}`} />
+                  <InfoPill icon={Package} label={`Son Kargo: ${customer.lastShipmentAt || "-"}`} />
+                  <InfoPill icon={CalendarClock} label={`Son Tahsilat: ${lastCollectionAt}`} />
+                  {activeContractEndDate && (
+                    <InfoPill icon={CalendarX2} label={`Sözleşme Bitiş: ${toDateOnlyLabel(activeContractEndDate)}`} />
+                  )}
+                </div>
+
+              </div>
+
+              <CustomerHeaderActions
+                initialStatus={customer.status}
+                sharePath={`/arf/cargo/marketing/customers/${customer.id}`}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <SummaryCard label="Toplam Kargo" value={String(totalShipmentCount)} icon={Package} />
+              <SummaryCard
+                label="Toplam Ciro"
+                value={formatCurrency(totalShipmentAmount)}
+                icon={Building2}
+              />
+              <SummaryCard label="Teslim Edilen" value={String(deliveredCount)} icon={CheckCircle2} />
+              <SummaryCard
+                label="Açık Bakiye"
+                value={formatCurrency(currentBalance)}
+                icon={CircleDollarSign}
+              />
+              <SummaryCard
+                label="Aktif Sözleşme"
+                value={String(activeContractCount)}
+                icon={ShieldCheck}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Tabs defaultValue={initialTab} className="space-y-3">
+          <TabsList className="grid h-10 w-full grid-cols-5 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
+            <TabsTrigger value="info">Müşteri Bilgileri</TabsTrigger>
+            <TabsTrigger value="addresses">Adres Bilgileri</TabsTrigger>
+            <TabsTrigger value="contracts">Sözleşme Bilgileri</TabsTrigger>
+            <TabsTrigger value="shipments">Kargolar</TabsTrigger>
+            <TabsTrigger value="finance">Finansal Hareketler</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="shipments">
+            <CustomerShipmentsSection shipments={customer.shipments} customerId={customer.id} />
+          </TabsContent>
+
+          <TabsContent value="finance">
+            <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Finansal Hareketler</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                <div className="grid gap-3 md:grid-cols-3">
+                  <MiniMetric
+                    label="Toplam Borç"
+                    value={formatCurrency(
+                      customer.financialMovements.reduce((acc, row) => acc + row.debit, 0),
+                    )}
+                  />
+                  <MiniMetric
+                    label="Toplam Tahsilat"
+                    value={formatCurrency(
+                      customer.financialMovements.reduce((acc, row) => acc + row.credit, 0),
+                    )}
+                  />
+                  <MiniMetric label="Güncel Bakiye" value={formatCurrency(currentBalance)} />
+                </div>
+
+                <div className="rounded-xl border border-slate-200">
+                  <CustomerFinancialMovementsSection movements={customer.financialMovements} />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="info">
+            <CustomerInfoEditorCard
+              customerType={customer.customerType}
+              tradeName={customer.tradeName}
+              taxOffice={customer.taxOffice || ""}
+              taxNumber={customer.taxNumber || ""}
+              tcIdentityNumber={customer.tcIdentityNumber || ""}
+              firstName={customer.firstName || ""}
+              lastName={customer.lastName || ""}
+              phone={customer.phone || ""}
+              email={customer.email || ""}
+            />
+          </TabsContent>
+
+          <TabsContent value="addresses">
+            <CustomerAddressesSection addresses={customer.addresses} />
+          </TabsContent>
+
+          <TabsContent value="contracts">
+            <CustomerContractsSection customerId={customer.id} contracts={customer.contracts} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
+  )
+}
+
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  icon: React.ElementType
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium tracking-wide text-slate-500">{label}</p>
+        <span className="inline-flex size-7 items-center justify-center rounded-lg border border-secondary/30 bg-primary/12 text-secondary">
+          <Icon className="size-4" />
+        </span>
+      </div>
+      <p className="mt-1 text-xl font-semibold tracking-tight text-slate-900">{value}</p>
+    </div>
+  )
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  )
+}
+
+function InfoPill({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs">
+      <Icon className="size-3.5 shrink-0 text-slate-500" />
+      <span className="whitespace-nowrap text-slate-700">{label}</span>
+    </div>
+  )
+}

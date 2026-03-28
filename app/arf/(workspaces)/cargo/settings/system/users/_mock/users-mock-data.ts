@@ -22,6 +22,7 @@ function toRecord(detail: UserDetail): UserRecord {
     email: detail.email,
     phoneNumber: detail.phoneNumber,
     role: detail.role,
+    roleId: detail.roleId,
     locationId: detail.locationId,
     locationName: detail.locationName,
     locationType: detail.locationType,
@@ -84,6 +85,7 @@ function makeDetail(input: {
   email: string
   phoneNumber: string
   role: UserRole
+  roleId?: string
   locationId: string | null
   locationName: string | null
   locationType: "branch" | "tm" | "hq" | null
@@ -107,6 +109,7 @@ function makeDetail(input: {
     email: input.email,
     phoneNumber: input.phoneNumber,
     role: input.role,
+    roleId: input.roleId,
     locationId: input.locationId,
     locationName: input.locationName,
     locationType: input.locationType,
@@ -132,6 +135,7 @@ const storedUsers: UserDetail[] = [
     email: "mehmet.kaya@kargosistemi.com",
     phoneNumber: "0532 111 22 33",
     role: "superadmin",
+    roleId: "superadmin",
     locationId: null,
     locationName: null,
     locationType: null,
@@ -153,6 +157,7 @@ const storedUsers: UserDetail[] = [
     email: "ahmet.yilmaz@kargosistemi.com",
     phoneNumber: "0541 222 33 44",
     role: "hq_manager",
+    roleId: "hq_manager",
     locationId: "hq-001",
     locationName: "Genel Merkez",
     locationType: "hq",
@@ -173,6 +178,7 @@ const storedUsers: UserDetail[] = [
     email: "fatma.demir@kargosistemi.com",
     phoneNumber: "0555 333 44 55",
     role: "tm_manager",
+    roleId: "hq_manager",
     locationId: "tm-001",
     locationName: "İstanbul Transfer Merkezi",
     locationType: "tm",
@@ -192,6 +198,7 @@ const storedUsers: UserDetail[] = [
     email: "ali.celik@kargosistemi.com",
     phoneNumber: "0544 444 55 66",
     role: "branch_manager",
+    roleId: "role_branch_manager",
     locationId: "br-001",
     locationName: "Adana Şubesi",
     locationType: "branch",
@@ -211,6 +218,7 @@ const storedUsers: UserDetail[] = [
     email: "zeynep.arslan@kargosistemi.com",
     phoneNumber: "0533 555 66 77",
     role: "courier",
+    roleId: "role_courier",
     locationId: "br-001",
     locationName: "Adana Şubesi",
     locationType: "branch",
@@ -260,6 +268,7 @@ const storedUsers: UserDetail[] = [
     email: "kemal.sahin@kargosistemi.com",
     phoneNumber: "0551 666 77 88",
     role: "courier",
+    roleId: "role_courier",
     locationId: "br-002",
     locationName: "Bursa Şubesi",
     locationType: "branch",
@@ -297,6 +306,7 @@ const storedUsers: UserDetail[] = [
     email: "havva.yildiz@kargosistemi.com",
     phoneNumber: "0562 777 88 99",
     role: "operator",
+    roleId: "system_admin",
     locationId: "tm-002",
     locationName: "Ankara Transfer Merkezi",
     locationType: "tm",
@@ -317,6 +327,7 @@ const storedUsers: UserDetail[] = [
     email: "burak.ozturk@kargosistemi.com",
     phoneNumber: "0545 888 99 00",
     role: "branch_manager",
+    roleId: "role_branch_manager",
     locationId: "br-003",
     locationName: "Antalya Şubesi",
     locationType: "branch",
@@ -334,6 +345,13 @@ const storedUsers: UserDetail[] = [
 
 export function getUsersList(): UserRecord[] {
   return [...storedUsers]
+    .sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf())
+    .map(toRecord)
+}
+
+export function getUsersByRoleId(roleId: string): UserRecord[] {
+  return [...storedUsers]
+    .filter((u) => u.roleId === roleId)
     .sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf())
     .map(toRecord)
 }

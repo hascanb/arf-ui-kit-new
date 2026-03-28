@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { type ChangeEvent, type KeyboardEvent, useState } from "react"
+import { type ChangeEvent, type KeyboardEvent, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -102,6 +103,7 @@ const mockTrackingData = mockTrackingRecords as unknown as TrackingRecord[]
 const normalizeTrackingNo = (value: string) => value.toUpperCase().replace(/\s+/g, "").trim()
 
 export default function KargoSorgulaPage() {
+  const searchParams = useSearchParams()
   const [trackingNo, setTrackingNo] = useState("")
   const [selectedRecord, setSelectedRecord] = useState<TrackingRecord | null>(null)
   const [errorMessage, setErrorMessage] = useState("")
@@ -152,6 +154,12 @@ export default function KargoSorgulaPage() {
     setSelectedRecord(found)
     setErrorMessage("")
   }
+
+  useEffect(() => {
+    const query = searchParams.get("query")
+    if (!query) return
+    handleSearch(query)
+  }, [searchParams])
 
   return (
     <>
