@@ -50,7 +50,7 @@ export const ARF_ROUTES = {
       trips: `${CARGO_BASE}/operations/trips`,
       suppliers: `${CARGO_BASE}/operations/suppliers`,
       lines: `${CARGO_BASE}/operations/lines`,
-      ktf: `${CARGO_BASE}/operations/ktf`,
+      ktf: `${CARGO_BASE}/operations/transfer-forms`,
       interlandUnits: `${CARGO_BASE}/operations/interland-units`,
     },
 
