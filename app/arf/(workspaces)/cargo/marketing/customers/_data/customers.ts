@@ -46,7 +46,7 @@ export interface CustomerShipmentRecord {
   lastActionAt?: string
   pieceStatus?: string
   invoiceStatus?: 'kesildi' | 'kesilmedi'
-  collectionStatus?: 'tahsil_edildi' | 'beklemede' | 'iptal'
+  collectionStatus?: 'tahsil_edildi' | 'beklemede' | 'iptal' | 'musteri_tahsil_edildi' | 'gm_gonderildi'
   createdBy?: string
 }
 
@@ -150,7 +150,7 @@ export const customerDetails: CustomerDetailRecord[] = [
     ],
     shipments: [
       {
-        id: 'shipment-100021',
+        id: '100021',
         trackingNo: 'ARF-100021',
         date: '2026-03-15 14:10',
         route: 'Adana -> Ankara',
@@ -179,7 +179,7 @@ export const customerDetails: CustomerDetailRecord[] = [
         createdBy: 'Mehmet Şahin',
       },
       {
-        id: 'shipment-100019',
+        id: '100019',
         trackingNo: 'ARF-100019',
         date: '2026-03-13 10:42',
         route: 'Adana -> İzmir',

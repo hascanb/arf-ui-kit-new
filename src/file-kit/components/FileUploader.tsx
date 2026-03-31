@@ -211,11 +211,11 @@ export function FileUploader({
         }}
       >
         <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 text-sm font-medium">Drag & drop files or click to browse</p>
-        <p className="mt-1 text-xs text-muted-foreground">Up to {maxFiles} files, {maxSizeMb}MB each</p>
+        <p className="mt-2 text-sm font-medium">Dosyaları sürükleyin veya seçmek için tıklayın</p>
+        <p className="mt-1 text-xs text-muted-foreground">En fazla {maxFiles} dosya, her biri en fazla {maxSizeMb}MB</p>
         
         <Button type="button" variant="outline" size="sm" className="mt-4" disabled={disabled} onClick={() => inputRef.current?.click()}>
-          Browse files
+          Dosya Seç
         </Button>
 
         <input

@@ -6,19 +6,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { CustomerAddressesSection } from "./_components/customer-addresses-section"
 import { CustomerContractsSection } from "./_components/customer-contracts-section"
-import { CustomerFinancialMovementsSection } from "./_components/customer-financial-movements-section"
+import { CustomerFinancialSection } from "./_components/customer-financial-section"
 import { CustomerHeaderActions } from "./_components/customer-header-actions"
 import { CustomerInfoEditorCard } from "./_components/customer-info-editor-card"
 import { CustomerShipmentsSection } from "./_components/customer-shipments-section"
 import {
-  ArrowRightLeft,
+  fetchFinancialKpi,
+  fetchOpenCargos,
+  fetchInvoices,
+} from "./_api/financial-api"
+import {
   Building2,
   CalendarClock,
   CalendarX2,
   CheckCircle2,
   CircleDollarSign,
   Package,
-  ShieldCheck,
 } from "lucide-react"
 import {
   getCustomerById,
@@ -92,11 +95,25 @@ export default async function MusteriDetayPage({
       .find((movement) => movement.type === "tahsilat")
       ?.date ?? "-"
 
+  const hasContract = activeContractCount > 0
+
+  let financialKpi = null
+  let openCargos: Awaited<ReturnType<typeof fetchOpenCargos>> = []
+  let invoices: Awaited<ReturnType<typeof fetchInvoices>> = []
+
+  if (hasContract) {
+    ;[financialKpi, openCargos, invoices] = await Promise.all([
+      fetchFinancialKpi(customerId),
+      fetchOpenCargos(customerId),
+      fetchInvoices(customerId),
+    ])
+  }
+
   const initialTab =
     tab === "addresses" ||
     tab === "contracts" ||
     tab === "shipments" ||
-    tab === "finance"
+    (tab === "finance" && hasContract)
       ? tab
       : "info"
 
@@ -127,6 +144,11 @@ export default async function MusteriDetayPage({
                   >
                     {customer.customerType === "corporate" ? "Kurumsal" : "Bireysel"}
                   </Badge>
+                  {activeContractCount > 0 && (
+                    <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">
+                      Sözleşmeli
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2 text-sm text-slate-600">
@@ -146,7 +168,7 @@ export default async function MusteriDetayPage({
               />
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <SummaryCard label="Toplam Kargo" value={String(totalShipmentCount)} icon={Package} />
               <SummaryCard
                 label="Toplam Ciro"
@@ -159,56 +181,42 @@ export default async function MusteriDetayPage({
                 value={formatCurrency(currentBalance)}
                 icon={CircleDollarSign}
               />
-              <SummaryCard
-                label="Aktif Sözleşme"
-                value={String(activeContractCount)}
-                icon={ShieldCheck}
-              />
             </div>
           </CardContent>
         </Card>
 
         <Tabs defaultValue={initialTab} className="space-y-3">
-          <TabsList className="grid h-10 w-full grid-cols-5 rounded-xl border border-slate-200 bg-slate-100 p-0.5">
+          <TabsList className={cn(
+            "grid h-10 w-full rounded-xl border border-slate-200 bg-slate-100 p-0.5",
+            hasContract ? "grid-cols-5" : "grid-cols-4"
+          )}>
             <TabsTrigger value="info">Müşteri Bilgileri</TabsTrigger>
             <TabsTrigger value="addresses">Adres Bilgileri</TabsTrigger>
             <TabsTrigger value="contracts">Sözleşme Bilgileri</TabsTrigger>
             <TabsTrigger value="shipments">Kargolar</TabsTrigger>
-            <TabsTrigger value="finance">Finansal Hareketler</TabsTrigger>
+            {hasContract && <TabsTrigger value="finance">Finansal Hareketler</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="shipments">
             <CustomerShipmentsSection shipments={customer.shipments} customerId={customer.id} />
           </TabsContent>
 
-          <TabsContent value="finance">
-            <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Finansal Hareketler</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-0">
-                <div className="grid gap-3 md:grid-cols-3">
-                  <MiniMetric
-                    label="Toplam Borç"
-                    value={formatCurrency(
-                      customer.financialMovements.reduce((acc, row) => acc + row.debit, 0),
-                    )}
-                  />
-                  <MiniMetric
-                    label="Toplam Tahsilat"
-                    value={formatCurrency(
-                      customer.financialMovements.reduce((acc, row) => acc + row.credit, 0),
-                    )}
-                  />
-                  <MiniMetric label="Güncel Bakiye" value={formatCurrency(currentBalance)} />
-                </div>
-
-                <div className="rounded-xl border border-slate-200">
-                  <CustomerFinancialMovementsSection movements={customer.financialMovements} />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {hasContract && financialKpi && (
+            <TabsContent value="finance">
+              <CustomerFinancialSection
+                kpi={financialKpi}
+                openCargos={openCargos}
+                invoices={invoices}
+                customerInfo={{
+                  customerId: customer.id,
+                  customerType: customer.customerType,
+                  tradeName: customer.tradeName,
+                  taxOffice: customer.taxOffice,
+                  taxNumber: customer.taxNumber,
+                }}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="info">
             <CustomerInfoEditorCard

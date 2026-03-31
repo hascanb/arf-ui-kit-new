@@ -78,6 +78,9 @@ export const ARF_ROUTES = {
       headquarters: {
         root: `${CARGO_BASE}/finance/headquarters`,
         bankAccounts: `${CARGO_BASE}/finance/headquarters/bank-accounts`,
+        invoices: `${CARGO_BASE}/finance/headquarters/invoices`,
+        branchEntitlementList: `${CARGO_BASE}/finance/headquarters/branch-entitlement-list`,
+        transferCenterEntitlementList: `${CARGO_BASE}/finance/headquarters/transfer-center-entitlement-list`,
       },
       headOffice: {
         root: `${CARGO_BASE}/finance/head-office`,
@@ -87,8 +90,7 @@ export const ARF_ROUTES = {
         branchCashes: `${CARGO_BASE}/finance/head-office/branch-cashes`,
         branchCashLists: `${CARGO_BASE}/finance/head-office/branch-cash-lists`,
         approvalQueue: `${CARGO_BASE}/finance/head-office/approval-queue`,
-        branchEntitlementList: `${CARGO_BASE}/finance/head-office/branch-entitlement-list`,
-        transferCenterEntitlementList: `${CARGO_BASE}/finance/head-office/transfer-center-entitlement-list`,
+
       },
     },
 

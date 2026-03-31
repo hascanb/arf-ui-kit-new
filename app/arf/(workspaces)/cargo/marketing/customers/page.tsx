@@ -3,42 +3,178 @@
 import { useState } from "react"
 import { AppHeader } from '@hascanb/arf-ui-kit/layout-kit'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Package, Plus, ShieldCheck, Users } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { CheckCircle2, ChevronDown, ChevronUp, Plus, ShieldCheck, UserRound, Users } from "lucide-react"
+import { toast } from "sonner"
 import { customerDetails, customerListRows } from "./_data/customers"
 import { CustomersTableSection } from "./_components/customers-table-section"
+import {
+  CustomerAddressModal,
+  type AddressFormState,
+  type CustomerCreateStep,
+  type CustomerFormState,
+  type ModalState,
+} from "../../shipments/_components/customer-address-modal"
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    minimumFractionDigits: 2,
-  }).format(value)
+const initialCustomerFormState: CustomerFormState = {
+  customerType: "corporate",
+  tradeName: "",
+  taxNumber: "",
+  taxOffice: "",
+  tcIdentityNumber: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  contactName: "",
+  phone: "",
+  city: "",
+  district: "",
+  neighborhood: "",
+  branch: "",
+}
+
+const initialAddressFormState: AddressFormState = {
+  label: "",
+  city: "",
+  district: "",
+  neighborhood: "",
+  line1: "",
+  contactName: "",
+  phone: "",
+  branch: "",
+}
 
 export default function MusterilerPage() {
   const [isSummaryVisible, setIsSummaryVisible] = useState(true)
+  const [modalState, setModalState] = useState<ModalState | null>(null)
+  const [customerCreateStep, setCustomerCreateStep] = useState<CustomerCreateStep>("type")
+  const [customerForm, setCustomerForm] = useState<CustomerFormState>(() => ({ ...initialCustomerFormState }))
+  const [addressForm, setAddressForm] = useState<AddressFormState>(() => ({ ...initialAddressFormState }))
+  const [modalError, setModalError] = useState("")
 
   const totalCustomerCount = customerListRows.length
-  const activeCustomerCount = customerListRows.filter((row) => row.durum === "active").length
-  const deliveredShipmentCount = customerListRows.reduce((acc, row) => acc + row.teslim_edilen_sayisi, 0)
-  const totalShipmentAmount = customerDetails.reduce(
-    (acc, customer) => acc + customer.shipments.reduce((shipmentAcc, shipment) => shipmentAcc + shipment.amount, 0),
-    0,
-  )
-  const totalOpenBalance = customerDetails.reduce(
-    (acc, customer) => acc + (customer.financialMovements[customer.financialMovements.length - 1]?.balance ?? 0),
-    0,
-  )
-  const totalActiveContractCount = customerListRows.reduce((acc, row) => acc + row.aktif_sozlesme_sayisi, 0)
+  const passiveCustomerCount = customerListRows.filter((row) => row.durum === "passive").length
+  const contractedCustomerCount = customerListRows.filter((row) => row.aktif_sozlesme_sayisi > 0).length
+  const individualCustomerCount = customerListRows.filter((row) => row.tip === "individual").length
+  const corporateCustomerCount = customerListRows.filter((row) => row.tip === "corporate").length
 
   const summaryCards = [
     { label: "Toplam Müşteri", value: String(totalCustomerCount), icon: Users },
-    { label: "Aktif Müşteri", value: String(activeCustomerCount), icon: CheckCircle2 },
-    { label: "Teslim Edilen Kargo", value: String(deliveredShipmentCount), icon: Package },
-    { label: "Toplam Ciro", value: formatCurrency(totalShipmentAmount), icon: CircleDollarSign },
-    { label: "Açık Bakiye", value: formatCurrency(totalOpenBalance), icon: CircleDollarSign },
-    { label: "Aktif Sözleşme", value: String(totalActiveContractCount), icon: ShieldCheck },
+    { label: "Pasif Müşteri", value: String(passiveCustomerCount), icon: CheckCircle2 },
+    { label: "Sözleşmeli Müşteri", value: String(contractedCustomerCount), icon: ShieldCheck },
+    { label: "Bireysel Müşteri", value: String(individualCustomerCount), icon: UserRound },
+    { label: "Kurumsal Müşteri", value: String(corporateCustomerCount), icon: Users },
   ]
+
+  const openCreateCustomerModal = () => {
+    setModalState({ side: "sender", entity: "customer", mode: "create" })
+    setCustomerCreateStep("type")
+    setCustomerForm({ ...initialCustomerFormState })
+    setAddressForm({ ...initialAddressFormState })
+    setModalError("")
+  }
+
+  const closeModal = () => {
+    setModalState(null)
+    setCustomerCreateStep("type")
+    setModalError("")
+  }
+
+  const goBackInModal = () => {
+    if (customerCreateStep === "address") {
+      setCustomerCreateStep("customer")
+      setModalError("")
+      return
+    }
+
+    if (customerCreateStep === "customer") {
+      setCustomerCreateStep("type")
+      setModalError("")
+      return
+    }
+
+    closeModal()
+  }
+
+  const saveModal = () => {
+    if (!modalState) return
+
+    if (customerCreateStep === "type") {
+      setCustomerCreateStep("customer")
+      setModalError("")
+      return
+    }
+
+    if (customerCreateStep === "customer") {
+      const isCorporate = customerForm.customerType === "corporate"
+      const firstName = customerForm.firstName.trim()
+      const lastName = customerForm.lastName.trim()
+      const email = customerForm.email.trim()
+      const phone = customerForm.phone.trim()
+      const contactName = `${firstName} ${lastName}`.trim()
+
+      if (isCorporate && !customerForm.tradeName.trim()) {
+        setModalError("Kurumsal müşteri için şirket adı zorunludur.")
+        return
+      }
+
+      if (isCorporate && !customerForm.taxNumber.trim()) {
+        setModalError("Kurumsal müşteri için vergi numarası zorunludur.")
+        return
+      }
+
+      if (isCorporate && !customerForm.taxOffice.trim()) {
+        setModalError("Kurumsal müşteri için vergi dairesi zorunludur.")
+        return
+      }
+
+      if (!isCorporate && !/^\d{11}$/.test(customerForm.tcIdentityNumber.trim())) {
+        setModalError("Bireysel müşteri için 11 haneli TC kimlik numarası girin.")
+        return
+      }
+
+      if (!firstName || !lastName) {
+        setModalError(
+          isCorporate ? "Şirket yetkili adı ve soyadı zorunludur." : "Ad ve soyad alanları zorunludur.",
+        )
+        return
+      }
+
+      if (!phone) {
+        setModalError(
+          isCorporate ? "Şirket yetkili telefon numarası zorunludur." : "Telefon numarası zorunludur.",
+        )
+        return
+      }
+
+      if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+        setModalError("Geçerli bir email adresi girin veya boş bırakın.")
+        return
+      }
+
+      setAddressForm((current) => ({
+        ...current,
+        contactName,
+        phone,
+      }))
+      setCustomerCreateStep("address")
+      setModalError("")
+      return
+    }
+
+    if (!addressForm.label.trim() || !addressForm.line1.trim()) {
+      setModalError("Adres başlığı ve açık adres zorunludur.")
+      return
+    }
+
+    if (!addressForm.city.trim() || !addressForm.district.trim() || !addressForm.neighborhood.trim()) {
+      setModalError("Adres için şehir, ilçe ve mahalle bilgileri zorunludur.")
+      return
+    }
+
+    toast.success("Yeni müşteri akışı tamamlandı (demo)")
+    closeModal()
+  }
 
   return (
     <>
@@ -64,7 +200,7 @@ export default function MusterilerPage() {
               {isSummaryVisible ? <ChevronUp className="mr-2 size-4" /> : <ChevronDown className="mr-2 size-4" />}
               {isSummaryVisible ? "Özeti Gizle" : "Özeti Göster"}
             </Button>
-            <Button className="shrink-0">
+            <Button className="shrink-0" onClick={openCreateCustomerModal}>
               <Plus className="mr-2 size-4" />
               Yeni Müşteri
             </Button>
@@ -72,7 +208,7 @@ export default function MusterilerPage() {
         </div>
 
         {isSummaryVisible && (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {summaryCards.map((card) => (
               <Card key={card.label} className="rounded-2xl border-slate-200 bg-white shadow-sm">
                 <CardContent className="p-3">
@@ -94,6 +230,19 @@ export default function MusterilerPage() {
             <CustomersTableSection data={customerListRows} />
           </CardContent>
         </Card>
+
+        <CustomerAddressModal
+          modalState={modalState}
+          customerCreateStep={customerCreateStep}
+          customerForm={customerForm}
+          addressForm={addressForm}
+          modalError={modalError}
+          setCustomerForm={setCustomerForm}
+          setAddressForm={setAddressForm}
+          onClose={closeModal}
+          onBack={goBackInModal}
+          onSave={saveModal}
+        />
       </div>
     </>
   )

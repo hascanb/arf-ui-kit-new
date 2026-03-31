@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Download, FileText, Pencil, Plus, Power, Trash2, X, CalendarDays } from "lucide-react"
+import { FileText, Pencil, Plus, Power, Trash2, X, CalendarDays } from "lucide-react"
 import type { CustomerContractRecord } from "../../_data/customers"
 
 const CUSTOMER_CONTRACTS_STORAGE_PREFIX = "arf:customers:contracts:v1:"
@@ -423,26 +423,14 @@ export function CustomerContractsSection({
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {contract.attachmentName ? (
-                      <>
-                        <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
-                          <FileText className="size-3.5" />
-                          {contract.attachmentName}
-                        </span>
-                        {contract.attachmentUrl ? (
-                          <a
-                            href={contract.attachmentUrl}
-                            download={contract.attachmentName}
-                            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                          >
-                            <Download className="mr-1.5 size-3.5" />
-                            PDF İndir
-                          </a>
-                        ) : (
-                          <span className="inline-flex items-center rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-500">
-                            Demo veride dosya linki yok
-                          </span>
-                        )}
-                      </>
+                      <a
+                        href={contract.attachmentUrl ?? "#"}
+                        download={contract.attachmentUrl ? contract.attachmentName : undefined}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                      >
+                        <FileText className="size-3.5" />
+                        Sözleşme Görüntüle
+                      </a>
                     ) : (
                       <span className="inline-flex items-center rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-500">
                         Ek dosya yüklenmedi
@@ -470,9 +458,6 @@ export function CustomerContractsSection({
                 <h2 className="text-2xl font-semibold text-slate-900">
                   {editingId ? "Sözleşmeyi Düzenle" : "Yeni Sözleşme"}
                 </h2>
-                <p className="text-sm text-slate-500">
-                  Sözleşme bilgilerini, PDF belgesini ve fiyat kurallarını tek ekrandan tanımlayabilirsiniz.
-                </p>
               </div>
               <Button variant="ghost" size="icon" className="rounded-2xl" onClick={closeModal}>
                 <X className="size-5" />

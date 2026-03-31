@@ -67,7 +67,10 @@ const invoiceStatusConfig: Record<string, { label: string; className: string }> 
 
 const collectionStatusConfig: Record<string, { label: string; className: string }> = {
   tahsil_edildi: { label: "Tahsil Edildi", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  musteri_tahsil_edildi: { label: "Müşteriden Tahsil Edildi", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
   beklemede: { label: "Beklemede", className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  bekliyor: { label: "Bekliyor", className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  gm_gonderildi: { label: "Tahsil Edildi (GM'ye Gönderildi)", className: "bg-sky-500/10 text-sky-600 border-sky-500/20" },
   iptal: { label: "İptal", className: "bg-red-500/10 text-red-600 border-red-500/20" },
 }
 
@@ -87,7 +90,10 @@ const invoiceStatusFilterOptions = [
 
 const collectionStatusFilterOptions = [
   { label: "Tahsil Edildi", value: "tahsil_edildi" },
+  { label: "Müşteriden Tahsil Edildi", value: "musteri_tahsil_edildi" },
   { label: "Beklemede", value: "beklemede" },
+  { label: "Bekliyor", value: "bekliyor" },
+  { label: "Tahsil Edildi (GM'ye Gönderildi)", value: "gm_gonderildi" },
   { label: "İptal", value: "iptal" },
 ]
 
