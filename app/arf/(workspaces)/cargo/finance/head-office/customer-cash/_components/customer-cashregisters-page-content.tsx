@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { AppHeader } from "@hascanb/arf-ui-kit/layout-kit"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,7 +56,9 @@ export function CustomerCashregistersPageContent({ rows, summary }: Props) {
 
         <Card className="rounded-2xl border-slate-200 shadow-sm">
           <CardContent className="pt-4">
-            <CustomerCashregistersTableSection data={rows} />
+            <Suspense fallback={null}>
+              <CustomerCashregistersTableSection data={rows} />
+            </Suspense>
           </CardContent>
         </Card>
       </div>
